@@ -2,3 +2,4 @@
 /build/
 /.jacocoverage/
 /target/
+/nbproject/

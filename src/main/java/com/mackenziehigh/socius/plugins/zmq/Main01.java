@@ -1,7 +1,7 @@
 package com.mackenziehigh.socius.plugins.zmq;
 
 import com.mackenziehigh.cascade.Cascade;
-import com.mackenziehigh.socius.plugins.Clock;
+import com.mackenziehigh.socius.plugins.time.Clock;
 import java.io.IOException;
 
 public final class Main01

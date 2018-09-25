@@ -1,24 +1,22 @@
 package com.mackenziehigh.socius.plugins.flow;
 
 import com.google.common.collect.Maps;
-import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.plugins.Clock;
-import com.mackenziehigh.socius.plugins.Printer;
-import java.time.Instant;
 import java.util.Map;
 
 /**
+ * Fans out messages from a single input to multiple outputs.
  *
+ * @param <T> is the type of the messages passing through the fanout.
  */
 public final class Fanout<T>
 {
     private final Actor<T, T> recvActor;
 
-    private final Map<String, Actor<T, T>> outputs = Maps.newConcurrentMap();
+    private final Map<Object, Actor<T, T>> outputs = Maps.newConcurrentMap();
 
     private final Object lock = new Object();
 
@@ -32,42 +30,45 @@ public final class Fanout<T>
         outputs.values().forEach(x -> x.accept(message));
     }
 
-    public Input<T> input ()
+    /**
+     * Input Connection.
+     *
+     * @return return the input to the fanout.
+     */
+    public Input<T> dataIn ()
     {
         return recvActor.input();
     }
 
-    public Output<T> output (final String name)
+    /**
+     * Output Connection.
+     *
+     * @param key identifies the data-output to return.
+     * @return the identified data-output.
+     */
+    public Output<T> dataOut (final Object key)
     {
         synchronized (lock)
         {
-            if (outputs.containsKey(name) == false)
+            if (outputs.containsKey(key) == false)
             {
                 final Actor<T, T> identityActor = recvActor.stage().newActor().withScript((T x) -> x).create();
-                outputs.put(name, identityActor);
+                outputs.put(key, identityActor);
             }
         }
 
-        return outputs.get(name).output();
+        return outputs.get(key).output();
     }
 
+    /**
+     * Factory Method.
+     *
+     * @param <T> is the type of messages passing through the fanout.
+     * @param stage will be used to create private actors.
+     * @return the new fanout.
+     */
     public static <T> Fanout<T> newFanout (final Stage stage)
     {
         return new Fanout<>(stage);
-    }
-
-    public static void main (String[] args)
-    {
-        final Stage stage = Cascade.newStage();
-        final Clock clock = new Clock(stage).period(1000).start();
-        final Fanout<Instant> fanout = Fanout.newFanout(stage);
-        final Printer printer1 = new Printer(stage);
-        printer1.format("X = %s");
-        final Printer printer2 = new Printer(stage);
-        printer2.format("Y = %s");
-
-        clock.clockOut().connect(fanout.input());
-        fanout.output("UTC").connect(printer1.dataIn());
-        fanout.output("EST").connect(printer2.dataIn());
     }
 }

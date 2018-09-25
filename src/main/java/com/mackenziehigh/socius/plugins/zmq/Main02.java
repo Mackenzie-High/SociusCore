@@ -1,7 +1,7 @@
 package com.mackenziehigh.socius.plugins.zmq;
 
 import com.mackenziehigh.cascade.Cascade;
-import com.mackenziehigh.socius.plugins.Printer;
+import com.mackenziehigh.socius.plugins.io.Printer;
 import java.io.IOException;
 
 public final class Main02

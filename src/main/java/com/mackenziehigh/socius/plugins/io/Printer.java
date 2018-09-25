@@ -1,4 +1,4 @@
-package com.mackenziehigh.socius.plugins;
+package com.mackenziehigh.socius.plugins.io;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;

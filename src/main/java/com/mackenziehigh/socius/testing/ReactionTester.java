@@ -43,6 +43,12 @@ public final class ReactionTester
         return stage;
     }
 
+    public <I, O> ReactionTester execute (final Step task)
+    {
+        steps.add(task);
+        return this;
+    }
+
     public <I, O> ReactionTester send (final Actor<I, O> actor,
                                        final I message)
     {

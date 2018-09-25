@@ -5,11 +5,17 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 /**
  *
  */
-public interface ChannelDownlink<T>
+public interface ChannelDownlink<K, T>
 {
-    public ChannelDownlink<T> subscribe (Actor<T, ?> connector,
-                                         String channelName);
+    public ChannelDownlink<K, T> subscribe (Actor<T, ?> connector,
+                                            K key);
 
-    public ChannelDownlink<T> subscribe (Actor.Input<T> connector,
-                                         String channelName);
+    public ChannelDownlink<K, T> subscribe (Actor.Input<T> connector,
+                                            K key);
+
+    public ChannelDownlink<K, T> unsubscribe (Actor<T, ?> connector,
+                                              K key);
+
+    public ChannelDownlink<K, T> unsubscribe (Actor.Input<T> connector,
+                                              K key);
 }
