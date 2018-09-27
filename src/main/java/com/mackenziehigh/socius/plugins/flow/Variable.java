@@ -4,6 +4,7 @@ import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -57,6 +58,16 @@ public final class Variable<T>
     {
         final T value = variable.get();
         dataOut.dataIn().send(value == null ? value : null);
+    }
+
+    /**
+     * Get the current value stored in the variable.
+     *
+     * @return the current value, if any.
+     */
+    public Optional<T> value ()
+    {
+        return Optional.ofNullable(variable.get());
     }
 
     /**

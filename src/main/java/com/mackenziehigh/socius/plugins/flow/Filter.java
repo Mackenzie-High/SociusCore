@@ -9,6 +9,8 @@ import java.util.function.Predicate;
 /**
  * Filters incoming messages based on a predicate and
  * forwards only those messages that the predicate accepts.
+ *
+ * @param <T> is the type of messages flowing through the filter.
  */
 public final class Filter<T>
 {

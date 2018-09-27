@@ -1,88 +1,106 @@
 package com.mackenziehigh.socius.plugins.flow;
 
-import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.plugins.io.Printer;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Message Bus for (N x N) <i>Intra</i>-Process-Communication.
  *
+ * @param <M> is the type of messages that flow through the message-bus.
  */
 public final class Bus<M>
 {
     private final Stage stage;
 
-    private final Actor<M, M> hub;
+    /**
+     * This processor is used to connect the inputs to the outputs.
+     */
+    private final Processor<M> hub;
 
-    private final Map<Object, Actor<M, M>> inputs = new ConcurrentHashMap<>();
+    /**
+     * Messages are routed from these processors to the hub.
+     *
+     * <p>
+     * In theory, the inputs could have been connected directly to the hub.
+     * However, in practice, that would be inefficient,
+     * because actors use copy-on-write lists in their connectors.
+     * </p>
+     */
+    private final Map<Object, Processor<M>> inputs = new ConcurrentHashMap<>();
 
-    private final Map<Object, Actor<M, M>> outputs = new ConcurrentHashMap<>();
+    /**
+     * Messages are routed from the hub to these processors.
+     *
+     * <p>
+     * In theory, the outputs could have been connected directly to the hub.
+     * However, in practice, that would be inefficient,
+     * because actors use copy-on-write lists in their connectors.
+     * </p>
+     */
+    private final Map<Object, Processor<M>> outputs = new ConcurrentHashMap<>();
+
+    private final Collection<Processor<M>> outputsView = outputs.values();
 
     private Bus (final Stage stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
-        this.hub = stage.newActor().withScript(this::forwardFromHub).withLinkedInflowQueue().create();
+        this.hub = Processor.newProcessor(stage);
     }
 
-    public synchronized Input<M> input (final Object key)
+    /**
+     * Get a named input that supplies messages to this message-bus.
+     *
+     * @param key identifies the input to retrieve.
+     * @return the named input.
+     */
+    public Input<M> dataIn (final Object key)
     {
-        if (inputs.containsKey(key) == false)
-        {
-            final Actor<M, M> actor = stage.newActor().withScript(this::forwardToHub).create();
-            inputs.put(key, actor);
-        }
-
-        final Actor<M, M> actor = inputs.get(key);
-
-        return actor.input();
+        // Thread Safe.
+        inputs.putIfAbsent(key, Processor.newProcessor(stage, this::forwardToHub));
+        return inputs.get(key).dataIn();
     }
 
-    public synchronized Output<M> output (final Object key)
+    /**
+     * Get a named output that transmits messages from this message-bus.
+     *
+     * @param key identifies the output to retrieve.
+     * @return the named output.
+     */
+    public Output<M> dataOut (final Object key)
     {
-        if (outputs.containsKey(key) == false)
-        {
-            final Actor<M, M> actor = stage.newActor().withScript((M x) -> x).create();
-            outputs.put(key, actor);
-        }
-
-        final Actor<M, M> actor = outputs.get(key);
-
-        return actor.output();
+        // Thread Safe.
+        outputs.put(key, Processor.newProcessor(stage, this::forwardFromHub));
+        return outputs.get(key).dataOut();
     }
 
-    private void forwardToHub (final M message)
-    {
-        hub.accept(message);
-    }
-
-    private void forwardFromHub (final M message)
-    {
-        outputs.values().stream().forEach(x -> x.accept(message));
-    }
-
+    /**
+     * Factory Method.
+     *
+     * @param <M> is the type of messages that flow through the message-bus.
+     * @param stage will be used to create private actors.
+     * @return the new message-bus.
+     */
     public static <M> Bus<M> newBus (final Stage stage)
     {
         return new Bus<>(stage);
     }
 
-    public static void main (String[] args)
+    private void forwardToHub (final M message)
     {
-        final Stage stage = Cascade.newStage();
-        final Bus<Integer> bus = Bus.newBus(stage);
+        hub.dataIn().send(message);
+    }
 
-        final Printer p = new Printer(stage);
-        p.format("X = %s");
-        bus.output("p").connect(p.dataIn());
-        final Printer q = new Printer(stage);
-        q.format("Y = %s");
-        bus.output("q").connect(q.dataIn());
-
-        bus.input("x").send(100);
+    private void forwardFromHub (final M message)
+    {
+        for (Processor<M> output : outputsView)
+        {
+            output.dataIn().send(message);
+        }
     }
 
 }

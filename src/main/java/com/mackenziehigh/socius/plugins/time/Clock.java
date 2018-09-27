@@ -48,7 +48,7 @@ public final class Clock
     }
 
     public Clock period (final long value,
-                            final TimeUnit valueUnit)
+                         final TimeUnit valueUnit)
     {
         periodNanos = valueUnit.toNanos(value);
         return this;
