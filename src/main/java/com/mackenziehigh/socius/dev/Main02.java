@@ -1,9 +1,9 @@
 package com.mackenziehigh.socius.dev;
 
-import com.mackenziehigh.socius.plugins.flow.Mapper;
-import com.mackenziehigh.socius.plugins.flow.Processor;
-import com.mackenziehigh.socius.plugins.jfx.ActorsFx;
-import com.mackenziehigh.socius.plugins.jfx.StageFx;
+import com.mackenziehigh.socius.flow.Mapper;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.thirdparty.jfx.ActorsFx;
+import com.mackenziehigh.socius.thirdparty.jfx.StageFx;
 import java.time.Instant;
 import javafx.application.Application;
 import javafx.scene.Scene;

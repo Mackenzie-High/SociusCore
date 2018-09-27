@@ -1,5 +1,6 @@
 package com.mackenziehigh.socius.plugins.flow;
 
+import com.mackenziehigh.socius.flow.HashDispatcher;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;

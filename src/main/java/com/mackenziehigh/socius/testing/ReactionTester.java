@@ -136,20 +136,4 @@ public final class ReactionTester
     {
         stage.close();
     }
-
-    public static void main (String[] args)
-            throws Throwable
-    {
-        final ReactionTester tester = new ReactionTester();
-
-        final Actor<String, String> actor1 = tester.stage().newActor().withScript((String x) -> x).create();
-
-        tester.send(actor1, "A");
-        tester.send(actor1, "B");
-        tester.send(actor1, "C");
-        tester.expect(actor1, "A");
-        tester.expect(actor1, "B");
-//        tester.expect(actor1, "C");
-        tester.run();
-    }
 }
