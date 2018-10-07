@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mackenziehigh</groupId>
     <artifactId>socius</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
     <packaging>jar</packaging>
     <build>
 
@@ -70,7 +70,7 @@
         <dependency>
             <groupId>com.mackenziehigh</groupId>
             <artifactId>cascade</artifactId>
-            <version>[0.0,1000.0)</version>
+            <version>[0.0,)</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
