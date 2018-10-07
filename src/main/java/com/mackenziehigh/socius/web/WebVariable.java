@@ -3,7 +3,7 @@ package com.mackenziehigh.socius.web;
 /**
  *
  */
-public class WebVariable
+public final class WebVariable
 {
 
 }

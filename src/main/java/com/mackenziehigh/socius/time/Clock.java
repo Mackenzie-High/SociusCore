@@ -3,7 +3,6 @@ package com.mackenziehigh.socius.time;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.inception.Kernel.KernelApi;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executors;
@@ -25,11 +24,6 @@ public final class Clock
     {
         this.actor = stage.newActor().withScript((Instant x) -> x).create();
         this.clockOut = actor.output();
-    }
-
-    public Clock (final KernelApi kapi)
-    {
-        this(kapi.stage());
     }
 
     public Output<Instant> clockOut ()

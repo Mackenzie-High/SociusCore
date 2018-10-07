@@ -4,7 +4,6 @@ import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.inception.Kernel.KernelApi;
 import java.util.Objects;
 
 /**
@@ -27,11 +26,6 @@ public final class Printer<T>
         this.actor = stage.newActor().withScript(this::print).create();
         this.dataIn = actor.input();
         this.dataOut = actor.output();
-    }
-
-    public Printer (final KernelApi kapi)
-    {
-        this(kapi.stage());
     }
 
     public Input<T> dataIn ()
