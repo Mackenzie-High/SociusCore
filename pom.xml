@@ -70,7 +70,7 @@
         <dependency>
             <groupId>com.mackenziehigh</groupId>
             <artifactId>cascade</artifactId>
-            <version>0.1</version>
+            <version>[0.0,1000.0)</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
