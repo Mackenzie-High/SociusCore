@@ -1,36 +1,25 @@
 package com.mackenziehigh.socius.dev;
 
-import com.mackenziehigh.socius.utils.TrampolineMachine;
-import java.util.Scanner;
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.web.WebReceiver;
+import com.mackenziehigh.socius.web.WebServer;
+import java.io.IOException;
 
-/**
- *
- */
-public class Main01
-        implements TrampolineMachine
+public final class Main01
 {
-    String name;
-
-    private State queryName ()
-    {
-        name = new Scanner(System.in).nextLine();
-        return this::echoName;
-    }
-
-    private State echoName ()
-    {
-        System.out.println("Name = " + name);
-        return this::queryName;
-    }
-
-    @Override
-    public State initial ()
-    {
-        return this::queryName;
-    }
-
     public static void main (String[] args)
+            throws IOException
     {
-        new Main01().run();
+        final Stage stage = Cascade.newStage();
+
+        final WebServer server = WebServer.newWebServer().withPort(8082).build().start();
+
+        final WebReceiver recv = WebReceiver.newWebReceiver(stage).build();
+
+        server.requestsOut().connect(recv.requestIn());
+        server.responsesIn().connect(recv.responseOut());
+
+        System.in.read();
     }
 }

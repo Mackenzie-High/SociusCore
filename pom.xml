@@ -6,6 +6,8 @@
     <version>0.1</version>
     <packaging>jar</packaging>
     <build>
+
+        <!-- Code Coverage Plugin -->
         <plugins>
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -23,6 +25,22 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- This plugin ensures that dependencies get copied into target/lib. -->
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

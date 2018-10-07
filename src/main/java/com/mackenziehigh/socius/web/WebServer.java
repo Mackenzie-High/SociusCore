@@ -1,5 +1,6 @@
 package com.mackenziehigh.socius.web;
 
+import com.mackenziehigh.socius.gpb.http_m;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
@@ -10,9 +11,9 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.flow.Mapper;
 import com.mackenziehigh.socius.flow.Processor;
-import com.mackenziehigh.socius.web.HTTP.Header;
-import com.mackenziehigh.socius.web.HTTP.Protocol;
-import com.mackenziehigh.socius.web.HTTP.QueryParameter;
+import com.mackenziehigh.socius.gpb.http_m.Header;
+import com.mackenziehigh.socius.gpb.http_m.Protocol;
+import com.mackenziehigh.socius.gpb.http_m.QueryParameter;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -147,13 +148,13 @@ public final class WebServer
      * This processor will be used to send HTTP requests out of the server,
      * so that external handler actors can process the requests.
      */
-    private final Processor<HTTP.Request> requestsOut = Processor.newProcessor(stage);
+    private final Processor<http_m.Request> requestsOut = Processor.newProcessor(stage);
 
     /**
      * This processor will receive the HTTP responses from the external actors
      * and then will route those responses to the originating connection.
      */
-    private final Processor<HTTP.Response> responsesIn = Processor.newProcessor(stage, this::onResponse);
+    private final Processor<http_m.Response> responsesIn = Processor.newProcessor(stage, this::onResponse);
 
     /**
      * Sole Constructor.
@@ -175,7 +176,7 @@ public final class WebServer
      *
      * @return the connection.
      */
-    public Output<HTTP.Request> requestsOut ()
+    public Output<http_m.Request> requestsOut ()
     {
         return requestsOut.dataOut();
     }
@@ -195,7 +196,7 @@ public final class WebServer
      *
      * @return the connection.
      */
-    public Input<HTTP.Response> responsesIn ()
+    public Input<http_m.Response> responsesIn ()
     {
         return responsesIn.dataIn();
     }
@@ -292,7 +293,7 @@ public final class WebServer
         }
     }
 
-    private void onResponse (final HTTP.Response response)
+    private void onResponse (final http_m.Response response)
     {
         routeResponse(response);
     }
@@ -303,7 +304,7 @@ public final class WebServer
      *
      * @param response needs to be send to a client.
      */
-    private void routeResponse (final HTTP.Response response)
+    private void routeResponse (final http_m.Response response)
     {
         /**
          * Get the Correlation-ID that allows us to map responses to requests.
@@ -412,7 +413,7 @@ public final class WebServer
         {
             if (msg instanceof FullHttpRequest)
             {
-                final HTTP.Request encodedRequest = encode((FullHttpRequest) msg);
+                final http_m.Request encodedRequest = encode((FullHttpRequest) msg);
                 final String correlationId = encodedRequest.getCorrelationId();
 
                 /**
@@ -458,12 +459,12 @@ public final class WebServer
             ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
 
-        private HTTP.Request encode (final FullHttpRequest request)
+        private http_m.Request encode (final FullHttpRequest request)
                 throws URISyntaxException
         {
             final String correlationId = UUID.randomUUID().toString();
 
-            final HTTP.Request.Builder builder = HTTP.Request.newBuilder();
+            final http_m.Request.Builder builder = http_m.Request.newBuilder();
 
             builder.setServerName(serverName);
             builder.setServerId(serverId);
@@ -534,7 +535,7 @@ public final class WebServer
             {
                 for (Cookie cookie : ServerCookieDecoder.STRICT.decode(header))
                 {
-                    final HTTP.Cookie.Builder cookieBuilder = HTTP.Cookie.newBuilder();
+                    final http_m.Cookie.Builder cookieBuilder = http_m.Cookie.newBuilder();
 
                     cookieBuilder.setDomain(cookie.domain());
                     cookieBuilder.setHttpOnly(cookie.isHttpOnly());
@@ -601,7 +602,7 @@ public final class WebServer
             return timeout.compareTo(other.timeout);
         }
 
-        public void send (final HTTP.Response encodedResponse)
+        public void send (final http_m.Response encodedResponse)
         {
             /**
              * Sending a response is a one-shot operation.
@@ -800,15 +801,15 @@ public final class WebServer
                 .build()
                 .start();
 
-        final Mapper<HTTP.Request, HTTP.Response> handler = Mapper.newMapper(stage, WebServer::echo);
+        final Mapper<http_m.Request, http_m.Response> handler = Mapper.newMapper(stage, WebServer::echo);
 
         server.requestsOut().connect(handler.dataIn());
         server.responsesIn().connect(handler.dataOut());
     }
 
-    private static HTTP.Response echo (final HTTP.Request req)
+    private static http_m.Response echo (final http_m.Request req)
     {
-        final HTTP.Response.Builder rep = HTTP.Response.newBuilder();
+        final http_m.Response.Builder rep = http_m.Response.newBuilder();
 
         rep.setRequest(req);
         rep.setContentType("text/plain");

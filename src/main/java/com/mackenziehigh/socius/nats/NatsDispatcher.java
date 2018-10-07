@@ -1,4 +1,4 @@
-package com.mackenziehigh.socius.thirdparty.nats;
+package com.mackenziehigh.socius.nats;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;

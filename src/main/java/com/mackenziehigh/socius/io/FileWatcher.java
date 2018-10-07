@@ -1,0 +1,9 @@
+package com.mackenziehigh.socius.io;
+
+/**
+ *
+ * @author mackenzie
+ */
+public class FileWatcher {
+
+}
