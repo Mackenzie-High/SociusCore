@@ -21,13 +21,13 @@ public final class Batcher<T>
     private final List<Queue<T>> queues;
 
     private Batcher (final Stage stage,
-                     final int count)
+                     final int arity)
     {
-        this.dataIn = new ArrayList<>(count);
-        this.queues = new ArrayList<>(count);
+        this.dataIn = new ArrayList<>(arity);
+        this.queues = new ArrayList<>(arity);
         this.dataOut = Processor.newProcessor(stage);
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < arity; i++)
         {
             final int idx = i;
             dataIn.add(Processor.newProcessor(stage, (T msg) -> onMessage(idx, msg)));
@@ -66,8 +66,8 @@ public final class Batcher<T>
     }
 
     public static <T> Batcher<T> newBatcher (final Stage stage,
-                                             final int count)
+                                             final int arity)
     {
-        return new Batcher<>(stage, count);
+        return new Batcher<>(stage, arity);
     }
 }

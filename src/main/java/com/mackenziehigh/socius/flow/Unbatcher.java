@@ -19,13 +19,13 @@ public final class Unbatcher<T>
     private final List<Processor<T>> dataOut;
 
     private Unbatcher (final Stage stage,
-                       final int count)
+                       final int arity)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.dataIn = Processor.newProcessor(stage, this::onMessage);
         final ImmutableList.Builder<Processor<T>> builder = ImmutableList.builder();
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < arity; i++)
         {
             builder.add(Processor.newProcessor(stage));
         }
@@ -59,8 +59,8 @@ public final class Unbatcher<T>
     }
 
     public static <T> Unbatcher<T> newUnbatcher (final Stage stage,
-                                                 final int count)
+                                                 final int arity)
     {
-        return new Unbatcher<>(stage, count);
+        return new Unbatcher<>(stage, arity);
     }
 }
