@@ -6,7 +6,7 @@ import org.junit.Test;
 /**
  * Unit Test.
  */
-public final class DiskVariableTest
+public final class FileVariableTest
 {
     @Test
     public void test ()

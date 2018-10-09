@@ -7,7 +7,6 @@ import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
@@ -109,29 +108,4 @@ public final class Deduplicator<K, T>
         }
     }
 
-    public static void main (String[] args)
-            throws Throwable
-    {
-        final ReactionTester tester = new ReactionTester();
-        final Deduplicator<String, String> dedup = Deduplicator.<String, String>newDeduplicator(tester.stage())
-                .withKeyFunction(x -> x)
-                .withCapacity(3)
-                .build();
-        tester.stage().addErrorHandler(System.out::println);
-
-        tester.send(dedup.dataIn(), "A");
-        tester.send(dedup.dataIn(), "B");
-        tester.send(dedup.dataIn(), "C");
-        tester.send(dedup.dataIn(), "D");
-        tester.send(dedup.dataIn(), "E");
-        tester.send(dedup.dataIn(), "E");
-        tester.send(dedup.dataIn(), "F");
-        tester.expect(dedup.dataOut(), "A");
-        tester.expect(dedup.dataOut(), "B");
-        tester.expect(dedup.dataOut(), "C");
-        tester.expect(dedup.dataOut(), "D");
-        tester.expect(dedup.dataOut(), "E");
-        tester.expect(dedup.dataOut(), "F");
-        tester.run();
-    }
 }

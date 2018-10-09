@@ -1,6 +1,6 @@
 package com.mackenziehigh.socius.flow;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
@@ -11,23 +11,28 @@ import java.util.function.Function;
 
 /**
  * Conditionally routes messages based on a table lookup.
+ *
+ * @param <T>
  */
-public final class TableInserter<T>
+public final class TableInserter<K, T>
 {
+    private final Stage stage;
+
     private final Processor<T> procDataIn;
 
     private final Processor<T> procDataOut;
 
-    private final Map<Object, Input<T>> routes;
+    private final Map<K, Input<T>> routes = Maps.newConcurrentMap();
 
-    private final Function<T, Object> extractor;
+    private final Function<T, K> extractor;
 
-    private TableInserter (final Builder<T> builder)
+    private TableInserter (final Stage stage,
+                           final Function<T, K> extractor)
     {
-        this.procDataIn = Processor.newProcessor(builder.stage, this::onMessage);
-        this.procDataOut = Processor.newProcessor(builder.stage);
-        this.routes = ImmutableMap.copyOf(builder.routes);
-        this.extractor = builder.extractor;
+        this.stage = Objects.requireNonNull(stage, "stage");
+        this.procDataIn = Processor.newProcessor(stage, this::onMessage);
+        this.procDataOut = Processor.newProcessor(stage);
+        this.extractor = Objects.requireNonNull(extractor, "extractor");
     }
 
     private void onMessage (final T message)
@@ -56,44 +61,17 @@ public final class TableInserter<T>
         return procDataOut.dataOut();
     }
 
-    public static <T> Builder<T> newTableInserter (final Stage stage)
+    public synchronized Output<T> selectIf (final K key)
     {
-        return new Builder(stage);
+        Preconditions.checkState(routes.containsKey(key) == false, "Duplicate: selectIf(%s)", key);
+        final Processor<T> proc = Processor.newProcessor(stage);
+        routes.put(key, proc.dataIn());
+        return proc.dataOut();
     }
 
-    public static final class Builder<T>
+    public static <K, T> TableInserter<K, T> newTableInserter (final Stage stage,
+                                                               final Function<T, K> extractor)
     {
-        private final Stage stage;
-
-        private Function<T, Object> extractor = null;
-
-        private final Map<Object, Input<T>> routes = Maps.newHashMap();
-
-        private Builder (final Stage stage)
-        {
-            this.stage = Objects.requireNonNull(stage, "stage");
-        }
-
-        public Builder<T> withKeyExtractor (final Function<T, Object> functor)
-        {
-            this.extractor = Objects.requireNonNull(functor, "functor");
-            return this;
-        }
-
-        public Builder<T> withRoute (final Object key,
-                                     final Input<T> output)
-        {
-            Objects.requireNonNull(key, "key");
-            Objects.requireNonNull(output, "output");
-            routes.put(key, output);
-            return this;
-        }
-
-        public TableInserter build ()
-        {
-            Objects.requireNonNull(extractor, "No key extractor function was specified.");
-            return new TableInserter(this);
-        }
+        return new TableInserter(stage, extractor);
     }
-
 }

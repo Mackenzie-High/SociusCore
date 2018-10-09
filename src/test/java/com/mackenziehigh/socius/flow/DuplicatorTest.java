@@ -1,6 +1,6 @@
 package com.mackenziehigh.socius.flow;
 
-import static org.junit.Assert.*;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -9,8 +9,57 @@ import org.junit.Test;
 public final class DuplicatorTest
 {
     @Test
-    public void test ()
+    public void test1 ()
+            throws Throwable
     {
-        fail();
+        final ReactionTester tester = new ReactionTester();
+        final Duplicator<Character> dup = Duplicator.newDuplicator(tester.stage(), 4);
+
+        tester.send(dup.dataIn(), 'A');
+        tester.send(dup.dataIn(), 'B');
+        tester.send(dup.dataIn(), 'C');
+        tester.expect(dup.dataOut(), 'A');
+        tester.expect(dup.dataOut(), 'A');
+        tester.expect(dup.dataOut(), 'A');
+        tester.expect(dup.dataOut(), 'A');
+        tester.expect(dup.dataOut(), 'B');
+        tester.expect(dup.dataOut(), 'B');
+        tester.expect(dup.dataOut(), 'B');
+        tester.expect(dup.dataOut(), 'B');
+        tester.expect(dup.dataOut(), 'C');
+        tester.expect(dup.dataOut(), 'C');
+        tester.expect(dup.dataOut(), 'C');
+        tester.expect(dup.dataOut(), 'C');
+        tester.requireEmptyOutputs();
+        tester.run();
+    }
+
+    @Test
+    public void test2 ()
+            throws Throwable
+    {
+        final ReactionTester tester = new ReactionTester();
+        final Duplicator<Character> dup = Duplicator.newDuplicator(tester.stage(), 3, 2);
+
+        tester.send(dup.dataIn(), 'A');
+        tester.send(dup.dataIn(), 'B');
+        tester.send(dup.dataIn(), 'C');
+        tester.send(dup.dataIn(), 'X');
+        tester.send(dup.dataIn(), 'Y');
+        tester.send(dup.dataIn(), 'Z');
+        tester.expect(dup.dataOut(), 'A');
+        tester.expect(dup.dataOut(), 'B');
+        tester.expect(dup.dataOut(), 'C');
+        tester.expect(dup.dataOut(), 'A');
+        tester.expect(dup.dataOut(), 'B');
+        tester.expect(dup.dataOut(), 'C');
+        tester.expect(dup.dataOut(), 'X');
+        tester.expect(dup.dataOut(), 'Y');
+        tester.expect(dup.dataOut(), 'Z');
+        tester.expect(dup.dataOut(), 'X');
+        tester.expect(dup.dataOut(), 'Y');
+        tester.expect(dup.dataOut(), 'Z');
+        tester.requireEmptyOutputs();
+        tester.run();
     }
 }

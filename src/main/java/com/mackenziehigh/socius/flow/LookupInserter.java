@@ -1,13 +1,11 @@
 package com.mackenziehigh.socius.flow;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
-import java.util.List;
+import io.vavr.collection.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -16,17 +14,19 @@ import java.util.function.Predicate;
  */
 public final class LookupInserter<T>
 {
+    private final Stage stage;
+
     private final Processor<T> procDataIn;
 
     private final Processor<T> procDataOut;
 
-    private final List<Tuple2<Predicate<T>, Input<T>>> routes;
+    private volatile List<Tuple2<Predicate<T>, Input<T>>> routes = List.empty();
 
-    private LookupInserter (final Builder<T> builder)
+    private LookupInserter (final Stage stage)
     {
-        this.procDataIn = Processor.newProcessor(builder.stage, this::onMessage);
-        this.procDataOut = Processor.newProcessor(builder.stage);
-        this.routes = ImmutableList.copyOf(builder.routes);
+        this.stage = Objects.requireNonNull(stage);
+        this.procDataIn = Processor.newProcessor(stage, this::onMessage);
+        this.procDataOut = Processor.newProcessor(stage);
     }
 
     private void onMessage (final T message)
@@ -43,7 +43,7 @@ public final class LookupInserter<T>
         procDataOut.dataIn().send(message);
     }
 
-    public Stage.Actor.Input<T> dataIn ()
+    public Input<T> dataIn ()
     {
         return procDataIn.dataIn();
     }
@@ -53,34 +53,17 @@ public final class LookupInserter<T>
         return procDataOut.dataOut();
     }
 
-    public static <T> Builder<T> newLookupInserter (final Stage stage)
+    public synchronized Output<T> selectIf (final Predicate<T> condition)
     {
-        return new Builder(stage);
+        Objects.requireNonNull(condition, "condition");
+        final Processor<T> proc = Processor.newProcessor(stage);
+        // Must be sync!
+        routes = routes.append(Tuple.of(condition, proc.dataIn()));
+        return proc.dataOut();
     }
 
-    public static final class Builder<T>
+    public static <T> LookupInserter<T> newLookupInserter (final Stage stage)
     {
-        private final Stage stage;
-
-        private final List<Tuple2<Predicate<T>, Input<T>>> routes = Lists.newLinkedList();
-
-        private Builder (final Stage stage)
-        {
-            this.stage = Objects.requireNonNull(stage, "stage");
-        }
-
-        public Builder withRoute (final Input<T> output,
-                                  final Predicate<T> condition)
-        {
-            Objects.requireNonNull(output, "output");
-            Objects.requireNonNull(condition, "condition");
-            routes.add(Tuple.of(condition, output));
-            return this;
-        }
-
-        public LookupInserter build ()
-        {
-            return new LookupInserter(this);
-        }
+        return new LookupInserter(stage);
     }
 }

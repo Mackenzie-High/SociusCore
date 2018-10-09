@@ -49,7 +49,7 @@ public final class Bus<M>
     private Bus (final Stage stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
-        this.hub = Processor.newProcessor(stage);
+        this.hub = Processor.newProcessor(stage, this::forwardFromHub);
     }
 
     /**
@@ -74,7 +74,7 @@ public final class Bus<M>
     public Output<M> dataOut (final Object key)
     {
         // Thread Safe.
-        outputs.put(key, Processor.newProcessor(stage, this::forwardFromHub));
+        outputs.putIfAbsent(key, Processor.newProcessor(stage));
         return outputs.get(key).dataOut();
     }
 

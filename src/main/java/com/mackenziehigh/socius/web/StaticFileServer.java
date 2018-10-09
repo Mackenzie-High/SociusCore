@@ -1,6 +1,5 @@
 package com.mackenziehigh.socius.web;
 
-import com.mackenziehigh.socius.gpb.http_m;
 import com.google.common.base.Preconditions;
 import com.google.common.net.MediaType;
 import com.google.protobuf.ByteString;
@@ -8,6 +7,7 @@ import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.gpb.http_m;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,6 +15,8 @@ import java.util.Objects;
 
 /**
  * Simple File Server.
+ *
+ * TODO: Resources too?
  */
 public final class StaticFileServer
 {

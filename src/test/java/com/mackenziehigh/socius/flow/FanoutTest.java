@@ -1,6 +1,6 @@
 package com.mackenziehigh.socius.flow;
 
-import static org.junit.Assert.*;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -10,7 +10,18 @@ public final class FanoutTest
 {
     @Test
     public void test ()
+            throws Throwable
     {
-        fail();
+        final ReactionTester tester = new ReactionTester();
+        final Fanout<String> fanout = Fanout.newFanout(tester.stage());
+
+        tester.send(fanout.dataIn(), "Mercury");
+        tester.expect(fanout.dataOut("A"), "Mercury");
+        tester.expect(fanout.dataOut("B"), "Mercury");
+        tester.send(fanout.dataIn(), "Venus");
+        tester.expect(fanout.dataOut("A"), "Venus");
+        tester.expect(fanout.dataOut("B"), "Venus");
+        tester.requireEmptyOutputs();
+        tester.run();
     }
 }

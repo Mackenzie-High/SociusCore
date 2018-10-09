@@ -3,23 +3,23 @@ package com.mackenziehigh.socius.testing;
 import com.google.common.base.Verify;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.mackenziehigh.cascade.Cascade;
+import com.google.common.collect.Queues;
+import com.mackenziehigh.cascade.Cascade.AbstractStage;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 
 /**
  *
  */
 public final class ReactionTester
-        implements AutoCloseable
 {
     @FunctionalInterface
     public interface Step
@@ -28,15 +28,13 @@ public final class ReactionTester
                 throws Throwable;
     }
 
-    private final Stage stage = Cascade.newStage();
+    private final SyncStage stage = new SyncStage();
 
     private final List<Step> steps = Lists.newLinkedList();
 
     private final Map<Output<?>, BlockingDeque<Object>> expectedOutputs = Maps.newConcurrentMap();
 
     private final Map<Output<?>, BlockingDeque<Object>> actualOutputs = Maps.newConcurrentMap();
-
-    private final Map<Output<?>, BlockingDeque<Object>> outputSinks = Maps.newConcurrentMap();
 
     public Stage stage ()
     {
@@ -99,7 +97,7 @@ public final class ReactionTester
             final BlockingDeque<Object> queue2 = actualOutputs.get(output);
 
             final Object expected = expectedOutputs.get(output).pollFirst();
-            final Object actual = actualOutputs.get(output).pollFirst(1, TimeUnit.SECONDS);
+            final Object actual = actualOutputs.get(output).pollFirst();
 
             Verify.verify(Objects.equals(expected, actual), "expected (%s) != actual (%s)", expected, actual);
         };
@@ -111,8 +109,31 @@ public final class ReactionTester
 
     public ReactionTester requireEmptyOutputs ()
     {
-        steps.add(() -> expectedOutputs.values().forEach(x -> Verify.verify(x.isEmpty(), "Non Empty Output")));
+        steps.add(() -> actualOutputs.values().forEach(x -> Verify.verify(x.isEmpty(), "Non Empty Output: %s", x)));
         return this;
+    }
+
+    public ReactionTester dumpOutputs ()
+    {
+        steps.add(() -> actualOutputs.values().forEach(System.out::println));
+        return this;
+    }
+
+    public ReactionTester println (final String line)
+    {
+        steps.add(() -> System.out.println(line));
+        return this;
+    }
+
+    public ReactionTester printOutput (final Output<?> output)
+    {
+        steps.add(() -> System.out.println(actualOutputs.get(output)));
+        return this;
+    }
+
+    public ReactionTester printOutput (final Actor<?, ?> actor)
+    {
+        return printOutput(actor.output());
     }
 
     public void run ()
@@ -123,6 +144,7 @@ public final class ReactionTester
             for (Step step : steps)
             {
                 step.run();
+                stage.run();
             }
         }
         finally
@@ -131,9 +153,30 @@ public final class ReactionTester
         }
     }
 
-    @Override
-    public void close ()
+    private final class SyncStage
+            extends AbstractStage
     {
-        stage.close();
-    }
+        private final Queue<AbstractStage.ActorTask> tasks = Queues.newConcurrentLinkedQueue();
+
+        @Override
+        protected void onSubmit (final AbstractStage.ActorTask task)
+        {
+            tasks.add(task);
+        }
+
+        @Override
+
+        protected void onStageClose ()
+        {
+            // Pass.
+        }
+
+        public void run ()
+        {
+            while (tasks.isEmpty() == false)
+            {
+                tasks.poll().run();
+            }
+        }
+    };
 }

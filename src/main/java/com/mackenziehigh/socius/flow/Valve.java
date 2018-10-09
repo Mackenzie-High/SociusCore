@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Conditionally forwards messages based on a boolean flag (open|closed).
+ *
+ * @param <T> is the type of messages that flow through the valve.
  */
 public final class Valve<T>
 {
