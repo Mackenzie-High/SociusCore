@@ -1,11 +1,10 @@
 package com.mackenziehigh.socius.flow;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableList;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -17,12 +16,21 @@ public final class Unbatcher<T>
 
     private final Processor<List<T>> dataIn;
 
-    private final Map<Integer, Processor<T>> dataOut = Maps.newConcurrentMap();
+    private final List<Processor<T>> dataOut;
 
-    private Unbatcher (final Stage stage)
+    private Unbatcher (final Stage stage,
+                       final int count)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.dataIn = Processor.newProcessor(stage, this::onMessage);
+        final ImmutableList.Builder<Processor<T>> builder = ImmutableList.builder();
+
+        for (int i = 0; i < count; i++)
+        {
+            builder.add(Processor.newProcessor(stage));
+        }
+
+        this.dataOut = builder.build();
     }
 
     private void onMessage (final List<T> batch)
@@ -47,19 +55,12 @@ public final class Unbatcher<T>
 
     public Output<T> dataOut (final int index)
     {
-        synchronized (dataOut)
-        {
-            if (dataOut.containsKey(index) == false)
-            {
-                dataOut.put(index, Processor.newProcessor(stage));
-            }
-        }
-
         return dataOut.get(index).dataOut();
     }
 
-    public static <T> Unbatcher<T> newUnbatcher (final Stage stage)
+    public static <T> Unbatcher<T> newUnbatcher (final Stage stage,
+                                                 final int count)
     {
-        return new Unbatcher<>(stage);
+        return new Unbatcher<>(stage, count);
     }
 }

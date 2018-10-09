@@ -24,11 +24,11 @@ public final class BatchInserter<T>
 
     private static final boolean NOT_ADDED_TO_BATCH = false;
 
-    private final Processor<T> dataIn;
+    private final Processor<T> procDataIn;
 
-    private final Processor<T> dataOut;
+    private final Processor<T> procDataOut;
 
-    private final Processor<List<T>> batchOut;
+    private final Processor<List<T>> procBatchOut;
 
     private final List<Action<T>> actions;
 
@@ -38,9 +38,9 @@ public final class BatchInserter<T>
                            final List<Action<T>> actions)
     {
         this.actions = ImmutableList.copyOf(actions);
-        this.dataIn = Processor.newProcessor(stage, this::onMessage);
-        this.dataOut = Processor.newProcessor(stage);
-        this.batchOut = Processor.newProcessor(stage);
+        this.procDataIn = Processor.newProcessor(stage, this::onMessage);
+        this.procDataOut = Processor.newProcessor(stage);
+        this.procBatchOut = Processor.newProcessor(stage);
     }
 
     private void onMessage (final T message)
@@ -56,10 +56,14 @@ public final class BatchInserter<T>
         {
             if (action.receive(message) == ADDED_TO_BATCH)
             {
-                action.tally(counter);
                 received = ADDED_TO_BATCH;
                 break;
             }
+        }
+
+        for (Action<T> action : actions)
+        {
+            action.tally(counter);
         }
 
         /**
@@ -68,7 +72,7 @@ public final class BatchInserter<T>
          */
         if (received == NOT_ADDED_TO_BATCH)
         {
-            dataOut.dataIn().send(message);
+            procDataOut.dataIn().send(message);
             return;
         }
 
@@ -85,11 +89,12 @@ public final class BatchInserter<T>
             for (Action<T> action : actions)
             {
                 action.append(batchList);
+                action.clear();
             }
 
             final List<T> batch = ImmutableList.copyOf(batchList); // TODO: Use list builder.
 
-            batchOut.dataIn().send(batch);
+            procBatchOut.dataIn().send(batch);
         }
     }
 
@@ -100,7 +105,7 @@ public final class BatchInserter<T>
      */
     public Input<T> dataIn ()
     {
-        return dataIn.dataIn();
+        return procDataIn.dataIn();
     }
 
     /**
@@ -110,7 +115,7 @@ public final class BatchInserter<T>
      */
     public Output<T> dataOut ()
     {
-        return dataOut.dataOut();
+        return procDataOut.dataOut();
     }
 
     /**
@@ -120,7 +125,7 @@ public final class BatchInserter<T>
      */
     public Output<List<T>> batchOut ()
     {
-        return batchOut.dataOut();
+        return procBatchOut.dataOut();
     }
 
     /**
@@ -206,7 +211,7 @@ public final class BatchInserter<T>
 
             if (alreadyInBatch)
             {
-                return true;
+                return NOT_ADDED_TO_BATCH;
             }
             else if (condition.test(message))
             {
@@ -232,6 +237,11 @@ public final class BatchInserter<T>
         public void append (final List<T> list)
         {
             list.add(data.get());
+        }
+
+        public void clear ()
+        {
+            data.set(null);
         }
     }
 
