@@ -1,7 +1,6 @@
 package com.mackenziehigh.socius.flow;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,28 +12,65 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public final class Valve<T>
 {
-    private final Actor<T, T> pipe;
+    private final Processor<T> procDataIn;
 
-    private final Actor<Boolean, Boolean> toggle;
+    private final Processor<T> procDataOut;
+
+    private final Processor<Boolean> procToggleIn;
+
+    private final Processor<Boolean> procToggleOut;
+
+    private final Object lock = new Object();
 
     private final AtomicBoolean flag = new AtomicBoolean();
 
     private Valve (final Stage stage,
                    final boolean open)
     {
-        this.pipe = stage.newActor().withScript(this::onPipeMessage).create();
-        this.toggle = stage.newActor().withScript(this::onToggleMessage).create();
+        this.procDataIn = Processor.newProcessor(stage, this::onDataIn);
+        this.procDataOut = Processor.newProcessor(stage);
+        this.procToggleIn = Processor.newProcessor(stage, this::onToggleIn);
+        this.procToggleOut = Processor.newProcessor(stage, this::onToggleOut);
+        this.procDataIn.dataOut().connect(this.procDataOut.dataIn());
         this.flag.set(open);
     }
 
-    private T onPipeMessage (final T message)
+    private T onDataIn (final T message)
     {
         return flag.get() ? message : null;
     }
 
-    private void onToggleMessage (final Boolean message)
+    private void onToggleIn (final Boolean message)
     {
-        flag.set(message);
+        toggle(message);
+    }
+
+    private Boolean onToggleOut (final Boolean message)
+    {
+        return flag.get();
+    }
+
+    /**
+     * Open or close this valve.
+     *
+     * @param state is true, if the valve should be open, false otherwise.
+     * @return this.
+     */
+    public Valve<T> toggle (final boolean state)
+    {
+        /**
+         * Open or close the valve.
+         */
+        flag.set(state);
+
+        /**
+         * Notify down-stream parties of the change.
+         * We must ensure thread-safety, since this method may be called concurrently.
+         * A simple trick to ensure this is to let onToggleOut() read the flag.
+         */
+        procToggleOut.dataIn().send(true); // true is merely a placeholder.
+
+        return this;
     }
 
     /**
@@ -54,7 +90,7 @@ public final class Valve<T>
      */
     public boolean isClosed ()
     {
-        return flag.get();
+        return !isOpen();
     }
 
     /**
@@ -65,7 +101,7 @@ public final class Valve<T>
      */
     public Input<T> dataIn ()
     {
-        return pipe.input();
+        return procDataIn.dataIn();
     }
 
     /**
@@ -76,7 +112,7 @@ public final class Valve<T>
      */
     public Output<T> dataOut ()
     {
-        return pipe.output();
+        return procDataOut.dataOut();
     }
 
     /**
@@ -86,7 +122,7 @@ public final class Valve<T>
      */
     public Input<Boolean> toggleIn ()
     {
-        return toggle.input();
+        return procToggleIn.dataIn();
     }
 
     /**
@@ -98,9 +134,9 @@ public final class Valve<T>
      *
      * @return the valve control output.
      */
-    public Input<Boolean> toggleOut ()
+    public Output<Boolean> toggleOut ()
     {
-        return toggle.input();
+        return procToggleOut.dataOut();
     }
 
     /**

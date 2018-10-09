@@ -4,7 +4,7 @@ import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.time.Instant;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -14,60 +14,70 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class Variable<T>
 {
-    private final Processor<T> dataIn;
+    private final Processor<T> procDataIn;
 
-    private final Processor<T> dataOut;
+    private final Mapper<Boolean, T> procDataOut;
 
-    private final Processor<Boolean> clearIn;
-
-    private final Processor<Boolean> clearOut;
-
-    private final Processor<Instant> clockIn;
-
-    private final Processor<Instant> clockOut;
+    private final Processor<Instant> procClock;
 
     private final AtomicReference<T> variable = new AtomicReference<>();
 
     private Variable (final Stage stage,
                       final T initial)
     {
-        this.clockIn = Processor.newProcessor(stage, this::onGet);
-        this.clockOut = Processor.newProcessor(stage);
-        this.clearIn = Processor.newProcessor(stage, this::onClear);
-        this.clearOut = Processor.newProcessor(stage);
-        this.dataIn = Processor.newProcessor(stage, this::onSet);
-        this.dataOut = Processor.newProcessor(stage);
+        this.procClock = Processor.newProcessor(stage, this::onGet);
+        this.procDataIn = Processor.newProcessor(stage, this::onSet);
+        this.procDataOut = Mapper.newMapper(stage, this::onSend);
         this.variable.set(initial);
-    }
-
-    private void onClear (final Boolean message)
-    {
-        if (message)
-        {
-            variable.set(null);
-        }
     }
 
     private void onSet (final T message)
     {
         variable.set(message);
-        dataOut.dataIn().send(message);
+        sendValueThreadSafely();
     }
 
-    private void onGet (final Instant message)
+    private Instant onGet (final Instant message)
     {
-        final T value = variable.get();
-        dataOut.dataIn().send(value == null ? value : null);
+        sendValueThreadSafely();
+        return message;
+    }
+
+    private T onSend (final Boolean message)
+    {
+        return variable.get();
+    }
+
+    /**
+     * Send a constant to onSend(), which will then read the variable.
+     * This ensures that the dataOut() always gets the most up-to-date value.
+     */
+    private void sendValueThreadSafely ()
+    {
+        procDataOut.dataIn().send(true);
+    }
+
+    /**
+     * Set the value currently stored in this variable.
+     *
+     * @param value is the new value.
+     * @return this.
+     */
+    public Variable<T> set (final T value)
+    {
+        variable.set(value);
+        sendValueThreadSafely();
+        return this;
     }
 
     /**
      * Get the current value stored in the variable.
      *
-     * @return the current value, if any.
+     * @return the current value.
      */
-    public Optional<T> value ()
+    public T get ()
     {
-        return Optional.ofNullable(variable.get());
+        return variable.get();
     }
 
     /**
@@ -77,7 +87,7 @@ public final class Variable<T>
      */
     public Input<T> dataIn ()
     {
-        return dataIn.dataIn();
+        return procDataIn.dataIn();
     }
 
     /**
@@ -87,7 +97,7 @@ public final class Variable<T>
      */
     public Output<T> dataOut ()
     {
-        return dataOut.dataOut();
+        return procDataOut.dataOut();
     }
 
     /**
@@ -97,7 +107,7 @@ public final class Variable<T>
      */
     public Input<Instant> clockIn ()
     {
-        return clockIn.dataIn();
+        return procClock.dataIn();
     }
 
     /**
@@ -107,39 +117,7 @@ public final class Variable<T>
      */
     public Output<Instant> clockOut ()
     {
-        return clockOut.dataOut();
-    }
-
-    /**
-     * Use this input to cause this variable to be cleared.
-     *
-     * @return the input connector.
-     */
-    public Input<Boolean> clearIn ()
-    {
-        return clearIn.dataIn();
-    }
-
-    /**
-     * This output merely forwards the clear-in messages.
-     *
-     * @return the output connector.
-     */
-    public Output<Boolean> clearOut ()
-    {
-        return clearOut.dataOut();
-    }
-
-    /**
-     * Factory Method (Initially Empty Variable).
-     *
-     * @param <T> is the type of the value stored in the variable.
-     * @param stage will be used to create private actors.
-     * @return the new variable.
-     */
-    public static <T> Variable<T> newVariable (final Stage stage)
-    {
-        return new Variable<>(stage, null);
+        return procClock.dataOut();
     }
 
     /**
@@ -153,6 +131,8 @@ public final class Variable<T>
     public static <T> Variable<T> newVariable (final Stage stage,
                                                final T initial)
     {
+        Objects.requireNonNull(stage, "stage");
+        Objects.requireNonNull(initial, "initial");
         return new Variable<>(stage, initial);
     }
 }
