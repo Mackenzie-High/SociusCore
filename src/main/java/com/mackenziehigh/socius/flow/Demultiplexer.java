@@ -2,10 +2,11 @@ package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.Maps;
 import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import com.mackenziehigh.socius.flow.Multiplexer.Message;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 
 /**
@@ -13,19 +14,19 @@ import java.util.Objects;
  */
 public final class Demultiplexer<K, M>
 {
-    private final Cascade.Stage stage;
+    private final Stage stage;
 
-    private final Processor<Map.Entry<K, M>> input;
+    private final Processor<Message<K, M>> input;
 
     private final Map<K, Processor<M>> outputs = Maps.newConcurrentMap();
 
-    private Demultiplexer (final Cascade.Stage stage)
+    private Demultiplexer (final Stage stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.input = Processor.newProcessor(stage, this::onMessage);
     }
 
-    private void onMessage (final Entry<K, M> message)
+    private void onMessage (final Message<K, M> message)
     {
         /**
          * Get the destination directly from the map,
@@ -35,15 +36,15 @@ public final class Demultiplexer<K, M>
          * cannot occur due to a sender sending messages
          * with random keys.
          */
-        final Processor<M> dest = outputs.get(message.getKey());
+        final Processor<M> dest = outputs.get(message.key());
 
         if (dest != null)
         {
-            dest.dataIn().send(message.getValue());
+            dest.dataIn().send(message.message());
         }
     }
 
-    public Input<Map.Entry<K, M>> dataIn ()
+    public Input<Message<K, M>> dataIn ()
     {
         return input.dataIn();
     }
