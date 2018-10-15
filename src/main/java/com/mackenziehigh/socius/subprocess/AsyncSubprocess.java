@@ -1,13 +1,13 @@
 package com.mackenziehigh.socius.subprocess;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
+import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.flow.Processor;
-import com.mackenziehigh.socius.gpb.subprocess_m.ProcessRequest;
-import com.mackenziehigh.socius.gpb.subprocess_m.ProcessResponse;
+import com.mackenziehigh.socius.utils.memory.ByteSequence;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -16,9 +16,11 @@ import java.util.Scanner;
  */
 public final class AsyncSubprocess
 {
-    private final Processor<ProcessRequest> dataIn;
+    private final Processor<ByteSequence> procStdin;
 
-    private final Processor<ProcessResponse> dataOut;
+    private final Processor<ByteSequence> procStdout;
+
+    private final Processor<ByteSequence> procStderr;
 
     private final String staticId = null;
 
@@ -32,18 +34,19 @@ public final class AsyncSubprocess
 
     private AsyncSubprocess (final Builder builder)
     {
-        this.dataIn = Processor.newProcessor(builder.stage, this::onMessage);
-        this.dataOut = Processor.newProcessor(builder.stage);
+        this.procStdin = Processor.newProcessor(builder.stage, this::onMessage);
+        this.procStdout = Processor.newProcessor(builder.stage);
+        this.procStderr = Processor.newProcessor(builder.stage);
     }
 
-    private void onMessage (final ProcessRequest message)
+    private void onMessage (final ByteSequence message)
             throws IOException
     {
         startProcess(message);
         sendToStandardIn(message);
     }
 
-    private void startProcess (final ProcessRequest message)
+    private void startProcess (final ByteSequence message)
             throws IOException
     {
         if (process != null && process.isAlive())
@@ -64,14 +67,11 @@ public final class AsyncSubprocess
         stderrThread.start();
     }
 
-    private void sendToStandardIn (final ProcessRequest message)
+    private void sendToStandardIn (final ByteSequence message)
             throws IOException
     {
-        for (String line : message.getStdinList())
-        {
-            process.getOutputStream().write(line.getBytes(StandardCharsets.UTF_8));
-            process.getOutputStream().flush();
-        }
+        process.getOutputStream().write(message.toByteArray());
+        process.getOutputStream().flush();
     }
 
     private void readStandardOut (final InputStream stdout)
@@ -83,20 +83,28 @@ public final class AsyncSubprocess
         {
             final String line = scanner.nextLine();
 
-            final ProcessResponse response = ProcessResponse
-                    .newBuilder()
-                    .setStaticId(staticId)
-                    .setDynamicId(dynamicId)
-                    .addStdout(line)
-                    .build();
-
-            dataOut.dataIn().send(response);
+            //procStdout.dataIn().send(line);
         }
     }
 
     private void readStandardErr (final InputStream stdout)
     {
 
+    }
+
+    public Input<ByteSequence> stdin ()
+    {
+        return procStdin.dataIn();
+    }
+
+    public Output<ByteSequence> stdout ()
+    {
+        return procStdout.dataOut();
+    }
+
+    public Output<ByteSequence> stderr ()
+    {
+        return procStderr.dataOut();
     }
 
     public static Builder newAsyncSubprocess (final Stage stage)
@@ -108,12 +116,21 @@ public final class AsyncSubprocess
     {
         private final Stage stage;
 
+        private boolean prestart = false;
+
+        private boolean restart = false;
+
         public Builder (final Stage stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
         }
 
-        public AsyncSubprocess create ()
+        public Builder prestart ()
+        {
+            return this;
+        }
+
+        public AsyncSubprocess build ()
         {
             return new AsyncSubprocess(this);
         }
