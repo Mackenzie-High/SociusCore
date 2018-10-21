@@ -1,6 +1,5 @@
 package com.mackenziehigh.socius.time;
 
-import com.google.common.base.Preconditions;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -11,78 +10,158 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.IntUnaryOperator;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.LongUnaryOperator;
 
 /**
- *
+ * Frequency Oscillator.
  */
 public final class FrequencyOscillator
 {
-    private final Processor<Instant> clockOut;
-
     private final ScheduledExecutorService service;
 
-    private final int minimum;
-
-    private final int maximum;
-
-    private final IntUnaryOperator period;
+    private final LongUnaryOperator waveform;
 
     private final AtomicBoolean started = new AtomicBoolean();
 
-    private FrequencyOscillator (final ScheduledExecutorService service,
-                                 final IntUnaryOperator period,
-                                 final int minimum,
-                                 final int maximum)
+    private final AtomicBoolean stopped = new AtomicBoolean();
+
+    private final Processor<Instant> procClockOut;
+
+    private final AtomicLong seqnum = new AtomicLong();
+
+    private FrequencyOscillator (final Builder builder)
     {
-        Preconditions.checkArgument(minimum <= maximum, "minimum > maximum");
-        this.service = Objects.requireNonNull(service, "service");
-        this.period = Objects.requireNonNull(period, "period");
-        this.minimum = minimum;
-        this.maximum = maximum;
+        this.waveform = builder.waveform;
+
+        if (builder.service != null)
+        {
+            this.service = builder.service;
+        }
+        else
+        {
+            this.service = Executors.newSingleThreadScheduledExecutor(); // TODO
+        }
+
         final Stage stage = Cascade.newExecutorStage(service);
-        this.clockOut = Processor.newProcessor(stage);
+        this.procClockOut = Processor.newProcessor(stage);
     }
 
-    private void onTick (final int seqnum)
+    /**
+     * This output will receive ticks from the clock.
+     *
+     * @return the clock output.
+     */
+    public Output<Instant> clockOut ()
     {
-        final int delay = period.applyAsInt(seqnum);
-
-        service.schedule(() -> onTick(seqnum + 1), delay, TimeUnit.NANOSECONDS);
+        return procClockOut.dataOut();
     }
 
+    /**
+     * Call this method to cause the clock to start ticking.
+     *
+     * <p>
+     * This method is a no-op, if the clock was already started.
+     * </p>
+     *
+     * @return this.
+     */
     public FrequencyOscillator start ()
     {
         if (started.compareAndSet(false, true))
         {
-            service.submit(() -> onTick(minimum));
+            service.submit(this::onTick);
         }
 
         return this;
     }
 
+    private void onTick ()
+    {
+        procClockOut.dataIn().send(Instant.now());
+
+        if (stopped.get() == false)
+        {
+            final long delayNanos = waveform.applyAsLong(seqnum.incrementAndGet());
+            service.schedule(this::onTick, delayNanos, TimeUnit.NANOSECONDS);
+        }
+    }
+
+    /**
+     * Call this method to cause the clock to stop ticking.
+     *
+     * <p>
+     * This method is a no-op, if the clock was already started.
+     * </p>
+     *
+     * @return this.
+     */
     public FrequencyOscillator stop ()
     {
+        stopped.set(true);
         return this;
     }
 
-    public Output<Instant> clockOut ()
+    /**
+     * Factory Method.
+     *
+     * @return a builder that can be used to create a clock.
+     */
+    public static Builder newOscillator ()
     {
-        return clockOut.dataOut();
+        return new Builder();
     }
 
-    public static FrequencyOscillator create (final ScheduledExecutorService service,
-                                              final IntUnaryOperator period,
-                                              final int minimum,
-                                              final int maximum)
+    /**
+     * Builder.
+     */
+    public static final class Builder
     {
-        return new FrequencyOscillator(service, period, minimum, maximum);
-    }
 
-    public static void main (String[] args)
-    {
-        final ScheduledExecutorService s = Executors.newScheduledThreadPool(4);
-        final Stage stage = Cascade.newExecutorStage(s);
+        private ScheduledExecutorService service;
 
+        private LongUnaryOperator waveform = x -> TimeUnit.SECONDS.toNanos(1);
+
+        private Builder ()
+        {
+            // Pass.
+        }
+
+        /**
+         * Specify a sine-like function whose absolute-value
+         * will determine the periodicity of the oscillations.
+         *
+         * @param waveform is a sine-like function that takes
+         * a sequence-number as input and produces a nanosecond
+         * value that is the period until the next tick.
+         * @return this.
+         */
+        public Builder withWaveform (final LongUnaryOperator waveform)
+        {
+            this.waveform = Objects.requireNonNull(waveform, "waveform");
+            return this;
+        }
+
+        /**
+         * Specify the executor that powers the clock.
+         *
+         * @param service will power the clock.
+         * @return this.
+         */
+        public Builder poweredBy (final ScheduledExecutorService service)
+        {
+            this.service = service;
+            return this;
+        }
+
+        /**
+         * Build the clock.
+         *
+         * @return the new clock.
+         */
+        public FrequencyOscillator build ()
+        {
+            return new FrequencyOscillator(this);
+        }
     }
 }

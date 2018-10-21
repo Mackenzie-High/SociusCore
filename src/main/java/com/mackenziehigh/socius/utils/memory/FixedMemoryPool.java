@@ -1,5 +1,8 @@
 package com.mackenziehigh.socius.utils.memory;
 
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
@@ -26,6 +29,41 @@ public final class FixedMemoryPool
             final ByteSequence seq = ByteSequences.allocate(bufferSize);
             final Buffer buffer = new Buffer(this, seq);
             pool.add(buffer);
+        }
+    }
+
+    /**
+     * Useful when the buffers are disk-backed (Random Access Files).
+     *
+     * @param buffers
+     */
+    public FixedMemoryPool (final Collection<ByteSequence> buffers)
+    {
+        pool = new ArrayBlockingQueue<>(buffers.size());
+
+        for (ByteSequence seq : buffers)
+        {
+            final Buffer buffer = new Buffer(this, seq);
+            pool.add(buffer);
+        }
+    }
+
+    public FixedMemoryPool (final RandomAccessFile file,
+                            final long bufferSize)
+            throws IOException
+    {
+        final int bufferCount = (int) (file.length() / bufferSize);
+        long offset = 0;
+
+        pool = new ArrayBlockingQueue<>(bufferCount);
+
+        for (long i = 0; i < bufferCount; i++)
+        {
+            final ByteSequence seq = ByteSequences.wrap(file);
+            final ByteSequence slice = ByteSequences.slice(seq, offset, offset + bufferSize);
+            final Buffer buffer = new Buffer(this, slice);
+            pool.add(buffer);
+            offset += bufferSize;
         }
     }
 
