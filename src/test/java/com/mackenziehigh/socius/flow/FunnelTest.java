@@ -1,6 +1,6 @@
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.socius.testing.ReactionTester;
+import com.mackenziehigh.socius.utils.ReactionTester;
 import org.junit.Test;
 
 /**

@@ -1,7 +1,7 @@
 package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.ImmutableList;
-import com.mackenziehigh.socius.testing.ReactionTester;
+import com.mackenziehigh.socius.utils.ReactionTester;
 import org.junit.Test;
 
 /**

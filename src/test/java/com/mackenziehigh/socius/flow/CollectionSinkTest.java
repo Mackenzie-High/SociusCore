@@ -1,7 +1,7 @@
 package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.Lists;
-import com.mackenziehigh.socius.testing.ReactionTester;
+import com.mackenziehigh.socius.utils.ReactionTester;
 import java.util.List;
 import org.junit.Test;
 

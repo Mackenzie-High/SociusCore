@@ -1,4 +1,4 @@
-package com.mackenziehigh.socius.utils;
+package com.mackenziehigh.socius.time;
 
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import java.time.Duration;
@@ -13,19 +13,9 @@ import java.util.concurrent.TimeUnit;
  */
 public final class DelayedSender
 {
-    private final ScheduledExecutorService service;
+    private static DelayedSender global = null;
 
-    /**
-     * Constructor.
-     *
-     * <p>
-     * This constructor implicitly creates a single-threaded executor-service.
-     * </p>
-     */
-    public DelayedSender ()
-    {
-        this.service = Executors.newSingleThreadScheduledExecutor();
-    }
+    private final ScheduledExecutorService service;
 
     /**
      * Constructor.
@@ -52,28 +42,6 @@ public final class DelayedSender
      * @param delay is how long to wait before sending the message.
      * @return this.
      */
-    public <T> DelayedSender send (final Actor<? super T, ?> destination,
-                                   final T message,
-                                   final Duration delay)
-    {
-        return send(destination.input(), message, delay);
-    }
-
-    /**
-     * Schedule sending a message.
-     *
-     * <p>
-     * If the destination is unable to receive the message due
-     * to capacity restrictions, when the send is actually performed,
-     * then the message will be silently dropped.
-     * </p>
-     *
-     * @param <T> is the type of the message.
-     * @param destination is who the message will be sent to.
-     * @param message is the message to send.
-     * @param delay is how long to wait before sending the message.
-     * @return this.
-     */
     public <T> DelayedSender send (final Actor.Input<? super T> destination,
                                    final T message,
                                    final Duration delay)
@@ -82,4 +50,26 @@ public final class DelayedSender
         return this;
     }
 
+    /**
+     * Return the global <code>DelayedSender</code> singleton.
+     *
+     * <p>
+     * The first call to this method will create the instance
+     * and the related <code>ScheduledExecutorService</code>.
+     * </p>
+     *
+     * @return the singleton.
+     */
+    public static synchronized DelayedSender global ()
+    {
+        if (global == null)
+        {
+            final ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+            final Thread hook = new Thread(() -> ses.shutdown());
+            Runtime.getRuntime().addShutdownHook(hook);
+            global = new DelayedSender(ses);
+        }
+
+        return global;
+    }
 }

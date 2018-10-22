@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongUnaryOperator;
 
 /**
- * Frequency Oscillator.
+ * A clock that sends ticks at a variable frequency.
  */
 public final class FrequencyOscillator
 {

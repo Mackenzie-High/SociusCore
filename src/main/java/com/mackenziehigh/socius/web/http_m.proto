@@ -1,7 +1,7 @@
 syntax = "proto2";
 
-package com.mackenziehigh.socius.gpb;
-option java_package = "com.mackenziehigh.socius.gpb";
+package com.mackenziehigh.socius.web;
+option java_package = "com.mackenziehigh.socius.web";
 
 /**
  * HTTP Request.

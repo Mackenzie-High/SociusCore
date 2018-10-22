@@ -11,9 +11,10 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- *
+ * A clock that sends a tick once per minute,
+ * as close to the top of the minute as possible.
  */
-public class Minuteman
+public final class Minuteman
 {
     private final Timer timer;
 

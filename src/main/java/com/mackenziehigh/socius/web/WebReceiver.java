@@ -5,8 +5,8 @@ import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.flow.Processor;
-import com.mackenziehigh.socius.gpb.http_m.Request;
-import com.mackenziehigh.socius.gpb.http_m.Response;
+import com.mackenziehigh.socius.web.http_m.Request;
+import com.mackenziehigh.socius.web.http_m.Response;
 import java.util.Objects;
 
 /**

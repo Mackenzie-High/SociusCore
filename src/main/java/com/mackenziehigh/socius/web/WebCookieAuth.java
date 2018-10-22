@@ -1,8 +1,8 @@
 package com.mackenziehigh.socius.web;
 
 import com.mackenziehigh.socius.flow.Processor;
-import com.mackenziehigh.socius.gpb.http_m.Request;
-import com.mackenziehigh.socius.gpb.http_m.Response;
+import com.mackenziehigh.socius.web.http_m.Request;
+import com.mackenziehigh.socius.web.http_m.Response;
 
 /**
  *

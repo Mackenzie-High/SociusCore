@@ -1,4 +1,4 @@
-package com.mackenziehigh.socius.testing;
+package com.mackenziehigh.socius.utils;
 
 import com.google.common.base.Verify;
 import com.google.common.collect.Lists;

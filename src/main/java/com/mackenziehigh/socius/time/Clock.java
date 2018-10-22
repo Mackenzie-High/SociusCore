@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Wall Clock.
+ * A clock that sends ticks at a user-specified periodicity.
  */
 public final class Clock
 {

@@ -1,6 +1,6 @@
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.socius.testing.ReactionTester;
+import com.mackenziehigh.socius.utils.ReactionTester;
 import java.time.Instant;
 import org.junit.Test;
 
