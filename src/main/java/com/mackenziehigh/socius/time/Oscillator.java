@@ -16,7 +16,7 @@ import java.util.function.LongUnaryOperator;
 /**
  * A clock that sends ticks at a variable frequency.
  */
-public final class FrequencyOscillator
+public final class Oscillator
 {
     private final ScheduledExecutorService service;
 
@@ -30,7 +30,7 @@ public final class FrequencyOscillator
 
     private final AtomicLong seqnum = new AtomicLong();
 
-    private FrequencyOscillator (final Builder builder)
+    private Oscillator (final Builder builder)
     {
         this.waveform = builder.waveform;
 
@@ -66,7 +66,7 @@ public final class FrequencyOscillator
      *
      * @return this.
      */
-    public FrequencyOscillator start ()
+    public Oscillator start ()
     {
         if (started.compareAndSet(false, true))
         {
@@ -96,7 +96,7 @@ public final class FrequencyOscillator
      *
      * @return this.
      */
-    public FrequencyOscillator stop ()
+    public Oscillator stop ()
     {
         stopped.set(true);
         return this;
@@ -159,9 +159,9 @@ public final class FrequencyOscillator
          *
          * @return the new clock.
          */
-        public FrequencyOscillator build ()
+        public Oscillator build ()
         {
-            return new FrequencyOscillator(this);
+            return new Oscillator(this);
         }
     }
 }

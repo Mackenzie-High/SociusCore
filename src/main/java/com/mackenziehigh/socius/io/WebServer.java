@@ -1,4 +1,4 @@
-package com.mackenziehigh.socius.web;
+package com.mackenziehigh.socius.io;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -10,9 +10,9 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.flow.Mapper;
 import com.mackenziehigh.socius.flow.Processor;
-import com.mackenziehigh.socius.web.http_m.Header;
-import com.mackenziehigh.socius.web.http_m.Protocol;
-import com.mackenziehigh.socius.web.http_m.QueryParameter;
+import com.mackenziehigh.socius.io.http_m.Header;
+import com.mackenziehigh.socius.io.http_m.Protocol;
+import com.mackenziehigh.socius.io.http_m.QueryParameter;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
