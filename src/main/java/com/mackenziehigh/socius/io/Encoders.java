@@ -15,6 +15,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class Encoders
 {
+    /**
+     * Create a new <code>Encoder</code> that uses the native Java serialization mechanism.
+     *
+     * @param <T> is the type of object that will be encoded.
+     * @return the new encoder.
+     */
     public static <T extends Serializable> Encoder<T> newSerializer ()
     {
         return (final ByteBuffer buffer,
@@ -41,6 +47,12 @@ public final class Encoders
         };
     }
 
+    /**
+     * Create a new <code>Encoder</code> that transforms objects in UTF-8 encoded JSON.
+     *
+     * @param <T> is the type of object that will be encoded.
+     * @return the new encoder.
+     */
     public static <T extends CharSequence> Encoder<T> newJsonEncoder ()
     {
         final Gson gson = new GsonBuilder().create();

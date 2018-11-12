@@ -14,7 +14,14 @@ import java.nio.charset.StandardCharsets;
  */
 public final class Decoders
 {
-    public static <T extends Serializable> Decoder<T> newDeserializer ()
+    /**
+     * Create a new <code>Decoder</code> that uses the native Java serialization mechanism.
+     *
+     * @param <T> is the type of object that will be created.
+     * @param type is the type of object that will be created.
+     * @return the new decoder.
+     */
+    public static <T extends Serializable> Decoder<T> newDeserializer (final Class<T> type)
     {
         return (final ByteBuffer buffer,
                 final int size) ->
@@ -34,7 +41,7 @@ public final class Decoders
             try
             {
                 final Object object = oin.readObject();
-                return (T) object;
+                return type.cast(object);
             }
             catch (ClassNotFoundException ex)
             {
@@ -43,6 +50,11 @@ public final class Decoders
         };
     }
 
+    /**
+     * Create a new <code>Decoder</code> that transforms UTF-8 encoded JSON.
+     *
+     * @return the new decoder.
+     */
     public static Decoder<Object> newJsonDecoder ()
     {
         final Gson gson = new GsonBuilder().create();
