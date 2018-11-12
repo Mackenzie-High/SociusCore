@@ -10,7 +10,11 @@ import java.util.List;
 import java.util.Queue;
 
 /**
+ * Select one message from each of (N) data-inputs,
+ * combines the selections into a single messages,
+ * and then forwards the combined message.
  *
+ * @param <T> is the type of the messages flowing through.
  */
 public final class Batcher<T>
 {
@@ -40,7 +44,9 @@ public final class Batcher<T>
     {
         queues.get(index).add(message);
 
-        if (queues.stream().noneMatch(x -> x.isEmpty()))
+        final boolean readyToSend = queues.stream().noneMatch(x -> x.isEmpty());
+
+        if (readyToSend)
         {
             final List<T> batchList = new ArrayList<>(queues.size());
 
@@ -55,16 +61,41 @@ public final class Batcher<T>
         }
     }
 
+    /**
+     * The batch will be created from these data-inputs.
+     *
+     * @param index identifies the data-input.
+     * @return the desired data-input.
+     */
     public Input<T> dataIn (final int index)
     {
         return dataIn.get(index).dataIn();
     }
 
+    /**
+     * The combined messages will be forwarded to this output.
+     *
+     * <p>
+     * The combined messages are immutable lists containing
+     * the component messages, such that the <code>Kth</code>
+     * message was obtained from the <code>Kth</code> data-input.
+     * </p>
+     *
+     * @return the data-output.
+     */
     public Output<List<T>> dataOut ()
     {
         return dataOut.dataOut();
     }
 
+    /**
+     * Create a new <code>Batcher</code>.
+     *
+     * @param <T> is the type of the messages flowing through.
+     * @param stage will be used to create private actors.
+     * @param arity will be the number of data-inputs.
+     * @return the newly constructed object.
+     */
     public static <T> Batcher<T> newBatcher (final Stage stage,
                                              final int arity)
     {

@@ -13,7 +13,10 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
+ * Filter out duplicates from a stream of messages.
  *
+ * @param <K> is the type of the identifiers (keys) derived from the messages.
+ * @param <T> is the type of the messages themselves.
  */
 public final class Deduplicator<K, T>
 {
@@ -35,11 +38,23 @@ public final class Deduplicator<K, T>
         this.queue = Queues.newArrayBlockingQueue(capacity);
     }
 
+    /**
+     * Messages will flow from the stream into this data-input,
+     * and will later be forwarded to the data-output,
+     * if they are non-duplicates.
+     *
+     * @return the data-input.
+     */
     public Input<T> dataIn ()
     {
         return actor.input();
     }
 
+    /**
+     * Non-duplicate messages will be forwarded to this output.
+     *
+     * @return the data-output.
+     */
     public Output<T> dataOut ()
     {
         return actor.output();
@@ -72,11 +87,25 @@ public final class Deduplicator<K, T>
         Verify.verify(queue.size() == set.size());
     }
 
+    /**
+     * Create a builder that can build a new <code>Deduplicator</code>.
+     *
+     * @param <K> is the type of the identifiers (keys) derived from the messages.
+     * @param <T> is the type of the messages themselves.
+     * @param stage will be used to create private actors.
+     * @return the new builder.
+     */
     public static <K, T> Builder<K, T> newDeduplicator (final Stage stage)
     {
         return new Builder<>(stage);
     }
 
+    /**
+     * Builder.
+     *
+     * @param <K> is the type of the identifiers (keys) derived from the messages.
+     * @param <T> is the type of the messages themselves.
+     */
     public static final class Builder<K, T>
     {
         private final Stage stage;
@@ -90,18 +119,36 @@ public final class Deduplicator<K, T>
             this.stage = Objects.requireNonNull(stage, "stage");
         }
 
+        /**
+         * Specify a function that will assign an identifier (key)
+         * to each messages that passes through the <code>Deduplicator</code>.
+         *
+         * @param functor will assign identifiers.
+         * @return this.
+         */
         public Builder<K, T> withKeyFunction (final Function<T, K> functor)
         {
             this.keyFunction = Objects.requireNonNull(functor, "functor");
             return this;
         }
 
+        /**
+         * Specify how many identifiers can be stored in memory simultaneously.
+         *
+         * @param capacity is the maximum number of stored identifiers.
+         * @return this.
+         */
         public Builder<K, T> withCapacity (final int capacity)
         {
             this.capacity = capacity;
             return this;
         }
 
+        /**
+         * Build.
+         *
+         * @return the newly constructed object.
+         */
         public Deduplicator<K, T> build ()
         {
             return new Deduplicator<>(stage, keyFunction, capacity);

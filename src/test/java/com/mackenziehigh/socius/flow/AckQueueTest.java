@@ -15,7 +15,7 @@ public final class AckQueueTest
         final ReactionTester tester = new ReactionTester();
         final AckQueue<Character, Integer> queue = AckQueue.<Character, Integer>newAckQueue(tester.stage())
                 .withBacklogCapacity(5)
-                .withPermits(3)
+                .withInFlightPermits(3)
                 .build();
 
         tester.send(queue.dataIn(), 'A'); // 1  (send direct)

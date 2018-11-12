@@ -16,7 +16,7 @@ public final class Multiplexer<K, M>
 
     private final Map<K, Processor<M>> inputs = Maps.newConcurrentMap();
 
-    private final Processor<Message<K, M>> output;
+    private final Processor<MultiplexedMessage<K, M>> output;
 
     private Multiplexer (final Stage stage)
     {
@@ -33,11 +33,11 @@ public final class Multiplexer<K, M>
     private void onMessage (final K key,
                             final M message)
     {
-        final Message<K, M> entry = newMessage(key, message);
+        final MultiplexedMessage<K, M> entry = newMessage(key, message);
         output.dataIn().send(entry);
     }
 
-    public Output<Message<K, M>> dataOut ()
+    public Output<MultiplexedMessage<K, M>> dataOut ()
     {
         return output.dataOut();
     }
@@ -47,13 +47,13 @@ public final class Multiplexer<K, M>
         return new Multiplexer<>(stage);
     }
 
-    public static <K, M> Message<K, M> newMessage (final K key,
+    public static <K, M> MultiplexedMessage<K, M> newMessage (final K key,
                                                    final M message)
     {
         Objects.requireNonNull(key, "key");
         Objects.requireNonNull(message, "message");
 
-        return new Message<K, M>()
+        return new MultiplexedMessage<K, M>()
         {
             @Override
             public K key ()
@@ -70,9 +70,9 @@ public final class Multiplexer<K, M>
             @Override
             public boolean equals (final Object o)
             {
-                return o instanceof Message
-                       && Objects.equals(key, ((Message) o).key())
-                       && Objects.equals(message, ((Message) o).message());
+                return o instanceof MultiplexedMessage
+                       && Objects.equals(key, ((MultiplexedMessage) o).key())
+                       && Objects.equals(message, ((MultiplexedMessage) o).message());
             }
 
             @Override
@@ -89,7 +89,7 @@ public final class Multiplexer<K, M>
         };
     }
 
-    public interface Message<K, M>
+    public interface MultiplexedMessage<K, M>
     {
         public K key ();
 
