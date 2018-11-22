@@ -1,8 +1,8 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.BatchInserter;
+import com.mackenziehigh.socius.actors.BatchInserter;
 import com.google.common.collect.ImmutableList;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**

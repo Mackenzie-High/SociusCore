@@ -1,7 +1,7 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.IfElse;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.actors.IfElse;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**

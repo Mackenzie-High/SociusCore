@@ -1,8 +1,8 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.LookupInserter;
+import com.mackenziehigh.socius.actors.LookupInserter;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import java.math.BigInteger;
 import org.junit.Test;
 

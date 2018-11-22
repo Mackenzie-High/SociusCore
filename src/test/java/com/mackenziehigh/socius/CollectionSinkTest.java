@@ -1,8 +1,8 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.CollectionSink;
+import com.mackenziehigh.socius.actors.CollectionSink;
 import com.google.common.collect.Lists;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import java.util.List;
 import org.junit.Test;
 

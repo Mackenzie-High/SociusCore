@@ -1,8 +1,8 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Unbatcher;
+import com.mackenziehigh.socius.actors.Unbatcher;
 import com.google.common.collect.Lists;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**

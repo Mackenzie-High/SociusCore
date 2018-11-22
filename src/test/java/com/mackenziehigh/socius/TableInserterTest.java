@@ -1,8 +1,8 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.TableInserter;
+import com.mackenziehigh.socius.actors.TableInserter;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**

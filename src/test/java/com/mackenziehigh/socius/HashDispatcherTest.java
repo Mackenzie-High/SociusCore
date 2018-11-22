@@ -1,8 +1,8 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.HashDispatcher;
+import com.mackenziehigh.socius.actors.HashDispatcher;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 public final class HashDispatcherTest

@@ -1,7 +1,7 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Deduplicator;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.actors.Deduplicator;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**

@@ -1,7 +1,7 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.RoundRobinBalancer;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.actors.RoundRobinBalancer;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import static org.junit.Assert.*;
 import org.junit.Test;
 

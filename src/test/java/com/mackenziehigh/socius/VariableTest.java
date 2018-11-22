@@ -1,7 +1,7 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Variable;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.actors.Variable;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import java.time.Instant;
 import org.junit.Test;
 

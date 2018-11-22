@@ -1,8 +1,8 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Multiplexer;
-import com.mackenziehigh.socius.Demultiplexer;
-import com.mackenziehigh.socius.ReactionTester;
+import com.mackenziehigh.socius.actors.Multiplexer;
+import com.mackenziehigh.socius.actors.Demultiplexer;
+import com.mackenziehigh.socius.testing.ReactionTester;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
