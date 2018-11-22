@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.Filter;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -13,7 +11,7 @@ public final class FilterTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Filter<String> actor = Filter.newFilter(tester.stage(), x -> !x.contains("e"));
 
         tester.send(actor.dataIn(), "avril");

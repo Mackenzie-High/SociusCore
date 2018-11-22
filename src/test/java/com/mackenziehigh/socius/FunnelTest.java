@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.Funnel;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -13,7 +11,7 @@ public final class FunnelTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Funnel<String> funnel = Funnel.newFunnel(tester.stage());
 
         tester.send(funnel.dataIn("A"), "Mercury");

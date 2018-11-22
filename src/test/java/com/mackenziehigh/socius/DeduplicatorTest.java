@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.Deduplicator;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -13,7 +11,7 @@ public final class DeduplicatorTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Deduplicator<String, String> dedup = Deduplicator.<String, String>newDeduplicator(tester.stage())
                 .withKeyFunction(x -> x)
                 .withCapacity(3)

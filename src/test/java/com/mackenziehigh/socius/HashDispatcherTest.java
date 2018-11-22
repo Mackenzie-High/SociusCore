@@ -1,13 +1,11 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.HashDispatcher;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 public final class HashDispatcherTest
 {
-    private final ReactionTester tester = new ReactionTester();
+    private final ActorTester tester = new ActorTester();
 
     private final HashDispatcher<String, Integer> dispatcher = HashDispatcher.newDispatcher(tester.stage());
 

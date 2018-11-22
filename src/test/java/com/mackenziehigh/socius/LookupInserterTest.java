@@ -1,8 +1,6 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.LookupInserter;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import java.math.BigInteger;
 import org.junit.Test;
 
@@ -15,7 +13,7 @@ public final class LookupInserterTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final LookupInserter<Integer> inserter = LookupInserter.newLookupInserter(tester.stage());
         final Output<Integer> primes = inserter.selectIf(x -> BigInteger.valueOf(x).isProbablePrime(10));
         final Output<Integer> power2 = inserter.selectIf(x -> (x & (x - 1)) == 0);

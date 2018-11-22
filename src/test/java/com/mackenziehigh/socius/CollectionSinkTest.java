@@ -1,8 +1,6 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.CollectionSink;
 import com.google.common.collect.Lists;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import java.util.List;
 import org.junit.Test;
 
@@ -15,7 +13,7 @@ public final class CollectionSinkTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final List<String> collection = Lists.newArrayList();
         final CollectionSink<String> actor = CollectionSink.newCollectionSink(tester.stage(), collection);
 

@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.RoundRobinBalancer;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -14,7 +12,7 @@ public final class RoundRobinBalancerTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final RoundRobinBalancer<Character> balancer = RoundRobinBalancer.newBalancer(tester.stage(), 3);
 
         assertEquals(3, balancer.arity());

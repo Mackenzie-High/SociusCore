@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.Variable;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import java.time.Instant;
 import org.junit.Test;
 
@@ -14,7 +12,7 @@ public final class VariableTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Variable<Character> var = Variable.newVariable(tester.stage(), 'A');
         final Instant now1 = Instant.now();
         final Instant now2 = Instant.now();

@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.Valve;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -13,7 +11,7 @@ public final class ValveTest
     public void test1 ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Valve<Character> valve = Valve.newOpenValve(tester.stage());
 
         /**
@@ -86,7 +84,7 @@ public final class ValveTest
     public void test2 ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Valve<Character> valve = Valve.newClosedValve(tester.stage());
 
         /**

@@ -1,8 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.Multiplexer;
-import com.mackenziehigh.socius.actors.Demultiplexer;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -15,7 +12,7 @@ public final class DemultiplexerTest
     public void test1 ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Demultiplexer<Character, String> demux = Demultiplexer.newDemultiplexer(tester.stage());
 
         tester.send(demux.dataIn(), Multiplexer.newMessage('A', "autumn"));
@@ -33,7 +30,7 @@ public final class DemultiplexerTest
     @Test
     public void testSameDataOut ()
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Demultiplexer<Character, String> demux = Demultiplexer.newDemultiplexer(tester.stage());
         assertEquals(demux.dataOut('X'), demux.dataOut('X'));
     }

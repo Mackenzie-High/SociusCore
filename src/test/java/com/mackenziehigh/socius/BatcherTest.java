@@ -1,8 +1,6 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.Batcher;
 import com.google.common.collect.Lists;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -14,7 +12,7 @@ public final class BatcherTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Batcher<Character> batcher = Batcher.newBatcher(tester.stage(), 3);
 
         /**

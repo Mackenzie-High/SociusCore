@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.Multiplexer;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -15,7 +13,7 @@ public final class MultiplexerTest
     public void test1 ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Multiplexer<Character, String> mux = Multiplexer.newMultiplexer(tester.stage());
 
         tester.send(mux.dataIn('A'), "autumn");
@@ -33,7 +31,7 @@ public final class MultiplexerTest
     @Test
     public void testSameDataIn ()
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Multiplexer<Character, String> mux = Multiplexer.newMultiplexer(tester.stage());
         assertEquals(mux.dataIn('X'), mux.dataIn('X'));
     }

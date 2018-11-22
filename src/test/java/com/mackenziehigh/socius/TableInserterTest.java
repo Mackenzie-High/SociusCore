@@ -1,8 +1,6 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.TableInserter;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -14,7 +12,7 @@ public final class TableInserterTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final TableInserter<Character, String> inserter = TableInserter.newTableInserter(tester.stage(), x -> x.charAt(0));
         final Output<String> outputA = inserter.selectIf('A');
         final Output<String> outputE = inserter.selectIf('E');

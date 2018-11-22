@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.AckQueue;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -13,7 +11,7 @@ public final class AckQueueTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final AckQueue<Character, Integer> queue = AckQueue.<Character, Integer>newAckQueue(tester.stage())
                 .withBacklogCapacity(5)
                 .withInFlightPermits(3)

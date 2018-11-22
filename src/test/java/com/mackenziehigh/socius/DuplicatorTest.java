@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.Duplicator;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -13,7 +11,7 @@ public final class DuplicatorTest
     public void test1 ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Duplicator<Character> dup = Duplicator.newDuplicator(tester.stage(), 4);
 
         tester.send(dup.dataIn(), 'A');
@@ -39,7 +37,7 @@ public final class DuplicatorTest
     public void test2 ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final Duplicator<Character> dup = Duplicator.newDuplicator(tester.stage(), 3, 2);
 
         tester.send(dup.dataIn(), 'A');

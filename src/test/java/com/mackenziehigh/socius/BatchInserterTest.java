@@ -1,8 +1,6 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.BatchInserter;
 import com.google.common.collect.ImmutableList;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -14,7 +12,7 @@ public final class BatchInserterTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
 
         /**
          * Each batch requires one 'A', two 'B', and one 'C'.

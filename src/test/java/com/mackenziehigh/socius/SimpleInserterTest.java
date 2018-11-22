@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.actors.SimpleInserter;
-import com.mackenziehigh.socius.testing.ReactionTester;
 import org.junit.Test;
 
 /**
@@ -13,7 +11,7 @@ public final class SimpleInserterTest
     public void test ()
             throws Throwable
     {
-        final ReactionTester tester = new ReactionTester();
+        final ActorTester tester = new ActorTester();
         final SimpleInserter<Integer> inserter = SimpleInserter.<Integer>newInserter(tester.stage())
                 .selectIf(x -> x % 2 == 0)
                 .build();
