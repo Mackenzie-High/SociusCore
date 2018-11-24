@@ -1,6 +1,5 @@
 package com.mackenziehigh.socius.core;
 
-import com.mackenziehigh.socius.core.ChannelBilink;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -18,7 +17,6 @@ import java.util.Objects;
  * @param <M>
  */
 public final class HashDispatcher<K, M>
-        implements ChannelBilink<K, M>
 {
     private final Stage stage;
 
@@ -50,7 +48,6 @@ public final class HashDispatcher<K, M>
     /**
      * {@inheritDoc}
      */
-    @Override
     public synchronized HashDispatcher<K, M> publish (final Actor<?, M> connector,
                                                       final K key)
     {
@@ -60,7 +57,6 @@ public final class HashDispatcher<K, M>
     /**
      * {@inheritDoc}
      */
-    @Override
     public synchronized HashDispatcher<K, M> publish (final Actor.Output<M> connector,
                                                       final K key)
     {
@@ -84,7 +80,6 @@ public final class HashDispatcher<K, M>
     /**
      * {@inheritDoc}
      */
-    @Override
     public synchronized HashDispatcher<K, M> unpublish (final Actor<?, M> connector,
                                                         final K key)
     {
@@ -94,7 +89,6 @@ public final class HashDispatcher<K, M>
     /**
      * {@inheritDoc}
      */
-    @Override
     public synchronized HashDispatcher<K, M> unpublish (final Actor.Output<M> connector,
                                                         final K key)
     {
@@ -105,7 +99,6 @@ public final class HashDispatcher<K, M>
     /**
      * {@inheritDoc}
      */
-    @Override
     public synchronized HashDispatcher<K, M> subscribe (final Actor<M, ?> connector,
                                                         final K key)
     {
@@ -115,7 +108,6 @@ public final class HashDispatcher<K, M>
     /**
      * {@inheritDoc}
      */
-    @Override
     public synchronized HashDispatcher<K, M> subscribe (final Actor.Input<M> connector,
                                                         final K key)
     {
@@ -126,7 +118,6 @@ public final class HashDispatcher<K, M>
     /**
      * {@inheritDoc}
      */
-    @Override
     public synchronized HashDispatcher<K, M> unsubscribe (final Actor<M, ?> connector,
                                                           final K key)
     {
@@ -136,7 +127,6 @@ public final class HashDispatcher<K, M>
     /**
      * {@inheritDoc}
      */
-    @Override
     public synchronized HashDispatcher<K, M> unsubscribe (final Actor.Input<M> connector,
                                                           final K key)
     {

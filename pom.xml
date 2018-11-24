@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mackenziehigh</groupId>
-    <artifactId>socius</artifactId>
-    <version>dev</version>
+    <artifactId>socius-core</artifactId>
+    <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <build>
 
@@ -59,6 +59,19 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>mackenziehigh</id>
+            <url>http://www.mackenziehigh.com/content/maven/repo/</url>
+            <snapshots>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+            <releases>
+                <updatePolicy>always</updatePolicy>
+            </releases>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.immutables</groupId>
@@ -79,11 +92,6 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
             <version>3.6.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.mackenziehigh</groupId>
-            <artifactId>cascade</artifactId>
-            <version>[0.0,)</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -139,6 +147,11 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mackenziehigh</groupId>
+            <artifactId>cascade</artifactId>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
     <properties>
