@@ -160,7 +160,7 @@ public final class Router<K, M>
         return this;
     }
 
-    public static <K, M> Router<K, M> newDispatcher (final Stage stage)
+    public static <K, M> Router<K, M> newRouter (final Stage stage)
     {
         return new Router<>(stage);
     }

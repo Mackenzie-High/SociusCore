@@ -8,7 +8,7 @@ public final class HashDispatcherTest
 {
     private final ActorTester tester = new ActorTester();
 
-    private final Router<String, Integer> dispatcher = Router.newDispatcher(tester.stage());
+    private final Router<String, Integer> dispatcher = Router.newRouter(tester.stage());
 
     private final Actor<Integer, Integer> actor1 = tester.stage().newActor().withScript((Integer x) -> x).create();
 

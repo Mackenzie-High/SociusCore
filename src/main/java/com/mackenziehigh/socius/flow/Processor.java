@@ -11,8 +11,8 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
  * Applies a map-function to incoming messages and then forwards the results.
  *
  * <p>
- * If the map-function returns null, then no message will be forwarded.
- * Thus, in effect, returning null causes the <code>Processor</code> to act as a <code>Filter</code>.
+ * If the map-function returns null or void, then no message will be forwarded.
+ * Thus, in effect, returning null or void causes the <code>Processor</code> to act as a <code>Filter</code>.
  * </p>
  *
  * @param <T> is the type of the incoming and outgoing messages.

@@ -10,8 +10,8 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
  * such that the output data-type is the same as the input data-type.
  *
  * <p>
- * If the map-function returns null, then no message will be forwarded.
- * Thus, in effect, returning null causes the <code>Processor</code> to act as a <code>Filter</code>.
+ * If the map-function returns null or void, then no message will be forwarded.
+ * Thus, in effect, returning null or void causes the <code>Mapper</code> to act as a <code>Filter</code>.
  * </p>
  *
  * @param <I> is the type of the incoming messages.
