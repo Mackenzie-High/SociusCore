@@ -1,4 +1,4 @@
 /**
- * Socius provides common asynchronous objects based on Cascade.
+ * Actors - Flow Related.
  */
 package com.mackenziehigh.socius.flow;
