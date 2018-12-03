@@ -213,7 +213,7 @@ public final class Batcher<T>
          */
         public Builder<T> withArity (final int value)
         {
-            Preconditions.checkArgument(value < 0, "arity < 0");
+            Preconditions.checkArgument(value >= 0, "arity < 0");
             this.arity = value;
             return this;
         }
@@ -226,7 +226,7 @@ public final class Batcher<T>
          */
         public Builder<T> withCapacity (final int value)
         {
-            Preconditions.checkArgument(value < 0, "capacity < 0");
+            Preconditions.checkArgument(value >= 0, "capacity < 0");
             this.capacity = value;
             return this;
         }

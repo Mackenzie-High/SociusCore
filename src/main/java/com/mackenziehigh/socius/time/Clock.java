@@ -164,9 +164,9 @@ public final class Clock
      */
     public Clock stop ()
     {
-        if (future != null)
+        if (stopped.compareAndSet(false, true))
         {
-            if (stopped.compareAndSet(false, true))
+            if (future != null)
             {
                 final boolean interrupt = false;
                 future.cancel(interrupt);

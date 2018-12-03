@@ -7,7 +7,7 @@ import org.junit.Test;
 /**
  * Unit Test.
  */
-public final class RoundRobinBalancerTest
+public final class RoundRobinTest
 {
     @Test
     public void test ()
