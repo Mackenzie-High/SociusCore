@@ -2,7 +2,6 @@ package com.mackenziehigh.socius.flow;
 
 import com.google.common.util.concurrent.RateLimiter;
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Objects;
@@ -14,12 +13,25 @@ import java.util.Objects;
  */
 public final class Throttler<T>
 {
-    private final Actor<T, T> dataIn;
+    /**
+     * Provides the data-input connector.
+     */
+    private final Processor<T> procDataIn;
 
-    private final Actor<T, T> dataOut;
+    /**
+     * Provides the data-output connector.
+     */
+    private final Processor<T> procDataOut;
 
-    private final Actor<T, T> overflowOut;
+    /**
+     * Provides the overflow-output connector.
+     */
+    private final Processor<T> procOverflowOut;
 
+    /**
+     * This objects decides whether a message should be dropped or forwarded.
+     * This object is not thread-safe, so it can only be touched by the actor.
+     */
     private final RateLimiter limiter;
 
     private Throttler (final Stage stage,
@@ -27,43 +39,71 @@ public final class Throttler<T>
     {
         Objects.requireNonNull(stage, "stage");
         this.limiter = RateLimiter.create(hertz);
-        this.dataIn = stage.newActor().withScript(this::onMessage).create();
-        this.dataOut = stage.newActor().withScript((T x) -> x).create();
-        this.overflowOut = stage.newActor().withScript((T x) -> x).create();
+        this.procDataIn = Processor.newConsumer(stage, this::onMessage);
+        this.procDataOut = Processor.newConnector(stage);
+        this.procOverflowOut = Processor.newConnector(stage);
     }
 
     private void onMessage (final T message)
     {
         if (limiter.tryAcquire())
         {
-            dataOut.accept(message);
+            // Forward the message.
+            procDataOut.accept(message);
         }
         else
         {
-            overflowOut.accept(message);
+            // Drop the message.
+            procOverflowOut.accept(message);
         }
     }
 
     /**
+     * Input Connection.
      *
-     *
-     * @return
+     * @return the input that provides the messages to throttle.
      */
     public Input<T> dataIn ()
     {
-        return dataIn.input();
+        return procDataIn.dataIn();
     }
 
+    /**
+     * Output Connection.
+     *
+     * <p>
+     * This output will receive the messages that were <b>not</b> dropped.
+     * </>
+     *
+     * @return the output that will receive the throttled messages.
+     */
     public Output<T> dataOut ()
     {
-        return dataOut.output();
+        return procDataOut.dataOut();
     }
 
+    /**
+     * Output Connection.
+     *
+     * <p>
+     * This output will receive the messages that <b>were</b> dropped.
+     * </>
+     *
+     * @return the output that will receive the dropped messages.
+     */
     public Output<T> overflowOut ()
     {
-        return overflowOut.output();
+        return procOverflowOut.dataOut();
     }
 
+    /**
+     * Factory Method.
+     *
+     * @param <T> is the type of the incoming and outgoing messages.
+     * @param stage will be used to create private actors.
+     * @param hertz will be the maximum rate at which messages will be forwarded.
+     * @return the new throttler.
+     */
     public static <T> Throttler<T> newThrottler (final Stage stage,
                                                  final double hertz)
     {

@@ -13,7 +13,9 @@ public final class DuplicatorTest
             throws Throwable
     {
         final ActorTester tester = new ActorTester();
-        final Duplicator<Character> dup = Duplicator.newDuplicator(tester.stage(), 4);
+        final Duplicator<Character> dup = Duplicator.<Character>newDuplicator(tester.stage())
+                .withRepeatCount(4)
+                .build();
 
         tester.send(dup.dataIn(), 'A');
         tester.send(dup.dataIn(), 'B');
@@ -39,7 +41,10 @@ public final class DuplicatorTest
             throws Throwable
     {
         final ActorTester tester = new ActorTester();
-        final Duplicator<Character> dup = Duplicator.newDuplicator(tester.stage(), 3, 2);
+        final Duplicator<Character> dup = Duplicator.<Character>newDuplicator(tester.stage())
+                .withSequenceLength(3)
+                .withRepeatCount(2)
+                .build();
 
         tester.send(dup.dataIn(), 'A');
         tester.send(dup.dataIn(), 'B');

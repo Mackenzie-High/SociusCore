@@ -14,7 +14,7 @@ public final class BatcherTest
             throws Throwable
     {
         final ActorTester tester = new ActorTester();
-        final Batcher<Character> batcher = Batcher.newBatcher(tester.stage(), 3);
+        final Batcher<Character> batcher = Batcher.<Character>newBatcher(tester.stage()).withArity(3).build();
 
         /**
          * Batch #1.

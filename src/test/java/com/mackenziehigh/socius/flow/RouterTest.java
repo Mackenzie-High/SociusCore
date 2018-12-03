@@ -4,7 +4,7 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.socius.testing.ActorTester;
 import org.junit.Test;
 
-public final class HashDispatcherTest
+public final class RouterTest
 {
     private final ActorTester tester = new ActorTester();
 
@@ -40,19 +40,19 @@ public final class HashDispatcherTest
         /**
          * Case: Multiple publishers to the same channel.
          */
-        dispatcher.publish(actor1, "X");
-        dispatcher.publish(actor2, "X");
+        dispatcher.publish(actor1.output(), "X");
+        dispatcher.publish(actor2.output(), "X");
 
         /**
          * Case: Single publisher to a channel.
          */
-        dispatcher.publish(actor3, "Y");
+        dispatcher.publish(actor3.output(), "Y");
 
         /**
          * Verify the results.
          */
-        dispatcher.subscribe(actor4, "X");
-        dispatcher.subscribe(actor5, "Y");
+        dispatcher.subscribe(actor4.input(), "X");
+        dispatcher.subscribe(actor5.input(), "Y");
         tester.send(actor1, 100);
         tester.send(actor2, 200);
         tester.send(actor3, 300);
@@ -83,13 +83,13 @@ public final class HashDispatcherTest
         /**
          * Duplicate registrations are ignored.
          */
-        dispatcher.publish(actor1, "X");
-        dispatcher.publish(actor1, "X");
+        dispatcher.publish(actor1.output(), "X");
+        dispatcher.publish(actor1.output(), "X");
 
         /**
          * Verify the results.
          */
-        dispatcher.subscribe(actor2, "X");
+        dispatcher.subscribe(actor2.input(), "X");
         tester.send(actor1, 100);
         tester.send(actor1, 200);
         tester.expect(actor2, 100);
@@ -115,13 +115,13 @@ public final class HashDispatcherTest
     public void test20180923042734271342 ()
             throws Throwable
     {
-        tester.execute(() -> dispatcher.publish(actor1, "X"));
-        tester.execute(() -> dispatcher.subscribe(actor2, "X"));
+        tester.execute(() -> dispatcher.publish(actor1.output(), "X"));
+        tester.execute(() -> dispatcher.subscribe(actor2.input(), "X"));
         tester.send(actor1, 100);
         tester.send(actor1, 200);
         tester.expect(actor1, 100);
         tester.expect(actor1, 200);
-        tester.execute(() -> dispatcher.unpublish(actor1, "X"));
+        tester.execute(() -> dispatcher.unpublish(actor1.output(), "X"));
         tester.send(actor1, 300);
         tester.send(actor1, 400);
         tester.requireEmptyOutputs();
@@ -146,14 +146,14 @@ public final class HashDispatcherTest
     public void test20180923042734271369 ()
             throws Throwable
     {
-        tester.execute(() -> dispatcher.publish(actor1, "X"));
-        tester.execute(() -> dispatcher.subscribe(actor2, "X"));
+        tester.execute(() -> dispatcher.publish(actor1.output(), "X"));
+        tester.execute(() -> dispatcher.subscribe(actor2.input(), "X"));
         tester.send(actor1, 100);
         tester.send(actor1, 200);
         tester.expect(actor1, 100);
         tester.expect(actor1, 200);
-        tester.execute(() -> dispatcher.unpublish(actor1, "X"));
-        tester.execute(() -> dispatcher.unpublish(actor1, "X"));
+        tester.execute(() -> dispatcher.unpublish(actor1.output(), "X"));
+        tester.execute(() -> dispatcher.unpublish(actor1.output(), "X"));
         tester.send(actor1, 300);
         tester.send(actor1, 400);
         tester.requireEmptyOutputs();
@@ -180,19 +180,19 @@ public final class HashDispatcherTest
         /**
          * Case: Multiple subscribers to the same channel.
          */
-        dispatcher.subscribe(actor1, "X");
-        dispatcher.subscribe(actor2, "X");
+        dispatcher.subscribe(actor1.input(), "X");
+        dispatcher.subscribe(actor2.input(), "X");
 
         /**
          * Case: Single subscriber to a channel.
          */
-        dispatcher.subscribe(actor3, "Y");
+        dispatcher.subscribe(actor3.input(), "Y");
 
         /**
          * Verify the results.
          */
-        dispatcher.publish(actor4, "X");
-        dispatcher.publish(actor5, "Y");
+        dispatcher.publish(actor4.output(), "X");
+        dispatcher.publish(actor5.output(), "Y");
         tester.send(actor4, 100);
         tester.send(actor4, 200);
         tester.send(actor5, 300);
@@ -227,13 +227,13 @@ public final class HashDispatcherTest
         /**
          * Duplicate registrations are ignored.
          */
-        dispatcher.subscribe(actor1, "X");
-        dispatcher.subscribe(actor1, "X");
+        dispatcher.subscribe(actor1.input(), "X");
+        dispatcher.subscribe(actor1.input(), "X");
 
         /**
          * Verify the results.
          */
-        dispatcher.publish(actor2, "X");
+        dispatcher.publish(actor2.output(), "X");
         tester.send(actor2, 100);
         tester.send(actor2, 200);
         tester.expect(actor1, 100);
@@ -259,13 +259,13 @@ public final class HashDispatcherTest
     public void test20180923042734271532 ()
             throws Throwable
     {
-        tester.execute(() -> dispatcher.publish(actor1, "X"));
-        tester.execute(() -> dispatcher.subscribe(actor2, "X"));
+        tester.execute(() -> dispatcher.publish(actor1.output(), "X"));
+        tester.execute(() -> dispatcher.subscribe(actor2.input(), "X"));
         tester.send(actor1, 100);
         tester.send(actor1, 200);
         tester.expect(actor1, 100);
         tester.expect(actor1, 200);
-        tester.execute(() -> dispatcher.unsubscribe(actor1, "X"));
+        tester.execute(() -> dispatcher.unsubscribe(actor1.input(), "X"));
         tester.send(actor1, 300);
         tester.send(actor1, 400);
         tester.requireEmptyOutputs();
@@ -289,14 +289,14 @@ public final class HashDispatcherTest
     public void test20180923042734271553 ()
             throws Throwable
     {
-        tester.execute(() -> dispatcher.publish(actor1, "X"));
-        tester.execute(() -> dispatcher.subscribe(actor2, "X"));
+        tester.execute(() -> dispatcher.publish(actor1.output(), "X"));
+        tester.execute(() -> dispatcher.subscribe(actor2.input(), "X"));
         tester.send(actor1, 100);
         tester.send(actor1, 200);
         tester.expect(actor1, 100);
         tester.expect(actor1, 200);
-        tester.execute(() -> dispatcher.unsubscribe(actor1, "X"));
-        tester.execute(() -> dispatcher.unsubscribe(actor1, "X"));
+        tester.execute(() -> dispatcher.unsubscribe(actor1.input(), "X"));
+        tester.execute(() -> dispatcher.unsubscribe(actor1.input(), "X"));
         tester.send(actor1, 300);
         tester.send(actor1, 400);
         tester.requireEmptyOutputs();
@@ -323,8 +323,8 @@ public final class HashDispatcherTest
         /**
          * Setup.
          */
-        dispatcher.publish(actor1, "X");
-        dispatcher.subscribe(actor2, "Y");
+        dispatcher.publish(actor1.output(), "X");
+        dispatcher.subscribe(actor2.input(), "Y");
 
         /**
          * Run Test.
@@ -359,8 +359,8 @@ public final class HashDispatcherTest
         /**
          * Setup.
          */
-        dispatcher.publish(actor1, "X");
-        dispatcher.subscribe(actor2, "Y");
+        dispatcher.publish(actor1.output(), "X");
+        dispatcher.subscribe(actor2.input(), "Y");
 
         /**
          * Run Test.

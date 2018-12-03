@@ -6,6 +6,7 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.ConsumerScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.function.Consumer;
 
 /**
  * Applies a map-function to incoming messages and then forwards the results.
@@ -18,6 +19,7 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class Processor<T>
+        implements Consumer<T>
 {
     private final Actor<T, T> actor;
 
@@ -47,6 +49,15 @@ public final class Processor<T>
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void accept (final T message)
+    {
+        dataIn().send(message);
+    }
+
+    /**
      * Factory Method.
      *
      * @param <T> is the type of the incoming and outgoing messages.
@@ -54,8 +65,8 @@ public final class Processor<T>
      * @param script defines the processing to perform.
      * @return the new processor.
      */
-    public static <T> Processor<T> newProcessor (final Stage stage,
-                                                 final FunctionScript<T, T> script)
+    public static <T> Processor<T> newFunction (final Stage stage,
+                                                final FunctionScript<T, T> script)
     {
         return new Processor<>(stage.newActor().withScript(script).create());
     }
@@ -68,8 +79,8 @@ public final class Processor<T>
      * @param script defines the processing to perform.
      * @return the new processor.
      */
-    public static <T> Processor<T> newProcessor (final Stage stage,
-                                                 final ConsumerScript<T> script)
+    public static <T> Processor<T> newConsumer (final Stage stage,
+                                                final ConsumerScript<T> script)
     {
         return new Processor<>(stage.newActor().withScript(script).create());
     }
@@ -86,7 +97,7 @@ public final class Processor<T>
      * @param stage will be used t create private actors.
      * @return the new processor.
      */
-    public static <T> Processor<T> newProcessor (final Stage stage)
+    public static <T> Processor<T> newConnector (final Stage stage)
     {
         return new Processor<>(stage.newActor().withScript((T x) -> x).create());
     }

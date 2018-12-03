@@ -21,7 +21,7 @@ public final class RequesterTest
                 .withReplyKeyFunction(x -> x.charAt(0))
                 .build();
 
-        final Mapper<String, String> server = Mapper.newMapper(tester.stage());
+        final Processor<String> server = Processor.newConnector(tester.stage());
 
         requester.requestOut().connect(server.dataIn());
         requester.replyIn().connect(server.dataOut());

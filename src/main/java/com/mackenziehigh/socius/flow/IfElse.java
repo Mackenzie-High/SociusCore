@@ -3,6 +3,7 @@ package com.mackenziehigh.socius.flow;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -12,21 +13,36 @@ import java.util.function.Predicate;
  */
 public final class IfElse<T>
 {
+    /**
+     * This is the user-defined condition that determines
+     * whether messages are routed from the data-input to
+     * either the true-output or the false-output.
+     */
     private final Predicate<T> condition;
 
+    /**
+     * Provides the data-input connector.
+     */
     private final Processor<T> checker;
 
+    /**
+     * Provides the true-output connector.
+     */
     private final Processor<T> trueOut;
 
+    /**
+     * Provides the false-output connector.
+     */
     private final Processor<T> falseOut;
 
     private IfElse (final Stage stage,
                     final Predicate<T> condition)
     {
-        this.condition = condition;
-        this.checker = Processor.newProcessor(stage, this::onMessage);
-        this.trueOut = Processor.newProcessor(stage);
-        this.falseOut = Processor.newProcessor(stage);
+        Objects.requireNonNull(stage, "stage");
+        this.condition = Objects.requireNonNull(condition, "condition");
+        this.checker = Processor.newConsumer(stage, this::onMessage);
+        this.trueOut = Processor.newConnector(stage);
+        this.falseOut = Processor.newConnector(stage);
     }
 
     private void onMessage (final T message)

@@ -2,10 +2,10 @@ package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.Maps;
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Fans out messages from a single input to multiple outputs.
@@ -14,15 +14,18 @@ import java.util.Map;
  */
 public final class Fanout<T>
 {
-    private final Actor<T, T> recvActor;
+    private final Stage stage;
 
-    private final Map<Object, Actor<T, T>> outputs = Maps.newConcurrentMap();
+    private final Processor<T> input;
+
+    private final Map<Object, Processor<T>> outputs = Maps.newConcurrentMap();
 
     private final Object lock = new Object();
 
     private Fanout (final Stage stage)
     {
-        this.recvActor = stage.newActor().withScript(this::send).create();
+        this.stage = Objects.requireNonNull(stage, "stage");
+        this.input = Processor.newConsumer(stage, this::send);
     }
 
     private void send (final T message)
@@ -37,7 +40,7 @@ public final class Fanout<T>
      */
     public Input<T> dataIn ()
     {
-        return recvActor.input();
+        return input.dataIn();
     }
 
     /**
@@ -48,16 +51,22 @@ public final class Fanout<T>
      */
     public Output<T> dataOut (final Object key)
     {
+        Objects.requireNonNull(key, "key");
+
+        /**
+         * This is synchronized in order to prevent two processors
+         * being created for the same key inadvertently.
+         */
         synchronized (lock)
         {
             if (outputs.containsKey(key) == false)
             {
-                final Actor<T, T> identityActor = recvActor.stage().newActor().withScript((T x) -> x).create();
-                outputs.put(key, identityActor);
+                final Processor output = Processor.newConnector(stage);
+                outputs.put(key, output);
             }
         }
 
-        return outputs.get(key).output();
+        return outputs.get(key).dataOut();
     }
 
     /**

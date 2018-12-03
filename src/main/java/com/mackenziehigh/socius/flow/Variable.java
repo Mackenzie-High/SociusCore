@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.socius.flow.Processor;
-import com.mackenziehigh.socius.flow.Mapper;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -16,20 +14,32 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class Variable<T>
 {
+    /**
+     * Provides the data-input connector.
+     */
     private final Processor<T> procDataIn;
 
+    /**
+     * Provides the data-output connector.
+     */
     private final Mapper<Boolean, T> procDataOut;
 
+    /**
+     * Provides the clock-input and clock-output connectors.
+     */
     private final Processor<Instant> procClock;
 
+    /**
+     * Provides the actual storage.
+     */
     private final AtomicReference<T> variable = new AtomicReference<>();
 
     private Variable (final Stage stage,
                       final T initial)
     {
-        this.procClock = Processor.newProcessor(stage, this::onGet);
-        this.procDataIn = Processor.newProcessor(stage, this::onSet);
-        this.procDataOut = Mapper.newMapper(stage, this::onSend);
+        this.procClock = Processor.newFunction(stage, this::onGet);
+        this.procDataIn = Processor.newConsumer(stage, this::onSet);
+        this.procDataOut = Mapper.newFunction(stage, this::onSend);
         this.variable.set(initial);
     }
 

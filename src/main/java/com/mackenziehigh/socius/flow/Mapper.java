@@ -2,8 +2,10 @@ package com.mackenziehigh.socius.flow;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
+import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.function.Consumer;
 
 /**
  * Applies a map-function to incoming messages and then forwards the results,
@@ -18,6 +20,7 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
  * @param <O> is the type of the outgoing messages.
  */
 public final class Mapper<I, O>
+        implements Consumer<I>
 {
     private final Actor<I, O> actor;
 
@@ -47,6 +50,15 @@ public final class Mapper<I, O>
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void accept (final I message)
+    {
+        dataIn().send(message);
+    }
+
+    /**
      * Factory Method.
      *
      * @param <I> is the type of the incoming messages.
@@ -55,41 +67,9 @@ public final class Mapper<I, O>
      * @param script defines the processing to perform.
      * @return the new processor.
      */
-    public static <I, O> Mapper<I, O> newMapper (final Stage stage,
-                                                 final Actor.FunctionScript<I, O> script)
+    public static <I, O> Mapper<I, O> newFunction (final Stage stage,
+                                                   final FunctionScript<I, O> script)
     {
         return new Mapper<>(stage.newActor().withScript(script).create());
     }
-
-    /**
-     * Factory Method.
-     *
-     * @param <I> is the type of the incoming messages.
-     * @param stage will be used t create private actors.
-     * @param script defines the processing to perform.
-     * @return the new processor.
-     */
-    public static <I> Mapper<I, I> newMapper (final Stage stage,
-                                              final Actor.ConsumerScript<I> script)
-    {
-        return new Mapper<>(stage.newActor().withScript(script).create());
-    }
-
-    /**
-     * Creates a new identity processor.
-     *
-     * <p>
-     * An identity processor merely forwards incoming messages to
-     * the output without performing any actual transformation, etc.
-     * </p>
-     *
-     * @param <I> is the type of the incoming messages.
-     * @param stage will be used t create private actors.
-     * @return the new processor.
-     */
-    public static <I> Mapper<I, I> newMapper (final Stage stage)
-    {
-        return new Mapper<>(stage.newActor().withScript((I x) -> x).create());
-    }
-
 }

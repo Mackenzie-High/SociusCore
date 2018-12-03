@@ -1,12 +1,11 @@
 package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.Maps;
-import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Funnels messages from multiple inputs into a single output.
@@ -15,20 +14,18 @@ import java.util.Map;
  */
 public final class Funnel<T>
 {
-    private final Actor<T, T> recvActor;
+    private final Stage stage;
 
-    private final Map<Object, Actor<T, T>> inputs = Maps.newConcurrentMap();
+    private final Processor<T> output;
+
+    private final Map<Object, Processor<T>> inputs = Maps.newConcurrentMap();
 
     private final Object lock = new Object();
 
     private Funnel (final Stage stage)
     {
-        this.recvActor = stage.newActor().withScript((T x) -> x).create();
-    }
-
-    private void send (final T message)
-    {
-        recvActor.accept(message);
+        this.stage = Objects.requireNonNull(stage, "stage");
+        this.output = Processor.newConnector(stage);
     }
 
     /**
@@ -38,7 +35,7 @@ public final class Funnel<T>
      */
     public Output<T> dataOut ()
     {
-        return recvActor.output();
+        return output.dataOut();
     }
 
     /**
@@ -49,16 +46,21 @@ public final class Funnel<T>
      */
     public Input<T> dataIn (final Object key)
     {
+        /**
+         * This is synchronized in order to prevent two processors
+         * being created for the same key inadvertently.
+         */
         synchronized (lock)
         {
             if (inputs.containsKey(key) == false)
             {
-                final Cascade.Stage.Actor<T, T> inputActor = recvActor.stage().newActor().withScript(this::send).create();
-                inputs.put(key, inputActor);
+                final Input<T> connector = output.dataIn();
+                final Processor<T> actor = Processor.newConsumer(stage, connector::send);
+                inputs.put(key, actor);
             }
         }
 
-        return inputs.get(key).input();
+        return inputs.get(key).dataIn();
     }
 
     /**

@@ -12,7 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Requires acknowledgment of previous messages before forwarding newer messages.
+ * A backlog queue that requires acknowledgment of previous messages,
+ * before forwarding newer messages.
  *
  * @param <T> is the type of messages passing through this object.
  * @param <R> is the type of the acknowledgments sent back to this object.
@@ -27,7 +28,7 @@ public final class AckQueue<T, R>
 
     /**
      * This is the maximum number of outstanding unacknowledged
-     * messages that can be n-flight at any any moment in time.
+     * messages that can be in-flight at any any moment in time.
      */
     private final int permits;
 
@@ -65,12 +66,24 @@ public final class AckQueue<T, R>
      */
     private final Object lock = new Object();
 
+    /**
+     * Provides the data-input connector.
+     */
     private final Processor<T> procDataIn;
 
+    /**
+     * Provides the data-output connector.
+     */
     private final Processor<T> procDataOut;
 
+    /**
+     * Provides the overflow-output connector.
+     */
     private final Processor<T> procOverflowOut;
 
+    /**
+     * Provides the acknowledgment-output connector.
+     */
     private final Processor<R> procAcksIn;
 
     private AckQueue (final Builder builder)
@@ -78,10 +91,10 @@ public final class AckQueue<T, R>
         this.permits = builder.permits;
         this.backlog = builder.backlog;
         this.backlogQueue = builder.queue;
-        this.procDataIn = Processor.newProcessor(builder.stage, this::onData);
-        this.procDataOut = Processor.newProcessor(builder.stage);
-        this.procAcksIn = Processor.newProcessor(builder.stage, this::onAck);
-        this.procOverflowOut = Processor.newProcessor(builder.stage);
+        this.procDataIn = Processor.newConsumer(builder.stage, this::onData);
+        this.procDataOut = Processor.newConnector(builder.stage);
+        this.procAcksIn = Processor.newConsumer(builder.stage, this::onAck);
+        this.procOverflowOut = Processor.newConnector(builder.stage);
     }
 
     private void onData (final T message)

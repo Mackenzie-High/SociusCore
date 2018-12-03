@@ -1,6 +1,5 @@
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.socius.flow.Processor;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -9,29 +8,44 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Conditionally forwards messages based on a boolean flag (open|closed).
  *
- * @param <T> is the type of messages that flow through the valve.
+ * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class Valve<T>
 {
+    /**
+     * Provides the data-input connector.
+     */
     private final Processor<T> procDataIn;
 
+    /**
+     * Provides the data-output connector.
+     */
     private final Processor<T> procDataOut;
 
+    /**
+     * Provides the toggle-input connector.
+     */
     private final Processor<Boolean> procToggleIn;
 
+    /**
+     * Provides the toggle-output connector.
+     */
     private final Processor<Boolean> procToggleOut;
 
-    private final Object lock = new Object();
-
+    /**
+     * This flag defines whether the valve is open or closed.
+     * True means that the valve is open.
+     * False means that the valve is closed.
+     */
     private final AtomicBoolean flag = new AtomicBoolean();
 
     private Valve (final Stage stage,
                    final boolean open)
     {
-        this.procDataIn = Processor.newProcessor(stage, this::onDataIn);
-        this.procDataOut = Processor.newProcessor(stage);
-        this.procToggleIn = Processor.newProcessor(stage, this::onToggleIn);
-        this.procToggleOut = Processor.newProcessor(stage, this::onToggleOut);
+        this.procDataIn = Processor.newFunction(stage, this::onDataIn);
+        this.procDataOut = Processor.newConnector(stage);
+        this.procToggleIn = Processor.newConsumer(stage, this::onToggleIn);
+        this.procToggleOut = Processor.newFunction(stage, this::onToggleOut);
         this.procDataIn.dataOut().connect(this.procDataOut.dataIn());
         this.flag.set(open);
     }

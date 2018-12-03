@@ -1,64 +1,151 @@
 package com.mackenziehigh.socius.flow;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Queues;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 
 /**
- * Select one message from each of (N) data-inputs,
- * combines the selections into a single messages,
+ * Selects one message from each of (N) data-inputs,
+ * combines the selections into a single message,
  * and then forwards the combined message.
+ *
+ * <p>
+ * A series of internal queues are used to store incoming messages.
+ * There is one queue for each of the (N) data-inputs.
+ * When all of the queues contain at least one message each,
+ * then one message will be removed from each queue and
+ * a batch will be formed from those (N) messages.
+ * Finally, the batch will be sent out.
+ * </p>
+ *
+ * <p>
+ * If the producers have differing message-rates,
+ * then one queue may become much fully than another.
+ * In effect, this can lead to a memory-leak like situation.
+ * Thus, you may set a maximum capacity for each queue.
+ * If a message is received, when the queue is at capacity,
+ * then the message will simply be dropped.
+ * </p>
  *
  * @param <T> is the type of the messages flowing through.
  */
 public final class Batcher<T>
 {
+    /**
+     * Provides the data-output connector.
+     */
     private final Processor<List<T>> dataOut;
 
-    private final List<Processor<T>> dataIn;
+    /**
+     * Provides the data-input connectors.
+     */
+    private final ImmutableList<Processor<T>> dataIn;
 
-    private final List<Queue<T>> queues;
+    /**
+     * These queues store the incoming messages, until a batch can be formed.
+     * There is one queue per data-input.
+     * Whenever a message is received from data-input (N),
+     * then the message will be added to the (Nth) queue.
+     */
+    private final ImmutableList<Queue<T>> queues;
+
+    /**
+     * This is the maximum number of messages in a single queue at any one time.
+     */
+    private final int capacity;
 
     private Batcher (final Stage stage,
-                     final int arity)
+                     final int arity,
+                     final int capacity)
     {
-        this.dataIn = new ArrayList<>(arity);
-        this.queues = new ArrayList<>(arity);
-        this.dataOut = Processor.newProcessor(stage);
+        this.dataOut = Processor.newConnector(stage);
+        this.capacity = capacity;
+
+        final ImmutableList.Builder<Processor<T>> builderDataIn = ImmutableList.builder();
+        final ImmutableList.Builder<Queue<T>> builderQueues = ImmutableList.builder();
 
         for (int i = 0; i < arity; i++)
         {
             final int idx = i;
-            dataIn.add(Processor.newProcessor(stage, (T msg) -> onMessage(idx, msg)));
-            queues.add(Queues.newArrayDeque());
+            builderDataIn.add(Processor.newConsumer(stage, (T msg) -> onMessage(idx, msg)));
+            builderQueues.add(Queues.newArrayDeque());
         }
+
+        this.dataIn = builderDataIn.build();
+        this.queues = builderQueues.build();
     }
 
+    /**
+     * This method may be executed by multiple actors concurrently!
+     *
+     * @param index identifies a data-input.
+     * @param message was just received via the data-input.
+     */
     private void onMessage (final int index,
                             final T message)
     {
-        queues.get(index).add(message);
+        /**
+         * Find the queue corresponding to the indexed data-input.
+         */
+        final Queue<T> queue = queues.get(index);
 
+        /**
+         * If the queue is already full, then drop the incoming message.
+         * Otherwise, enqueue the message and continue.
+         */
+        if (queue.size() == capacity)
+        {
+            return;
+        }
+        else
+        {
+            queue.add(message);
+        }
+
+        /**
+         * Determine whether there is at least one message in each queue.
+         */
         final boolean readyToSend = queues.stream().noneMatch(x -> x.isEmpty());
 
+        /**
+         * If a message is available from each queue,
+         * then we are ready to create and send a batch.
+         */
         if (readyToSend)
         {
-            final List<T> batchList = new ArrayList<>(queues.size());
+            /**
+             * Create the batch.
+             */
+            final ImmutableList.Builder<T> batchList = ImmutableList.builderWithExpectedSize(queues.size());
 
-            for (Queue<T> queue : queues)
+            for (Queue<T> member : queues)
             {
-                batchList.add(queue.poll());
+                batchList.add(member.poll());
             }
 
-            final List<T> batch = ImmutableList.copyOf(batchList); // TODO: Use list builder.
+            final ImmutableList<T> batch = batchList.build();
 
+            /**
+             * Send the batch.
+             */
             dataOut.dataIn().send(batch);
         }
+    }
+
+    /**
+     * Get the number of input connectors.
+     *
+     * @return the number of input.
+     */
+    public int arity ()
+    {
+        return dataIn.size();
     }
 
     /**
@@ -77,8 +164,8 @@ public final class Batcher<T>
      *
      * <p>
      * The combined messages are immutable lists containing
-     * the component messages, such that the <code>Kth</code>
-     * message was obtained from the <code>Kth</code> data-input.
+     * the component messages, such that the <code>Nth</code>
+     * message was obtained from the <code>Nth</code> data-input.
      * </p>
      *
      * @return the data-output.
@@ -89,16 +176,69 @@ public final class Batcher<T>
     }
 
     /**
-     * Create a new <code>Batcher</code>.
+     * Factory Method.
      *
      * @param <T> is the type of the messages flowing through.
      * @param stage will be used to create private actors.
-     * @param arity will be the number of data-inputs.
-     * @return the newly constructed object.
+     * @return a builder that can build the batcher.
      */
-    public static <T> Batcher<T> newBatcher (final Stage stage,
-                                             final int arity)
+    public static <T> Builder<T> newBatcher (final Stage stage)
     {
-        return new Batcher<>(stage, arity);
+        return new Builder<>(stage);
+    }
+
+    /**
+     * Builder.
+     *
+     * @param <T> is the type of the messages flowing through.
+     */
+    public static final class Builder<T>
+    {
+        private final Stage stage;
+
+        private int arity;
+
+        private int capacity;
+
+        private Builder (final Stage stage)
+        {
+            this.stage = Objects.requireNonNull(stage, "stage");
+        }
+
+        /**
+         * Specify the number of data-inputs.
+         *
+         * @param value will be the number of input queues.
+         * @return this.
+         */
+        public Builder<T> withArity (final int value)
+        {
+            Preconditions.checkArgument(value < 0, "arity < 0");
+            this.arity = value;
+            return this;
+        }
+
+        /**
+         * Specify the capacity of each of the input queues.
+         *
+         * @param value will be the maximum number of pending messages, per data-input.
+         * @return this.
+         */
+        public Builder<T> withCapacity (final int value)
+        {
+            Preconditions.checkArgument(value < 0, "capacity < 0");
+            this.capacity = value;
+            return this;
+        }
+
+        /**
+         * construct the new object.
+         *
+         * @return the new object.
+         */
+        public Batcher<T> build ()
+        {
+            return new Batcher<>(stage, arity, capacity);
+        }
     }
 }

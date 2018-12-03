@@ -1,5 +1,6 @@
 package com.mackenziehigh.socius.io;
 
+import com.google.common.base.Preconditions;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -13,11 +14,11 @@ import java.util.Collection;
  */
 public final class CollectionSink<T>
 {
-    private final Processor<T> processor;
+    private final Processor<T> actor;
 
-    private CollectionSink (final Processor<T> processor)
+    private CollectionSink (final Processor<T> actor)
     {
-        this.processor = processor;
+        this.actor = actor;
     }
 
     /**
@@ -27,7 +28,7 @@ public final class CollectionSink<T>
      */
     public Input<T> dataIn ()
     {
-        return processor.dataIn();
+        return actor.dataIn();
     }
 
     /**
@@ -37,7 +38,7 @@ public final class CollectionSink<T>
      */
     public Output<T> dataOut ()
     {
-        return processor.dataOut();
+        return actor.dataOut();
     }
 
     /**
@@ -51,7 +52,9 @@ public final class CollectionSink<T>
     public static <T> CollectionSink<T> newCollectionSink (final Cascade.Stage stage,
                                                            final Collection<T> collection)
     {
-        final Processor<T> proc = Processor.newProcessor(stage, (T x) -> collection.add(x));
+        Preconditions.checkNotNull(stage, "stage");
+        Preconditions.checkNotNull(collection, "collection");
+        final Processor<T> proc = Processor.newConsumer(stage, (T x) -> collection.add(x));
         return new CollectionSink<>(proc);
     }
 }

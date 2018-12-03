@@ -3,6 +3,7 @@ package com.mackenziehigh.socius.flow;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.function.Predicate;
  * @param <I> is the type of the incoming messages.
  * @param <O> is the type of the outgoing messages.
  */
-public final class OptionHierarchy<I, O>
+public final class OrderedChoice<I, O>
 {
     /**
      * An option that may receive messages.
@@ -73,11 +74,11 @@ public final class OptionHierarchy<I, O>
      */
     private final Funnel<O> funnel;
 
-    private OptionHierarchy (final Stage stage,
-                             final List<Option<I, O>> mappers)
+    private OrderedChoice (final Stage stage,
+                           final List<Option<I, O>> mappers)
     {
-        this.router = Processor.newProcessor(stage, this::onInput);
-        this.deadDrop = Processor.newProcessor(stage);
+        this.router = Processor.newConsumer(stage, this::onInput);
+        this.deadDrop = Processor.newConnector(stage);
         this.funnel = Funnel.newFunnel(stage);
         this.options = ImmutableList.copyOf(mappers);
 
@@ -89,6 +90,10 @@ public final class OptionHierarchy<I, O>
 
     private void onInput (final I message)
     {
+        /**
+         * Route the message to the first option
+         * that is willing to accept it.
+         */
         for (Option<I, O> option : options)
         {
             if (option.isMatch(message))
@@ -98,6 +103,10 @@ public final class OptionHierarchy<I, O>
             }
         }
 
+        /**
+         * None of the options were willing to accept the message.
+         * Therefore, route the message to the default output.
+         */
         deadDrop.dataIn().send(message);
     }
 
@@ -184,10 +193,11 @@ public final class OptionHierarchy<I, O>
          * @return this.
          */
         public Builder<I, O> withOption (final Predicate<I> condition,
-                                         final Mapper<I, O> transform)
+                                         final FunctionScript<I, O> transform)
         {
             Objects.requireNonNull(condition, "condition");
             Objects.requireNonNull(transform, "transform");
+            final Mapper<I, O> mapper = Mapper.newFunction(stage, transform);
             final Option<I, O> option = new Option<I, O>()
             {
                 @Override
@@ -199,13 +209,13 @@ public final class OptionHierarchy<I, O>
                 @Override
                 public Input<I> dataIn ()
                 {
-                    return transform.dataIn();
+                    return mapper.dataIn();
                 }
 
                 @Override
                 public Output<O> dataOut ()
                 {
-                    return transform.dataOut();
+                    return mapper.dataOut();
                 }
             };
             options.add(option);
@@ -217,9 +227,9 @@ public final class OptionHierarchy<I, O>
          *
          * @return the new option-hierarchy.
          */
-        public OptionHierarchy<I, O> build ()
+        public OrderedChoice<I, O> build ()
         {
-            return new OptionHierarchy<>(stage, options);
+            return new OrderedChoice<>(stage, options);
         }
     }
 }

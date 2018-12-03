@@ -1,24 +1,34 @@
 package com.mackenziehigh.socius.flow;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
- * Filters incoming messages based on a predicate and
+ * Filters incoming messages based on a predicate and then
  * forwards only those messages that the predicate accepts.
  *
  * @param <T> is the type of messages flowing through the filter.
  */
 public final class Filter<T>
 {
-    private final Actor<T, T> actor;
+    private final Processor<T> actor;
 
-    private Filter (final Actor<T, T> actor)
+    private final Predicate<T> condition;
+
+    private Filter (final Stage stage,
+                    final Predicate<T> condition)
     {
-        this.actor = actor;
+        Objects.requireNonNull(stage, "stage");
+        this.condition = Objects.requireNonNull(condition, "condition");
+        this.actor = Processor.newConsumer(stage, this::onMessage);
+    }
+
+    private T onMessage (final T message)
+    {
+        return condition.test(message) ? message : null;
     }
 
     /**
@@ -28,7 +38,7 @@ public final class Filter<T>
      */
     public Input<T> dataIn ()
     {
-        return actor.input();
+        return actor.dataIn();
     }
 
     /**
@@ -38,7 +48,7 @@ public final class Filter<T>
      */
     public Output<T> dataOut ()
     {
-        return actor.output();
+        return actor.dataOut();
     }
 
     /**
@@ -52,7 +62,7 @@ public final class Filter<T>
     public static <T> Filter<T> newFilter (final Stage stage,
                                            final Predicate<T> condition)
     {
-        return new Filter<>(stage.newActor().withScript((T x) -> condition.test(x) ? x : null).create());
+        return new Filter<>(stage, condition);
     }
 
 }

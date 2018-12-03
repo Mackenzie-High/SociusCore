@@ -11,16 +11,16 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Message Bus for (N x N) <i>Intra</i>-Process-Communication.
  *
- * @param <M> is the type of messages that flow through the message-bus.
+ * @param <T> is the type of messages that flow through the message-bus.
  */
-public final class Bus<M>
+public final class Bus<T>
 {
     private final Stage stage;
 
     /**
      * This processor is used to connect the inputs to the outputs.
      */
-    private final Processor<M> hub;
+    private final Processor<T> hub;
 
     /**
      * Messages are routed from these processors to the hub.
@@ -31,7 +31,7 @@ public final class Bus<M>
      * because actors use copy-on-write lists in their connectors.
      * </p>
      */
-    private final Map<Object, Processor<M>> inputs = new ConcurrentHashMap<>();
+    private final Map<Object, Processor<T>> inputs = new ConcurrentHashMap<>();
 
     /**
      * Messages are routed from the hub to these processors.
@@ -42,39 +42,66 @@ public final class Bus<M>
      * because actors use copy-on-write lists in their connectors.
      * </p>
      */
-    private final Map<Object, Processor<M>> outputs = new ConcurrentHashMap<>();
+    private final Map<Object, Processor<T>> outputs = new ConcurrentHashMap<>();
 
-    private final Collection<Processor<M>> outputsView = outputs.values();
+    /**
+     * Cache this, because we will be iterating over it frequently.
+     */
+    private final Collection<Processor<T>> outputsView = outputs.values();
 
     private Bus (final Stage stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
-        this.hub = Processor.newProcessor(stage, this::forwardFromHub);
+        this.hub = Processor.newConsumer(stage, this::forwardFromHub);
     }
 
     /**
      * Get a named input that supplies messages to this message-bus.
      *
+     * <p>
+     * This method is synchronized, since this method may need to
+     * create the connector that will be associated with the key.
+     * If two methods called, without synchronization,
+     * then two connectors could potentially be created.
+     * </p>
+     *
      * @param key identifies the input to retrieve.
      * @return the named input.
      */
-    public Input<M> dataIn (final Object key)
+    public synchronized Input<T> dataIn (final Object key)
     {
-        // Thread Safe.
-        inputs.putIfAbsent(key, Processor.newProcessor(stage, this::forwardToHub));
+        Objects.requireNonNull(key, "key");
+
+        if (inputs.containsKey(key) == false)
+        {
+            inputs.put(key, Processor.newConsumer(stage, this::forwardToHub));
+        }
+
         return inputs.get(key).dataIn();
     }
 
     /**
      * Get a named output that transmits messages from this message-bus.
      *
+     * <p>
+     * This method is synchronized, since this method may need to
+     * create the connector that will be associated with the key.
+     * If two methods called, without synchronization,
+     * then two connectors could potentially be created.
+     * </p>
+     *
      * @param key identifies the output to retrieve.
      * @return the named output.
      */
-    public Output<M> dataOut (final Object key)
+    public synchronized Output<T> dataOut (final Object key)
     {
-        // Thread Safe.
-        outputs.putIfAbsent(key, Processor.newProcessor(stage));
+        Objects.requireNonNull(key, "key");
+
+        if (outputs.containsKey(key) == false)
+        {
+            outputs.put(key, Processor.newConnector(stage));
+        }
+
         return outputs.get(key).dataOut();
     }
 
@@ -90,14 +117,14 @@ public final class Bus<M>
         return new Bus<>(stage);
     }
 
-    private void forwardToHub (final M message)
+    private void forwardToHub (final T message)
     {
         hub.dataIn().send(message);
     }
 
-    private void forwardFromHub (final M message)
+    private void forwardFromHub (final T message)
     {
-        for (Processor<M> output : outputsView)
+        for (Processor<T> output : outputsView)
         {
             output.dataIn().send(message);
         }

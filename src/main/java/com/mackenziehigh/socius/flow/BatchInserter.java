@@ -24,46 +24,57 @@ public final class BatchInserter<T>
 
     private static final boolean NOT_ADDED_TO_BATCH = false;
 
+    /**
+     * Provides the data-input connector.
+     */
     private final Processor<T> procDataIn;
 
+    /**
+     * Provides the data-output connector.
+     */
     private final Processor<T> procDataOut;
 
+    /**
+     * Provides the batch-output connector.
+     */
     private final Processor<List<T>> procBatchOut;
 
-    private final List<Action<T>> actions;
+    /**
+     * These objects trap and store individual messages,
+     * which themselves will be part of the next outgoing batch,
+     * until the batch is complete and ready to be sent out.
+     */
+    private final List<Selector<T>> selectors;
 
-    private final AtomicInteger counter = new AtomicInteger();
+    /**
+     * This counter is used to determine when the batch is full.
+     */
+    private final AtomicInteger batchSize = new AtomicInteger();
 
     private BatchInserter (final Stage stage,
-                           final List<Action<T>> actions)
+                           final List<Selector<T>> selectors)
     {
-        this.actions = ImmutableList.copyOf(actions);
-        this.procDataIn = Processor.newProcessor(stage, this::onMessage);
-        this.procDataOut = Processor.newProcessor(stage);
-        this.procBatchOut = Processor.newProcessor(stage);
+        this.selectors = ImmutableList.copyOf(selectors);
+        this.procDataIn = Processor.newConsumer(stage, this::onMessage);
+        this.procDataOut = Processor.newConnector(stage);
+        this.procBatchOut = Processor.newConnector(stage);
     }
 
     private void onMessage (final T message)
     {
-        counter.set(0);
-
         boolean received = false;
 
         /**
          * Try to add the message to the batch.
          */
-        for (Action<T> action : actions)
+        for (Selector<T> selector : selectors)
         {
-            if (action.receive(message) == ADDED_TO_BATCH)
+            if (selector.receive(message) == ADDED_TO_BATCH)
             {
                 received = ADDED_TO_BATCH;
+                batchSize.incrementAndGet();
                 break;
             }
-        }
-
-        for (Action<T> action : actions)
-        {
-            action.tally(counter);
         }
 
         /**
@@ -80,21 +91,22 @@ public final class BatchInserter<T>
          * If the message was added to the batch and the batch is now full,
          * then go ahead and transmit the batch.
          */
-        final boolean batchIsFull = actions.size() == counter.get();
+        final boolean batchIsFull = selectors.size() == batchSize.get();
 
         if (batchIsFull)
         {
-            final List<T> batchList = new ArrayList<>(actions.size());
+            final List<T> batchList = new ArrayList<>(selectors.size());
 
-            for (Action<T> action : actions)
+            for (Selector<T> selector : selectors)
             {
-                action.append(batchList);
-                action.clear();
+                selector.append(batchList);
+                selector.clear();
             }
 
             final List<T> batch = ImmutableList.copyOf(batchList); // TODO: Use list builder.
 
             procBatchOut.dataIn().send(batch);
+            batchSize.set(0);
         }
     }
 
@@ -133,7 +145,7 @@ public final class BatchInserter<T>
      *
      * @param <T> is the type of messages flowing through the inserter.
      * @param stage will be used to create private actors.
-     * @return the new inserter.
+     * @return a builder that can create a new inserter.
      */
     public static <T> Builder<T> newInserter (final Stage stage)
     {
@@ -149,7 +161,7 @@ public final class BatchInserter<T>
     {
         private final Stage stage;
 
-        private final List<Action<T>> actions = Lists.newLinkedList();
+        private final List<Selector<T>> actions = Lists.newLinkedList();
 
         private Builder (final Stage stage)
         {
@@ -169,7 +181,7 @@ public final class BatchInserter<T>
          */
         public Builder<T> require (final Predicate<T> condition)
         {
-            actions.add(new Action<>(condition));
+            actions.add(new Selector<>(condition));
             return this;
         }
 
@@ -194,13 +206,13 @@ public final class BatchInserter<T>
      *
      * @param <T> is the type of the messages flowing through the inserter.
      */
-    private static final class Action<T>
+    private static final class Selector<T>
     {
         private final Predicate<T> condition;
 
         private final AtomicReference<T> data = new AtomicReference<>();
 
-        private Action (final Predicate<T> condition)
+        private Selector (final Predicate<T> condition)
         {
             this.condition = condition;
         }
@@ -221,16 +233,6 @@ public final class BatchInserter<T>
             else
             {
                 return NOT_ADDED_TO_BATCH;
-            }
-        }
-
-        public void tally (final AtomicInteger counter)
-        {
-            final boolean alreadyInBatch = data.get() != null;
-
-            if (alreadyInBatch)
-            {
-                counter.incrementAndGet();
             }
         }
 

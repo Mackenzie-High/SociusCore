@@ -30,7 +30,7 @@ public final class WakeupCaller
         private Trigger (final Duration delay)
         {
             this.delay = delay;
-            this.procWakeup = Processor.newProcessor(stage, this::onWakeup);
+            this.procWakeup = Processor.newFunction(stage, this::onWakeup);
         }
 
         /**

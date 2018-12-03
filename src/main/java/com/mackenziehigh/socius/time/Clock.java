@@ -72,7 +72,7 @@ public final class Clock
         this.period = builder.period;
         this.service = builder.service != null ? builder.service : DefaultExecutor.get();
         final Stage stage = Cascade.newExecutorStage(service);
-        this.procClockOut = Processor.newProcessor(stage);
+        this.procClockOut = Processor.newConnector(stage);
     }
 
     /**

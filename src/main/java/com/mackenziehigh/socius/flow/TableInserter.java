@@ -1,7 +1,5 @@
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.socius.flow.Processor;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
@@ -13,26 +11,44 @@ import java.util.function.Function;
 /**
  * Conditionally routes messages based on a table lookup.
  *
- * @param <T>
+ * @param <K> is the type of the routing-key that is contained in each message.
+ * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class TableInserter<K, T>
 {
     private final Stage stage;
 
+    /**
+     * Provides the data-input connector.
+     */
     private final Processor<T> procDataIn;
 
+    /**
+     * Provides the data-output connector.
+     */
     private final Processor<T> procDataOut;
 
-    private final Map<K, Input<T>> routes = Maps.newConcurrentMap();
+    /**
+     * This map maps routing-keys to the corresponding receivers.
+     */
+    private final Map<K, Processor<T>> routingTable = Maps.newConcurrentMap();
 
+    /**
+     * This function knows how to extract routing-keys from messages.
+     */
     private final Function<T, K> extractor;
+
+    /**
+     * This lock synchronizes the creation of output receivers.
+     */
+    private final Object lock = new Object();
 
     private TableInserter (final Stage stage,
                            final Function<T, K> extractor)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
-        this.procDataIn = Processor.newProcessor(stage, this::onMessage);
-        this.procDataOut = Processor.newProcessor(stage);
+        this.procDataIn = Processor.newConsumer(stage, this::onMessage);
+        this.procDataOut = Processor.newConnector(stage);
         this.extractor = Objects.requireNonNull(extractor, "extractor");
     }
 
@@ -40,7 +56,7 @@ public final class TableInserter<K, T>
     {
         final Object key = extractor.apply(message);
 
-        final Input<T> route = routes.get(key);
+        final Processor<T> route = routingTable.get(key);
 
         if (route == null)
         {
@@ -48,28 +64,70 @@ public final class TableInserter<K, T>
         }
         else
         {
-            route.send(message);
+            route.dataIn().send(message);
         }
     }
 
+    /**
+     * Input Connection.
+     *
+     * @return the input that provides the messages to select from.
+     */
     public Input<T> dataIn ()
     {
         return procDataIn.dataIn();
     }
 
+    /**
+     * Output Connection.
+     *
+     * @return the output that receives the messages that were not selected
+     */
     public Output<T> dataOut ()
     {
         return procDataOut.dataOut();
     }
 
-    public synchronized Output<T> selectIf (final K key)
+    /**
+     * Output Connection.
+     *
+     * @param key is the routing-key that identifies messages intended for this output.
+     * @return the output that will receive the messages that contain the routing-key.
+     */
+    public Output<T> selectIf (final K key)
     {
-        Preconditions.checkState(routes.containsKey(key) == false, "Duplicate: selectIf(%s)", key);
-        final Processor<T> proc = Processor.newProcessor(stage);
-        routes.put(key, proc.dataIn());
-        return proc.dataOut();
+        Objects.requireNonNull(key, "key");
+
+        /**
+         * Create the output receiver, if it does not already exist.
+         * Do not allow concurrent calls to inadvertently create
+         * duplicate output receivers for the same key.
+         */
+        synchronized (lock)
+        {
+            if (routingTable.containsKey(key) == false)
+            {
+                final Processor<T> proc = Processor.newConnector(stage);
+                routingTable.put(key, proc);
+            }
+        }
+
+        /**
+         * The output connector is provided by the output receiver,
+         * which was created above, or during a previous invocation.
+         */
+        return routingTable.get(key).dataOut();
     }
 
+    /**
+     * Factory Method.
+     *
+     * @param <K> is the type of the routing-key that is contained in each message.
+     * @param <T> is the type of the incoming and outgoing messages.
+     * @param stage will be used to create private actors.
+     * @param extractor knows how to extract routing-keys from messages.
+     * @return the new inserter.
+     */
     public static <K, T> TableInserter<K, T> newTableInserter (final Stage stage,
                                                                final Function<T, K> extractor)
     {

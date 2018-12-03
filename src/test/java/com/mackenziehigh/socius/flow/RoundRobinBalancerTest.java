@@ -14,7 +14,7 @@ public final class RoundRobinBalancerTest
             throws Throwable
     {
         final ActorTester tester = new ActorTester();
-        final RoundRobinBalancer<Character> balancer = RoundRobinBalancer.newBalancer(tester.stage(), 3);
+        final RoundRobin<Character> balancer = RoundRobin.newRoundRobin(tester.stage(), 3);
 
         assertEquals(3, balancer.arity());
 

@@ -47,7 +47,7 @@ public final class Minuteman
     {
         Objects.requireNonNull(stage, "stage");
         this.timer = new Timer(getClass().getSimpleName(), true);
-        this.procClockOut = Processor.newProcessor(stage);
+        this.procClockOut = Processor.newConnector(stage);
     }
 
     /**
