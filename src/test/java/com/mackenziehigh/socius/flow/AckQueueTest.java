@@ -28,7 +28,6 @@ public final class AckQueueTest
         tester.send(queue.dataIn(), 'H'); // 8  (add to backlog)
         tester.send(queue.dataIn(), 'I'); // 9  (overflow)
         tester.send(queue.dataIn(), 'J'); // 10 (overflow)
-        tester.printOutput(queue.dataOut());
         tester.expect(queue.dataOut(), 'A');
         tester.expect(queue.dataOut(), 'B');
         tester.expect(queue.dataOut(), 'C');
@@ -44,9 +43,9 @@ public final class AckQueueTest
         tester.requireEmptyOutputs();
         tester.send(queue.acksIn(), 7);
         tester.send(queue.acksIn(), 8);
-        tester.requireEmptyOutputs();
         tester.expect(queue.dataOut(), 'G');
         tester.expect(queue.dataOut(), 'H');
+        tester.requireEmptyOutputs();
         tester.run();
 
     }
