@@ -18,7 +18,7 @@ public final class BatchInserterTest
         /**
          * Each batch requires one 'A', two 'B', and one 'C'.
          */
-        final BatchInserter<Character> inserter = BatchInserter.<Character>newInserter(tester.stage())
+        final BatchInserter<Character> inserter = BatchInserter.<Character>newBatchInserter(tester.stage())
                 .require(x -> x == 'A')
                 .require(x -> x == 'B')
                 .require(x -> x == 'B')

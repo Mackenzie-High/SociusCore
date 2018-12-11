@@ -99,11 +99,7 @@ public final class Batcher<T>
          * If the queue is already full, then drop the incoming message.
          * Otherwise, enqueue the message and continue.
          */
-        if (queue.size() == capacity)
-        {
-            return;
-        }
-        else
+        if (queue.size() < capacity)
         {
             queue.add(message);
         }
@@ -198,7 +194,7 @@ public final class Batcher<T>
 
         private int arity;
 
-        private int capacity;
+        private int capacity = Integer.MAX_VALUE;
 
         private Builder (final Stage stage)
         {

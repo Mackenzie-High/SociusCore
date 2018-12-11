@@ -96,6 +96,7 @@ public final class OrderedChoice<I, O>
          */
         for (Option<I, O> option : options)
         {
+
             if (option.isMatch(message))
             {
                 option.dataIn().send(message);
@@ -218,7 +219,7 @@ public final class OrderedChoice<I, O>
                     return mapper.dataOut();
                 }
             };
-            options.add(option);
+            withOption(option);
             return this;
         }
 

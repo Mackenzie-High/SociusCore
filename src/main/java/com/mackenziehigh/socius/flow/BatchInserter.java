@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -95,7 +94,7 @@ public final class BatchInserter<T>
 
         if (batchIsFull)
         {
-            final List<T> batchList = new ArrayList<>(selectors.size());
+            final ImmutableList.Builder<T> batchList = ImmutableList.builder();
 
             for (Selector<T> selector : selectors)
             {
@@ -103,7 +102,7 @@ public final class BatchInserter<T>
                 selector.clear();
             }
 
-            final List<T> batch = ImmutableList.copyOf(batchList); // TODO: Use list builder.
+            final ImmutableList<T> batch = batchList.build();
 
             procBatchOut.dataIn().send(batch);
             batchSize.set(0);
@@ -147,7 +146,7 @@ public final class BatchInserter<T>
      * @param stage will be used to create private actors.
      * @return a builder that can create a new inserter.
      */
-    public static <T> Builder<T> newInserter (final Stage stage)
+    public static <T> Builder<T> newBatchInserter (final Stage stage)
     {
         return new Builder<>(stage);
     }
@@ -236,7 +235,7 @@ public final class BatchInserter<T>
             }
         }
 
-        public void append (final List<T> list)
+        public void append (final ImmutableList.Builder<T> list)
         {
             list.add(data.get());
         }

@@ -32,6 +32,11 @@ public final class Printer<T>
      */
     private final Consumer<Object> method;
 
+    /**
+     * This is where the output will go to.
+     */
+    private final PrintStream stream;
+
     private Printer (final Stage stage,
                      final PrintStream stream,
                      final String format,
@@ -39,7 +44,7 @@ public final class Printer<T>
     {
         this.actor = Processor.newFunction(stage, this::print);
         this.format = Objects.requireNonNull(format, "format");
-        Objects.requireNonNull(stream, "stream");
+        this.stream = Objects.requireNonNull(stream, "stream");
         this.method = line ? stream::println : stream::print;
     }
 
@@ -47,6 +52,7 @@ public final class Printer<T>
     {
         final String text = String.format(format, value);
         method.accept(text);
+        stream.flush();
         return value;
     }
 
@@ -89,6 +95,32 @@ public final class Printer<T>
                                            final String format)
     {
         return new Printer<>(stage, System.out, format, false);
+    }
+
+    /**
+     * Create a new <code>Printer</code> that will print the messages
+     * to standard-out with a trailing newline.
+     *
+     * @param <T> is the type of the incoming and outgoing messages.
+     * @param stage will be used to create private actors.
+     * @return the new printer.
+     */
+    public static <T> Printer<T> newPrint (final Stage stage)
+    {
+        return new Printer<>(stage, System.out, "%s", false);
+    }
+
+    /**
+     * Create a new <code>Printer</code> that will print the messages
+     * to standard-error with a trailing newline.
+     *
+     * @param <T> is the type of the incoming and outgoing messages.
+     * @param stage will be used to create private actors.
+     * @return the new printer.
+     */
+    public static <T> Printer<T> newPrinterr (final Stage stage)
+    {
+        return new Printer<>(stage, System.err, "%s", false);
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.mackenziehigh.socius.testing;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -47,12 +48,6 @@ public final class ActorTester
         return this;
     }
 
-    public <I, O> ActorTester send (final Actor<I, O> actor,
-                                    final I message)
-    {
-        return send(actor.input(), message);
-    }
-
     public <I> ActorTester send (final Actor.Input<I> input,
                                  final I message)
     {
@@ -69,17 +64,12 @@ public final class ActorTester
         return this;
     }
 
-    public <I, O> ActorTester expect (final Actor<I, O> actor,
-                                      final O message)
-    {
-        return expect(actor.output(), message);
-    }
-
     public <O> ActorTester expect (final Actor.Output<O> output,
                                    final O message)
     {
         Objects.requireNonNull(output, "output");
         Objects.requireNonNull(message, "message");
+        Preconditions.checkArgument(output.actor().stage().equals(stage), "Wrong Stage");
 
         if (expectedOutputs.containsKey(output) == false)
         {
@@ -129,11 +119,6 @@ public final class ActorTester
     {
         steps.add(() -> System.out.println(actualOutputs.get(output)));
         return this;
-    }
-
-    public ActorTester printOutput (final Actor<?, ?> actor)
-    {
-        return printOutput(actor.output());
     }
 
     public void run ()

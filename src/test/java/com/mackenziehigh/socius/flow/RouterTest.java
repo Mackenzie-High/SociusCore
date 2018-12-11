@@ -4,6 +4,9 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.socius.testing.ActorTester;
 import org.junit.Test;
 
+/**
+ * Unit Test.
+ */
 public final class RouterTest
 {
     private final ActorTester tester = new ActorTester();
@@ -24,7 +27,7 @@ public final class RouterTest
      * Test: 20180923042734271117
      *
      * <p>
-     * Method: <code>publish(actor, key)</code>
+     * Method: <code>publish</code>
      * </p>
      *
      * <p>
@@ -53,12 +56,12 @@ public final class RouterTest
          */
         dispatcher.subscribe(actor4.input(), "X");
         dispatcher.subscribe(actor5.input(), "Y");
-        tester.send(actor1, 100);
-        tester.send(actor2, 200);
-        tester.send(actor3, 300);
-        tester.expect(actor4, 100);
-        tester.expect(actor4, 200);
-        tester.expect(actor5, 300);
+        tester.send(actor1.input(), 100);
+        tester.send(actor2.input(), 200);
+        tester.send(actor3.input(), 300);
+        tester.expect(actor4.output(), 100);
+        tester.expect(actor4.output(), 200);
+        tester.expect(actor5.output(), 300);
         tester.requireEmptyOutputs();
         tester.run();
     }
@@ -67,7 +70,7 @@ public final class RouterTest
      * Test: 20180923042734271259
      *
      * <p>
-     * Method: <code>publish(actor, key)</code>
+     * Method: <code>publish</code>
      * </p>
      *
      * <p>
@@ -90,10 +93,10 @@ public final class RouterTest
          * Verify the results.
          */
         dispatcher.subscribe(actor2.input(), "X");
-        tester.send(actor1, 100);
-        tester.send(actor1, 200);
-        tester.expect(actor2, 100);
-        tester.expect(actor2, 200);
+        tester.send(actor1.input(), 100);
+        tester.send(actor1.input(), 200);
+        tester.expect(actor2.output(), 100);
+        tester.expect(actor2.output(), 200);
         tester.requireEmptyOutputs();
         tester.run();
     }
@@ -102,7 +105,7 @@ public final class RouterTest
      * Test: 20180923042734271342
      *
      * <p>
-     * Method: <code>unpublish(actor, key)</code>
+     * Method: <code>unpublish</code>
      * </p>
      *
      * <p>
@@ -117,13 +120,13 @@ public final class RouterTest
     {
         tester.execute(() -> dispatcher.publish(actor1.output(), "X"));
         tester.execute(() -> dispatcher.subscribe(actor2.input(), "X"));
-        tester.send(actor1, 100);
-        tester.send(actor1, 200);
-        tester.expect(actor1, 100);
-        tester.expect(actor1, 200);
+        tester.send(actor1.input(), 100);
+        tester.send(actor1.input(), 200);
+        tester.expect(actor2.output(), 100);
+        tester.expect(actor2.output(), 200);
         tester.execute(() -> dispatcher.unpublish(actor1.output(), "X"));
-        tester.send(actor1, 300);
-        tester.send(actor1, 400);
+        tester.send(actor1.input(), 300);
+        tester.send(actor1.input(), 400);
         tester.requireEmptyOutputs();
         tester.run();
 
@@ -133,7 +136,7 @@ public final class RouterTest
      * Test: 20180923042734271369
      *
      * <p>
-     * Method: <code>unpublish(actor, key)</code>
+     * Method: <code>unpublish</code>
      * </p>
      *
      * <p>
@@ -148,14 +151,14 @@ public final class RouterTest
     {
         tester.execute(() -> dispatcher.publish(actor1.output(), "X"));
         tester.execute(() -> dispatcher.subscribe(actor2.input(), "X"));
-        tester.send(actor1, 100);
-        tester.send(actor1, 200);
-        tester.expect(actor1, 100);
-        tester.expect(actor1, 200);
+        tester.send(actor1.input(), 100);
+        tester.send(actor1.input(), 200);
+        tester.expect(actor2.output(), 100);
+        tester.expect(actor2.output(), 200);
         tester.execute(() -> dispatcher.unpublish(actor1.output(), "X"));
         tester.execute(() -> dispatcher.unpublish(actor1.output(), "X"));
-        tester.send(actor1, 300);
-        tester.send(actor1, 400);
+        tester.send(actor1.input(), 300);
+        tester.send(actor1.input(), 400);
         tester.requireEmptyOutputs();
         tester.run();
     }
@@ -164,7 +167,7 @@ public final class RouterTest
      * Test: 20180923042734271443
      *
      * <p>
-     * Method: <code>subscribe(actor, key)</code>
+     * Method: <code>subscribe</code>
      * </p>
      *
      * <p>
@@ -193,16 +196,16 @@ public final class RouterTest
          */
         dispatcher.publish(actor4.output(), "X");
         dispatcher.publish(actor5.output(), "Y");
-        tester.send(actor4, 100);
-        tester.send(actor4, 200);
-        tester.send(actor5, 300);
-        tester.send(actor5, 400);
-        tester.expect(actor1, 100);
-        tester.expect(actor1, 200);
-        tester.expect(actor2, 100);
-        tester.expect(actor2, 200);
-        tester.expect(actor3, 300);
-        tester.expect(actor3, 400);
+        tester.send(actor4.input(), 100);
+        tester.send(actor4.input(), 200);
+        tester.send(actor5.input(), 300);
+        tester.send(actor5.input(), 400);
+        tester.expect(actor1.output(), 100);
+        tester.expect(actor1.output(), 200);
+        tester.expect(actor2.output(), 100);
+        tester.expect(actor2.output(), 200);
+        tester.expect(actor3.output(), 300);
+        tester.expect(actor3.output(), 400);
         tester.requireEmptyOutputs();
         tester.run();
     }
@@ -211,7 +214,7 @@ public final class RouterTest
      * Test: 20180923042734271465
      *
      * <p>
-     * Method: <code>subscribe(actor, key)</code>
+     * Method: <code>subscribe</code>
      * </p>
      *
      * <p>
@@ -234,10 +237,10 @@ public final class RouterTest
          * Verify the results.
          */
         dispatcher.publish(actor2.output(), "X");
-        tester.send(actor2, 100);
-        tester.send(actor2, 200);
-        tester.expect(actor1, 100);
-        tester.expect(actor1, 200);
+        tester.send(actor2.input(), 100);
+        tester.send(actor2.input(), 200);
+        tester.expect(actor1.output(), 100);
+        tester.expect(actor1.output(), 200);
         tester.requireEmptyOutputs();
         tester.run();
     }
@@ -246,7 +249,7 @@ public final class RouterTest
      * Test: 20180923042734271532
      *
      * <p>
-     * Method: <code>unsubscribe(actor, key)</code>
+     * Method: <code>unsubscribe</code>
      * </p>
      *
      * <p>
@@ -261,13 +264,13 @@ public final class RouterTest
     {
         tester.execute(() -> dispatcher.publish(actor1.output(), "X"));
         tester.execute(() -> dispatcher.subscribe(actor2.input(), "X"));
-        tester.send(actor1, 100);
-        tester.send(actor1, 200);
-        tester.expect(actor1, 100);
-        tester.expect(actor1, 200);
-        tester.execute(() -> dispatcher.unsubscribe(actor1.input(), "X"));
-        tester.send(actor1, 300);
-        tester.send(actor1, 400);
+        tester.send(actor1.input(), 100);
+        tester.send(actor1.input(), 200);
+        tester.expect(actor2.output(), 100);
+        tester.expect(actor2.output(), 200);
+        tester.execute(() -> dispatcher.unsubscribe(actor2.input(), "X"));
+        tester.send(actor1.input(), 300);
+        tester.send(actor1.input(), 400);
         tester.requireEmptyOutputs();
         tester.run();
     }
@@ -276,7 +279,7 @@ public final class RouterTest
      * Test: 20180923042734271553
      *
      * <p>
-     * Method: <code>unsubscribe(actor, key)</code>
+     * Method: <code>unsubscribe</code>
      * </p>
      *
      * <p>
@@ -291,14 +294,14 @@ public final class RouterTest
     {
         tester.execute(() -> dispatcher.publish(actor1.output(), "X"));
         tester.execute(() -> dispatcher.subscribe(actor2.input(), "X"));
-        tester.send(actor1, 100);
-        tester.send(actor1, 200);
-        tester.expect(actor1, 100);
-        tester.expect(actor1, 200);
-        tester.execute(() -> dispatcher.unsubscribe(actor1.input(), "X"));
-        tester.execute(() -> dispatcher.unsubscribe(actor1.input(), "X"));
-        tester.send(actor1, 300);
-        tester.send(actor1, 400);
+        tester.send(actor1.input(), 100);
+        tester.send(actor1.input(), 200);
+        tester.expect(actor2.output(), 100);
+        tester.expect(actor2.output(), 200);
+        tester.execute(() -> dispatcher.unsubscribe(actor2.input(), "X"));
+        tester.execute(() -> dispatcher.unsubscribe(actor2.input(), "X"));
+        tester.send(actor1.input(), 300);
+        tester.send(actor1.input(), 400);
         tester.requireEmptyOutputs();
         tester.run();
     }
