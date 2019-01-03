@@ -3,7 +3,7 @@ package com.mackenziehigh.socius.time;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.socius.io.CollectionSink;
-import com.mackenziehigh.socius.time.WakeupCaller.Trigger;
+import com.mackenziehigh.socius.time.WakeupCaller.WakeupCall;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -29,8 +29,8 @@ public final class WakeupCallerTest
         final CollectionSink<String> sink = CollectionSink.newCollectionSink(stage, ticks);
 
         final WakeupCaller clock = WakeupCaller.newWakeupCaller();
-        final Trigger<String> trigger1 = clock.newTrigger(Duration.ofMillis(250));
-        final Trigger<String> trigger2 = clock.newTrigger(Duration.ofMillis(500));
+        final WakeupCall<String> trigger1 = clock.newWakeupCall(Duration.ofMillis(250));
+        final WakeupCall<String> trigger2 = clock.newWakeupCall(Duration.ofMillis(500));
 
         trigger1.wakeupOut().connect(sink.dataIn());
         trigger2.wakeupOut().connect(sink.dataIn());

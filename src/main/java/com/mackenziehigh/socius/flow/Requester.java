@@ -48,9 +48,14 @@ public final class Requester<K, I, R, O>
     private final Processor<O> resultOut;
 
     /**
-     * This actor provides the drops-out connector.
+     * This actor provides the drops-requests connector.
      */
-    private final Processor<I> dropOut;
+    private final Processor<I> droppedRequestOut;
+
+    /**
+     * This actor provides the drops-replies connector.
+     */
+    private final Processor<R> droppedReplyOut;
 
     /**
      * This is the amount of time to wait after forwarding a request,
@@ -99,16 +104,37 @@ public final class Requester<K, I, R, O>
     {
         this.stage = builder.stage;
         this.dataIn = Processor.newConsumer(stage, this::onRequestIn);
-        this.requestOut = Processor.newFunction(stage, this::onRequestOut);
+        this.requestOut = Processor.newConnector(stage);
         this.replyIn = Processor.newConsumer(stage, this::onReplyIn);
-        this.resultOut = Processor.newFunction(stage, this::onResultOut);
-        this.dropOut = Processor.newFunction(stage, this::onDropOut);
+        this.resultOut = Processor.newConnector(stage);
+        this.droppedRequestOut = Processor.newConnector(stage);
+        this.droppedReplyOut = Processor.newConnector(stage);
         this.keyFuncI = builder.keyFuncI;
         this.keyFuncR = builder.keyFuncR;
         this.composer = builder.composer;
         this.timeout = builder.timeout;
         this.tries = builder.tries;
         this.delayedSender = builder.delayedSender != null ? builder.delayedSender : DelayedSender.newDelayedSender();
+    }
+
+    /**
+     * Getter.
+     *
+     * @return the number of pending requests.
+     */
+    public int pendingRequestCount ()
+    {
+        return handlers.size();
+    }
+
+    /**
+     * Determine whether the default <code>DelayedSender</code> object is being used.
+     *
+     * @return true, if the default executor under the covers.
+     */
+    public boolean isUsingDefaultDelayedSender ()
+    {
+        return delayedSender.isUsingDefaultExecutor();
     }
 
     /**
@@ -155,11 +181,21 @@ public final class Requester<K, I, R, O>
     /**
      * Dropped requests will be sent to this output.
      *
-     * @return the drop-output.
+     * @return the output.
      */
-    public Output<I> dropOut ()
+    public Output<I> droppedRequestOut ()
     {
-        return dropOut.dataOut();
+        return droppedRequestOut.dataOut();
+    }
+
+    /**
+     * Dropped replies will be sent to this output.
+     *
+     * @return the output.
+     */
+    public Output<R> droppedReplyOut ()
+    {
+        return droppedReplyOut.dataOut();
     }
 
     private void onRequestIn (final I message)
@@ -167,7 +203,7 @@ public final class Requester<K, I, R, O>
         /**
          * Obtain the key that identifies the message.
          * If the message is already being handled (duplicate message),
-         * then ignore the message; otherwise, create a handle that
+         * then drop the message; otherwise, create a handler that
          * will handle the request/reply sequence of operations.
          */
         synchronized (lock)
@@ -180,6 +216,10 @@ public final class Requester<K, I, R, O>
                 handlers.put(key, handler);
                 handler.send();
             }
+            else
+            {
+                droppedRequestOut.accept(message);
+            }
         }
     }
 
@@ -190,8 +230,6 @@ public final class Requester<K, I, R, O>
          * If we are still interested in the message,
          * then there will be an associated handler.
          * Notify the handler of the received reply.
-         * The handler will use the composer to merge
-         * the request and the reply into a single message.
          */
         synchronized (lock)
         {
@@ -203,22 +241,11 @@ public final class Requester<K, I, R, O>
             {
                 handler.recv(message);
             }
+            else
+            {
+                droppedReplyOut.accept(message);
+            }
         }
-    }
-
-    private I onRequestOut (final I message)
-    {
-        return message;
-    }
-
-    private O onResultOut (final O message)
-    {
-        return message;
-    }
-
-    private I onDropOut (final I message)
-    {
-        return message;
     }
 
     /**
@@ -322,7 +349,7 @@ public final class Requester<K, I, R, O>
                      * Give up and drop the request.
                      * Prevent this method from executing again unintentionally.
                      */
-                    dropOut.dataIn().send(request);
+                    droppedRequestOut.dataIn().send(request);
                     cancel();
                 }
                 else
@@ -380,9 +407,9 @@ public final class Requester<K, I, R, O>
 
         private BiFunction<I, R, O> composer;
 
-        private int tries = 1;
+        private Integer tries;
 
-        private Duration timeout = Duration.ofSeconds(1);
+        private Duration timeout;
 
         private DelayedSender delayedSender;
 
@@ -440,15 +467,16 @@ public final class Requester<K, I, R, O>
         }
 
         /**
-         * Specify the maximum number of times to resend a request.
+         * Specify the maximum number of times to send a request,
+         * which includes the first send, plus any necessary retries.
          *
-         * @param limit is the retry limit.
+         * @param limit is maximum number of times a request will be sent.
          * @return this.
          */
-        public Builder<K, I, R, O> withRetryLimit (final int limit)
+        public Builder<K, I, R, O> withTries (final int limit)
         {
-            Preconditions.checkArgument(limit >= 0, "limit < 0");
-            this.tries = limit + 1;
+            Preconditions.checkArgument(limit >= 1, "limit < 1");
+            this.tries = limit;
             return this;
         }
 

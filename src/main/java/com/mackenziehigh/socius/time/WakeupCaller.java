@@ -19,7 +19,7 @@ public final class WakeupCaller
      *
      * @param <T> is the type of message sent during the wakeup call.
      */
-    public final class Trigger<T>
+    public final class WakeupCall<T>
     {
         private final Processor<T> procWakeup;
 
@@ -27,7 +27,7 @@ public final class WakeupCaller
 
         private final AtomicBoolean scheduled = new AtomicBoolean();
 
-        private Trigger (final Duration delay)
+        private WakeupCall (final Duration delay)
         {
             this.delay = delay;
             this.procWakeup = Processor.newFunction(stage, this::onWakeup);
@@ -54,7 +54,7 @@ public final class WakeupCaller
          * @param message will be sent during the wakeup call.
          * @return this.
          */
-        public Trigger<T> request (final T message)
+        public WakeupCall<T> request (final T message)
         {
             if (scheduled.compareAndSet(false, true))
             {
@@ -98,9 +98,9 @@ public final class WakeupCaller
      * @param delay is how long to wait after a wakeup call request before performing the call.
      * @return the new wakeup call trigger.
      */
-    public <T> Trigger<T> newTrigger (final Duration delay)
+    public <T> WakeupCall<T> newWakeupCall (final Duration delay)
     {
-        return new Trigger<>(delay);
+        return new WakeupCall<>(delay);
     }
 
     /**

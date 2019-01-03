@@ -16,7 +16,7 @@ import java.util.function.Predicate;
  * @param <I> is the type of the incoming messages.
  * @param <O> is the type of the outgoing messages.
  */
-public final class OrderedChoice<I, O>
+public final class ShuntingYard<I, O>
 {
     /**
      * An option that may receive messages.
@@ -24,7 +24,7 @@ public final class OrderedChoice<I, O>
      * @param <I> is the type of the incoming messages.
      * @param <O> is the type of the outgoing messages.
      */
-    public interface Option<I, O>
+    public interface Siding<I, O>
     {
         /**
          * Determines whether an incoming message should be routed to this option-handler.
@@ -57,7 +57,7 @@ public final class OrderedChoice<I, O>
     /**
      * These are the available options for processing incoming messages.
      */
-    private final List<Option<I, O>> options;
+    private final List<Siding<I, O>> options;
 
     /**
      * This object will route incoming messages to the appropriate option-handlers.
@@ -74,15 +74,15 @@ public final class OrderedChoice<I, O>
      */
     private final Funnel<O> funnel;
 
-    private OrderedChoice (final Stage stage,
-                           final List<Option<I, O>> mappers)
+    private ShuntingYard (final Stage stage,
+                          final List<Siding<I, O>> mappers)
     {
         this.router = Processor.newConsumer(stage, this::onInput);
         this.deadDrop = Processor.newConnector(stage);
         this.funnel = Funnel.newFunnel(stage);
         this.options = ImmutableList.copyOf(mappers);
 
-        for (Option<I, O> option : options)
+        for (Siding<I, O> option : options)
         {
             option.dataOut().connect(funnel.dataIn(new Object()));
         }
@@ -94,7 +94,7 @@ public final class OrderedChoice<I, O>
          * Route the message to the first option
          * that is willing to accept it.
          */
-        for (Option<I, O> option : options)
+        for (Siding<I, O> option : options)
         {
 
             if (option.isMatch(message))
@@ -164,7 +164,7 @@ public final class OrderedChoice<I, O>
     {
         private final Stage stage;
 
-        private final List<Option<I, O>> options = Lists.newLinkedList();
+        private final List<Siding<I, O>> options = Lists.newLinkedList();
 
         private Builder (final Stage stage)
         {
@@ -178,7 +178,7 @@ public final class OrderedChoice<I, O>
          * @param option is the additional option.
          * @return this.
          */
-        public Builder<I, O> withOption (final Option<I, O> option)
+        public Builder<I, O> withOption (final Siding<I, O> option)
         {
             Objects.requireNonNull(option, "option");
             options.add(option);
@@ -199,7 +199,7 @@ public final class OrderedChoice<I, O>
             Objects.requireNonNull(condition, "condition");
             Objects.requireNonNull(transform, "transform");
             final Mapper<I, O> mapper = Mapper.newFunction(stage, transform);
-            final Option<I, O> option = new Option<I, O>()
+            final Siding<I, O> option = new Siding<I, O>()
             {
                 @Override
                 public boolean isMatch (final I message)
@@ -228,9 +228,9 @@ public final class OrderedChoice<I, O>
          *
          * @return the new option-hierarchy.
          */
-        public OrderedChoice<I, O> build ()
+        public ShuntingYard<I, O> build ()
         {
-            return new OrderedChoice<>(stage, options);
+            return new ShuntingYard<>(stage, options);
         }
     }
 }

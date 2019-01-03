@@ -6,7 +6,7 @@ import org.junit.Test;
 /**
  * Unit Test.
  */
-public final class OrderedChoiceTest
+public final class ShuntingYardTest
 {
     private final ActorTester tester = new ActorTester();
 
@@ -23,7 +23,7 @@ public final class OrderedChoiceTest
     public void test20181210220416465169 ()
             throws Throwable
     {
-        final OrderedChoice<Integer, String> object = OrderedChoice.<Integer, String>newBuilder(tester.stage())
+        final ShuntingYard<Integer, String> object = ShuntingYard.<Integer, String>newBuilder(tester.stage())
                 .withOption(x -> x % 3 == 0, x -> "fizz = " + x)
                 .withOption(x -> x % 5 == 0, x -> "buzz = " + x)
                 .build();

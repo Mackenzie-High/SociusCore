@@ -8,20 +8,32 @@ import com.google.common.collect.Queues;
 import com.mackenziehigh.cascade.Cascade.AbstractStage;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
+import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
 
 /**
+ * (Experimental API) Provides a mechanism for synchronously testing actors in unit-tests.
  *
+ * <p>
+ * This API is still semi-unstable and may change without notice.
+ * Refactoring, etc, may be needed in the future, if you use this API.
+ * </p>
  */
 public final class ActorTester
 {
+    /**
+     * A step to perform during the test.
+     */
     @FunctionalInterface
     public interface Step
     {
@@ -29,11 +41,29 @@ public final class ActorTester
                 throws Throwable;
     }
 
+    /**
+     * Thrown whenever a step fails to execute successfully.
+     */
+    public final class StepException
+            extends RuntimeException
+    {
+        private StepException (final String message)
+        {
+            super(message);
+        }
+
+        private StepException (final StackTraceElement location,
+                               final Throwable cause)
+        {
+            super(String.format("(class = %s, method = %s, line = %d): %s", location.getClassName(), location.getMethodName(), location.getLineNumber(), cause.getMessage()), cause);
+        }
+    }
+
+    private final AtomicBoolean closed = new AtomicBoolean();
+
     private final SyncStage stage = new SyncStage();
 
     private final List<Step> steps = Lists.newLinkedList();
-
-    private final Map<Output<?>, BlockingDeque<Object>> expectedOutputs = Maps.newConcurrentMap();
 
     private final Map<Output<?>, BlockingDeque<Object>> actualOutputs = Maps.newConcurrentMap();
 
@@ -42,88 +72,191 @@ public final class ActorTester
         return stage;
     }
 
-    public <I, O> ActorTester execute (final Step task)
+    /**
+     * Connect an output to the tester.
+     *
+     * @param <O> is the type of messages provided by the output.
+     * @param output will be connected hereto.
+     * @return this.
+     */
+    public <O> ActorTester connect (final Output<O> output)
     {
-        steps.add(task);
-        return this;
-    }
-
-    public <I> ActorTester send (final Actor.Input<I> input,
-                                 final I message)
-    {
-        Objects.requireNonNull(input, "input");
-        Objects.requireNonNull(message, "message");
-        steps.add(() -> input.send(message));
-        return this;
-    }
-
-    public ActorTester require (final BooleanSupplier condition)
-    {
-        Objects.requireNonNull(condition, "condition");
-        steps.add(() -> Verify.verify(condition.getAsBoolean(), "Violation of Requirement"));
-        return this;
-    }
-
-    public <O> ActorTester expect (final Actor.Output<O> output,
-                                   final O message)
-    {
+        requireOpen();
+        requireSyncStage(output.actor());
         Objects.requireNonNull(output, "output");
-        Objects.requireNonNull(message, "message");
-        Preconditions.checkArgument(output.actor().stage().equals(stage), "Wrong Stage");
 
-        if (expectedOutputs.containsKey(output) == false)
+        if (actualOutputs.containsKey(output) == false)
         {
-            expectedOutputs.put(output, new LinkedBlockingDeque<>());
             actualOutputs.put(output, new LinkedBlockingDeque<>());
             final Actor<O, ?> sink = stage.newActor().withScript((O x) -> actualOutputs.get(output).add(x)).create();
             sink.input().connect(output);
         }
 
-        expectedOutputs.get(output).add(message);
+        return this;
+    }
+
+    /**
+     * Add a step to execute, when the test is run.
+     *
+     * @param task will be executed during the test.
+     * @return this.
+     */
+    public ActorTester execute (final Step task)
+    {
+        requireOpen();
+        Objects.requireNonNull(task, "task");
+        steps.add(new WrapperStep(task));
+        return this;
+    }
+
+    /**
+     * Add a step to execute, when the test is run.
+     *
+     * @param <I> is the type of the message to send.
+     * @param input will receive the message.
+     * @param message will be sent to the input during the test.
+     * @return this.
+     */
+    public <I> ActorTester send (final Input<I> input,
+                                 final I message)
+    {
+        requireOpen();
+        requireSyncStage(input.actor());
+        Objects.requireNonNull(input, "input");
+        Objects.requireNonNull(message, "message");
+        execute(() -> input.send(message));
+        return this;
+    }
+
+    /**
+     * Add a step to execute, when the test is run.
+     *
+     * @param condition must be true during the test.
+     * @return this.
+     */
+    public ActorTester require (final BooleanSupplier condition)
+    {
+        require(condition, "Violation of Requirement");
+        return this;
+    }
+
+    /**
+     * Add a step to execute, when the test is run.
+     *
+     * @param condition must be true during the test.
+     * @param error is the error-message to use, if the requirement fails.
+     * @return this.
+     */
+    public ActorTester require (final BooleanSupplier condition,
+                                final String error)
+    {
+        requireOpen();
+        Objects.requireNonNull(condition, "condition");
+        Objects.requireNonNull(error, "error");
+        final Step step = () ->
+        {
+            if (condition.getAsBoolean() == false)
+            {
+                throw new StepException(error);
+            }
+        };
+        execute(step);
+        return this;
+    }
+
+    /**
+     * Add a step to execute, when the test is run.
+     *
+     * @param <O> is the type of the message to receive.
+     * @param output will provide the message.
+     * @param message is the expected message.
+     * @return this.
+     */
+    public <O> ActorTester expect (final Output<O> output,
+                                   final O message)
+    {
+        requireOpen();
+        requireSyncStage(output.actor());
+        Objects.requireNonNull(output, "output");
+        Objects.requireNonNull(message, "message");
+        Preconditions.checkArgument(output.actor().stage().equals(stage), "Wrong Stage");
+
+        connect(output);
 
         final Step step = () ->
         {
-            final BlockingDeque<Object> queue1 = expectedOutputs.get(output);
-            final BlockingDeque<Object> queue2 = actualOutputs.get(output);
-
-            final Object expected = expectedOutputs.get(output).pollFirst();
             final Object actual = actualOutputs.get(output).pollFirst();
 
-            Verify.verify(Objects.equals(expected, actual), "expected (%s) != actual (%s)", expected, actual);
+            if (Objects.equals(message, actual) == false)
+            {
+                final String error = String.format("expected (%s) != actual (%s)", message, actual);
+                throw new StepException(error);
+            }
         };
 
-        steps.add(step);
+        execute(step);
 
         return this;
     }
 
+    /**
+     * Add a step to execute, when the test is run.
+     *
+     * @param <O> is the type of the message to receive.
+     * @param output will provide the message.
+     * @param condition is the expected message.
+     * @param error is the error-message to use, if the requirement fails.
+     * @return this.
+     */
+    public <O> ActorTester expectLike (final Output<O> output,
+                                       final Predicate<O> condition,
+                                       final String error)
+    {
+        requireOpen();
+        requireSyncStage(output.actor());
+        Objects.requireNonNull(output, "output");
+        Objects.requireNonNull(condition, "condition");
+        Preconditions.checkArgument(output.actor().stage().equals(stage), "Wrong Stage");
+
+        connect(output);
+
+        final Step step = () ->
+        {
+            final O actual = (O) actualOutputs.get(output).pollFirst();
+
+            if (condition.test(actual) == false)
+            {
+                throw new StepException(error);
+            }
+        };
+
+        execute(step);
+
+        return this;
+    }
+
+    /**
+     * Add a step to execute, when the test is run.
+     *
+     * @return this.
+     */
     public ActorTester requireEmptyOutputs ()
     {
-        steps.add(() -> actualOutputs.values().forEach(x -> Verify.verify(x.isEmpty(), "Non Empty Output: %s", x)));
+        requireOpen();
+        execute(() -> actualOutputs.values().forEach(x -> Verify.verify(x.isEmpty(), "Non Empty Output: %s", x)));
         return this;
     }
 
-    public ActorTester dumpOutputs ()
-    {
-        steps.add(() -> actualOutputs.values().forEach(System.out::println));
-        return this;
-    }
-
-    public ActorTester println (final String line)
-    {
-        steps.add(() -> System.out.println(line));
-        return this;
-    }
-
-    public ActorTester printOutput (final Output<?> output)
-    {
-        steps.add(() -> System.out.println(actualOutputs.get(output)));
-        return this;
-    }
-
+    /**
+     * Execute all the steps in the test.
+     *
+     * @throws Throwable if one of the steps throws an exception.
+     */
     public void run ()
             throws Throwable
     {
+        requireOpen();
+
         try
         {
             for (Step step : steps)
@@ -134,7 +267,24 @@ public final class ActorTester
         }
         finally
         {
+            closed.set(true);
             stage.close();
+        }
+    }
+
+    private void requireOpen ()
+    {
+        if (closed.get())
+        {
+            throw new IllegalStateException(getClass().getSimpleName() + " is already closed!");
+        }
+    }
+
+    private void requireSyncStage (final Actor<?, ?> actor)
+    {
+        if (actor.stage().equals(stage) == false)
+        {
+            throw new IllegalArgumentException("The actor is on the wrong stage!");
         }
     }
 
@@ -164,4 +314,43 @@ public final class ActorTester
             }
         }
     };
+
+    private final class WrapperStep
+            implements Step
+    {
+        private final StackTraceElement location;
+
+        private final Step delegate;
+
+        public WrapperStep (final Step delegate)
+        {
+            // Find out where the step was created, which s outside of these classes.
+            location = Arrays
+                    .asList(Thread.currentThread().getStackTrace())
+                    .stream()
+                    .filter(x -> x.getLineNumber() >= 0)
+                    .filter(x -> x.getClassName().startsWith("java.") == false)
+                    .filter(x -> x.getClassName().startsWith(ActorTester.class.getName() + "$") == false)
+                    .filter(x -> x.getClassName().equals(ActorTester.class.getName()) == false)
+                    .findFirst()
+                    .get();
+
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void run ()
+                throws Throwable
+        {
+            try
+            {
+                delegate.run();
+            }
+            catch (Throwable ex)
+            {
+
+                throw new StepException(location, ex);
+            }
+        }
+    }
 }
