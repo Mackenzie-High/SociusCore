@@ -868,7 +868,72 @@ Tick = 2019-02-13T04:51:00Z
 
 #### Example Program:
 
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.io.Printer;
+import com.mackenziehigh.socius.time.Oscillator;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.function.LongFunction;
+
+public final class Example
+{
+    public static void main (String[] args)
+            throws IOException
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         * The waveform will ensure that (N) seconds pass between
+         * tick (N - 1) and tick (N). As time progresses, (N) increases.
+         */
+        final LongFunction<Duration> waveform = (long N) -> Duration.ofSeconds(N);
+        final Oscillator generator = Oscillator.newOscillator().withWaveform(waveform).build();
+
+        /**
+         * This actor will print the clock-ticks.
+         */
+        final Printer<Instant> printer = Printer.newPrintln(stage, "Tick = %s");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        generator.clockOut().connect(printer.dataIn());
+
+        /**
+         * Start the clock; otherwise, nothing meaningful will happen.
+         */
+        generator.start();
+
+        /**
+         * Prevent the process from closing too soon.
+         */
+        System.in.read();
+    }
+}
+```
+
 #### Example Output:
+
+```
+Tick = 2019-02-13T04:57:56.842Z
+Tick = 2019-02-13T04:57:56.844Z
+Tick = 2019-02-13T04:57:57.845Z
+Tick = 2019-02-13T04:57:59.846Z
+Tick = 2019-02-13T04:58:02.846Z
+Tick = 2019-02-13T04:58:06.846Z
+Tick = 2019-02-13T04:58:11.847Z
+Tick = 2019-02-13T04:58:17.847Z
+Tick = 2019-02-13T04:58:24.848Z
+Tick = 2019-02-13T04:58:32.848Z
+Tick = 2019-02-13T04:58:41.849Z
+Tick = 2019-02-13T04:58:51.849Z
+```
 
 ### Printer
 
