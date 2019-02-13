@@ -119,6 +119,90 @@ List = [X5, Y5, Z5]
 ```
 
 ### BatchInserter
+
+#### Example Program:
+
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.BatchInserter;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.Printer;
+import java.util.List;
+
+public final class Example
+{
+    public static void main (String[] args)
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * These actors merely simulate data producers.
+         */
+        final Processor<String> producer = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         * A batch consists of one engine, one transmission, and four wheels.
+         */
+        final BatchInserter<String> inserter = BatchInserter.<String>newBatchInserter(stage)
+                .require(x -> x.contains("Engine"))
+                .require(x -> x.contains("Transmission"))
+                .require(x -> x.contains("Wheel"))
+                .require(x -> x.contains("Wheel"))
+                .require(x -> x.contains("Wheel"))
+                .require(x -> x.contains("Wheel"))
+                .build();
+
+        /**
+         * This actor will print the batches to standard-output.
+         */
+        final Printer<List<String>> factory = Printer.newPrintln(stage, "Build Vehicle Using: %s");
+
+        /**
+         * This actor will print the unused parts to standard-output.
+         */
+        final Printer<String> sink = Printer.newPrintln(stage, "Skip Part: %s");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        producer.dataOut().connect(inserter.dataIn());
+        inserter.batchOut().connect(factory.dataIn());
+        inserter.dataOut().connect(sink.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        producer.accept("Engine #1");
+        producer.accept("Engine #2");
+        producer.accept("Wheel #1");
+        producer.accept("Wheel #2");
+        producer.accept("Wheel #3");
+        producer.accept("Wheel #4");
+        producer.accept("Wheel #5");
+        producer.accept("Transmission #1");
+        producer.accept("Engine #3");
+        producer.accept("Wheel #6");
+        producer.accept("Wheel #7");
+        producer.accept("Wheel #8");
+        producer.accept("Wheel #9");
+        producer.accept("Transmission #2");
+    }
+}
+```
+
+#### Example Output:
+
+```
+Skip Part: Engine #2
+Skip Part: Wheel #5
+Build Vehicle Using: [Engine #1, Transmission #1, Wheel #1, Wheel #2, Wheel #3, Wheel #4]
+Build Vehicle Using: [Engine #3, Transmission #2, Wheel #6, Wheel #7, Wheel #8, Wheel #9]
+```
+
 ### Bus
 ### Caster
 ### Clock
