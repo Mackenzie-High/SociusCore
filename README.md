@@ -393,30 +393,199 @@ Current Time = 2019-02-13T03:54:20.528Z
 
 ### CollectionSink
 
+#### Example Program:
 
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.CollectionSink;
+import com.mackenziehigh.socius.io.Printer;
+import java.util.Collection;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+public final class Example
+{
+    public static void main (String[] args)
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This actor merely simulates a data producer.
+         */
+        final Processor<String> producer = Processor.newConnector(stage);
+
+        /**
+         * This is the collection that the sink will add elements to.
+         */
+        final Collection<String> collection = new CopyOnWriteArrayList<>();
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         */
+        final CollectionSink<String> sink = CollectionSink.newCollectionSink(stage, collection);
+
+        /**
+         * These actors will print the results to standard-output.
+         */
+        final Printer<String> printer = Printer.newPrintln(stage, "Collection: " + collection);
+
+        /**
+         * Connect the actors to form a network.
+         */
+        producer.dataOut().connect(sink.dataIn());
+        sink.dataOut().connect(printer.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        producer.accept("A");
+        producer.accept("B");
+        producer.accept("C");
+        producer.accept("X");
+        producer.accept("Y");
+        producer.accept("Z");
+    }
+}
+```
+
+#### Example Output:
+
+TODO
 
 ### DelayedSender
+
+#### Example Program:
+
+#### Example Output:
+
 ### Duplicator
+
+
+#### Example Program:
+
+#### Example Output:
+
 ### Fanout
+
+
+#### Example Program:
+
+#### Example Output:
+
 ### Filter
+
+
+#### Example Program:
+
+#### Example Output:
+
 ### Funnel
+
+
+#### Example Program:
+
+#### Example Output:
+
 ### IfElse
+
+
+#### Example Program:
+
+#### Example Output:
+
 ### LookupInserter
+
+
+#### Example Program:
+
+#### Example Output:
+
 ### Mapper
+
+#### Example Program:
+
+#### Example Output:
+
 ### Minuteman
+
+#### Example Program:
+
+#### Example Output:
+
 ### Oscillator
+
+#### Example Program:
+
+#### Example Output:
+
 ### Printer
+
+#### Example Program:
+
+#### Example Output:
+
 ### Processor
+
+#### Example Program:
+
+#### Example Output:
+
 ### Requester
+
+#### Example Program:
+
+#### Example Output:
+
 ### RoundRobin
+
+#### Example Program:
+
+#### Example Output:
+
 ### Router
+
+#### Example Program:
+
+#### Example Output:
+
 ### ShuntingYard
+
+
+#### Example Program:
+
+#### Example Output:
+
 ### TableInserter
+
+#### Example Program:
+
+#### Example Output:
+
 ### Unbatcher
+
+#### Example Program:
+
+#### Example Output:
+
 ### Valve
+
+#### Example Program:
+
+#### Example Output:
+
 ### Variable
+
+#### Example Program:
+
+#### Example Output:
+
 ### WakeupCaller
 
+#### Example Program:
 
+#### Example Output:
 
 
