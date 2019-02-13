@@ -278,8 +278,123 @@ public final class Example
 ```
 
 ### Caster
+
+#### Example Program: 
+
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.Caster;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.Printer;
+
+public final class Example
+{
+    public static void main (String[] args)
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This actor merely simulates a data producer.
+         */
+        final Processor<Object> producer = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         */
+        final Caster<Object, String> caster = Caster.newCaster(stage, String.class);
+
+        /**
+         * These actors will print the results to standard-output.
+         */
+        final Printer<String> success = Printer.newPrintln(stage, "Successfully cast (%s) to type String.");
+        final Printer<Object> failure = Printer.newPrintln(stage, "Failed to cast (%s) to type String.");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        producer.dataOut().connect(caster.dataIn());
+        caster.dataOut().connect(success.dataIn());
+        caster.errorOut().connect(failure.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        producer.accept("10"); // 10 is a String.
+        producer.accept(13); // 13 is an Integer.
+    }
+}
+```
+
+#### Example Output:
+
+```
+Successfully cast (10) to type String.
+Failed to cast (13) to type String.
+```
+
 ### Clock
+
+#### Example Program:
+
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.io.Printer;
+import com.mackenziehigh.socius.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+
+public final class Example
+{
+    public static void main (String[] args)
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         */
+        final Clock clock = Clock.newClock().withPeriod(Duration.ofSeconds(1)).build();
+
+        /**
+         * Start the flow of clock-ticks; otherwise, nothing meaningful will happen.
+         */
+        clock.start();
+
+        /**
+         * These actors will print the clock-ticks to standard-output.
+         */
+        final Printer<Instant> printer = Printer.newPrintln(stage, "Current Time = %s");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        clock.clockOut().connect(printer.dataIn());
+    }
+}
+```
+
+#### Example Output:
+
+```
+Current Time = 2019-02-13T03:54:13.529Z
+Current Time = 2019-02-13T03:54:14.528Z
+Current Time = 2019-02-13T03:54:15.528Z
+Current Time = 2019-02-13T03:54:16.528Z
+Current Time = 2019-02-13T03:54:17.528Z
+Current Time = 2019-02-13T03:54:18.528Z
+Current Time = 2019-02-13T03:54:19.528Z
+Current Time = 2019-02-13T03:54:20.528Z
+```
+
 ### CollectionSink
+
+
+
 ### DelayedSender
 ### Duplicator
 ### Fanout
