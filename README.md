@@ -809,7 +809,60 @@ public final class Example
 
 #### Example Program:
 
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.io.Printer;
+import com.mackenziehigh.socius.time.Minuteman;
+import java.io.IOException;
+import java.time.Instant;
+
+public final class Example
+{
+    public static void main (String[] args)
+            throws IOException
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         */
+        final Minuteman minuteman = Minuteman.newMinuteman(stage);
+
+        /**
+         * This actor will print the clock-ticks.
+         */
+        final Printer<Instant> printer = Printer.newPrintln(stage, "Tick = %s");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        minuteman.clockOut().connect(printer.dataIn());
+
+        /**
+         * Start the clock; otherwise, nothing meaningful will happen.
+         */
+        minuteman.start();
+
+        /**
+         * Prevent the process from closing too soon.
+         */
+        System.in.read();
+    }
+}
+```
+
 #### Example Output:
+
+```
+Tick = 2019-02-13T04:47:00Z
+Tick = 2019-02-13T04:48:00Z
+Tick = 2019-02-13T04:49:00Z
+Tick = 2019-02-13T04:50:00Z
+Tick = 2019-02-13T04:51:00Z
+```
 
 ### Oscillator
 
