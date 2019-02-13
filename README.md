@@ -463,31 +463,213 @@ TODO
 
 ### Duplicator
 
-
 #### Example Program:
 
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.Duplicator;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.Printer;
+
+public final class Example
+{
+    public static void main (String[] args)
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This actor merely simulates a data producer.
+         */
+        final Processor<String> producer = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         */
+        final Duplicator<String> dup = Duplicator.<String>newDuplicator(stage)
+                .withSequenceLength(2)
+                .withRepeatCount(3)
+                .build();
+
+        /**
+         * These actors will print the messages to standard-output.
+         */
+        final Printer<String> printer = Printer.newPrintln(stage);
+
+        /**
+         * Connect the actors to form a network.
+         */
+        producer.dataOut().connect(dup.dataIn());
+        dup.dataOut().connect(printer.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        producer.accept("A");
+        producer.accept("B");
+        producer.accept("X");
+        producer.accept("Y");
+    }
+}
+```
+
 #### Example Output:
+
+```
+A
+B
+A
+B
+A
+B
+X
+Y
+X
+Y
+X
+Y
+```
 
 ### Fanout
 
-
 #### Example Program:
 
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.Fanout;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.Printer;
+
+public final class Example
+{
+    public static void main (String[] args)
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This actor merely simulates a data producer.
+         */
+        final Processor<String> commander = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         */
+        final Fanout<String> fanout = Fanout.newFanout(stage);
+
+        /**
+         * These actors will print the commands to standard-output.
+         */
+        final Printer<String> silo0 = Printer.newPrintln(stage, "Silo #0 received command (%s).");
+        final Printer<String> silo1 = Printer.newPrintln(stage, "Silo #1 received command (%s).");
+        final Printer<String> silo2 = Printer.newPrintln(stage, "Silo #2 received command (%s).");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        commander.dataOut().connect(fanout.dataIn());
+        fanout.dataOut("S0").connect(silo0.dataIn());
+        fanout.dataOut("S1").connect(silo1.dataIn());
+        fanout.dataOut("S2").connect(silo2.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        commander.accept("Goto DEFCON 1");
+        commander.accept("Launch Strike #1");
+        commander.accept("Launch Strike #2");
+    }
+}
+```
+
 #### Example Output:
+
+```
+Silo #0 received command (Goto DEFCON 1).
+Silo #1 received command (Goto DEFCON 1).
+Silo #2 received command (Goto DEFCON 1).
+Silo #0 received command (Launch Strike #1).
+Silo #1 received command (Launch Strike #1).
+Silo #2 received command (Launch Strike #1).
+Silo #0 received command (Launch Strike #2).
+Silo #1 received command (Launch Strike #2).
+Silo #2 received command (Launch Strike #2).
+```
 
 ### Filter
 
-
 #### Example Program:
 
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.Filter;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.Printer;
+
+public final class Example
+{
+    public static void main (String[] args)
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This actor merely simulates a data producer.
+         */
+        final Processor<String> producer = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         */
+        final Filter<String> filter = Filter.newFilter(stage, x -> x.startsWith("E"));
+
+        /**
+         * This actor will print the message that were *not* dropped.
+         */
+        final Printer<String> printer = Printer.newPrintln(stage, "%s escaped the filter.");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        producer.dataOut().connect(filter.dataIn());
+        filter.dataOut().connect(printer.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        producer.accept("Autumn");
+        producer.accept("Elle");
+        producer.accept("Ashley");
+        producer.accept("Emma");
+        producer.accept("Anna");
+        producer.accept("Erin");
+    }
+}
+```
+
 #### Example Output:
+
+```
+Elle escaped the filter.
+Emma escaped the filter.
+Erin escaped the filter.
+```
 
 ### Funnel
 
-
 #### Example Program:
 
+
+
 #### Example Output:
+
+
 
 ### IfElse
 
