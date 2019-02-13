@@ -204,6 +204,79 @@ Build Vehicle Using: [Engine #3, Transmission #2, Wheel #6, Wheel #7, Wheel #8, 
 ```
 
 ### Bus
+
+#### Example Program:
+
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.Bus;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.Printer;
+
+public final class Example
+{
+    public static void main (String[] args)
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * These actors merely simulate data producers.
+         */
+        final Processor<String> producer0 = Processor.newConnector(stage);
+        final Processor<String> producer1 = Processor.newConnector(stage);
+        final Processor<String> producer2 = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         * Any message from any producer will be sent to every consumer.
+         */
+        final Bus<String> bus = Bus.newBus(stage);
+
+        /**
+         * These actors will print the messages to standard-output.
+         */
+        final Printer<String> consumer0 = Printer.newPrintln(stage, "(Consumer #0) got (%s).");
+        final Printer<String> consumer1 = Printer.newPrintln(stage, "(Consumer #1) got (%s).");
+        final Printer<String> consumer2 = Printer.newPrintln(stage, "(Consumer #2) got (%s).");
+
+        /**
+         * Connect the actors to form a network.
+         * The keys P0, P1, P2 and C0, C1, C2 where chosen at random.
+         */
+        producer0.dataOut().connect(bus.dataIn("P0"));
+        producer1.dataOut().connect(bus.dataIn("P1"));
+        producer2.dataOut().connect(bus.dataIn("P2"));
+        consumer0.dataIn().connect(bus.dataOut("C0"));
+        consumer1.dataIn().connect(bus.dataOut("C1"));
+        consumer2.dataIn().connect(bus.dataOut("C2"));
+
+        /**
+         * Cause data to flow through the network.
+         */
+        producer0.accept("Message #1");
+        producer1.accept("Message #2");
+        producer2.accept("Message #3");
+    }
+}
+```
+
+#### Example Output:
+
+```
+(Consumer #0) got (Message #1).
+(Consumer #1) got (Message #1).
+(Consumer #2) got (Message #1).
+(Consumer #0) got (Message #2).
+(Consumer #1) got (Message #2).
+(Consumer #2) got (Message #2).
+(Consumer #0) got (Message #3).
+(Consumer #1) got (Message #3).
+(Consumer #2) got (Message #3).
+```
+
 ### Caster
 ### Clock
 ### CollectionSink
