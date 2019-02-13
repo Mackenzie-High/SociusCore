@@ -7,7 +7,7 @@ Socius provides commonly used actor types based on the minimalist [Cascade](http
 ## Related Projects:
 
 * [Socius - Core](#Socius): Base Components. 
-* [Socius - Nats](https://github.com/Mackenzie-High/SociusNats): Provides the ability to connect to NATS-based message-oriented-middleware.
+* [Socius - Nats](https://github.com/Mackenzie-High/SociusNats): Provides the ability to connect to [NATS-based](https://nats.io/) message-oriented-middleware.
 * [Socius - Web](https://github.com/Mackenzie-High/SociusWeb): Provides a server for creating HTTP-based RESTful micro-services. 
 
 ## Core Classes:
