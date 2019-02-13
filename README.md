@@ -665,21 +665,135 @@ Erin escaped the filter.
 
 #### Example Program:
 
+```Java
+package example;
 
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.Funnel;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.Printer;
+
+public final class Example
+{
+    public static void main (String[] args)
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * These actors merely simulate data producers.
+         */
+        final Processor<Integer> producer0 = Processor.newConnector(stage);
+        final Processor<Integer> producer1 = Processor.newConnector(stage);
+        final Processor<Integer> producer2 = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         */
+        final Funnel<Integer> funnel = Funnel.newFunnel(stage);
+
+        /**
+         * This actor will print the message that were *not* dropped.
+         */
+        final Printer<Integer> printer = Printer.newPrintln(stage, "Funneled $%d dollars into this project.");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        producer0.dataOut().connect(funnel.dataIn("P0"));
+        producer1.dataOut().connect(funnel.dataIn("P1"));
+        producer2.dataOut().connect(funnel.dataIn("P2"));
+        funnel.dataOut().connect(printer.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        producer0.accept(37);
+        producer1.accept(43);
+        producer2.accept(20);
+    }
+}
+```
 
 #### Example Output:
 
-
+```
+Funneled $37 dollars into this project.
+Funneled $43 dollars into this project.
+Funneled $20 dollars into this project.
+```
 
 ### IfElse
 
-
 #### Example Program:
+
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.IfElse;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.Printer;
+
+public final class Example
+{
+    public static void main (String[] args)
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This actor merely simulates a data producer.
+         */
+        final Processor<String> producer = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose functionality is being demonstrated.
+         */
+        final IfElse<String> filter = IfElse.newIfElse(stage, x -> x.startsWith("A"));
+
+        /**
+         * This actor will print the messages that obeyed the condition.
+         */
+        final Printer<String> success = Printer.newPrintln(stage, "(%s) matched.");
+
+        /**
+         * This actor will print the messages that disobeyed the condition.
+         */
+        final Printer<String> failure = Printer.newPrintln(stage, "(%s) did not match.");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        producer.dataOut().connect(filter.dataIn());
+        filter.trueOut().connect(success.dataIn());
+        filter.falseOut().connect(failure.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        producer.accept("Autumn");
+        producer.accept("Elle");
+        producer.accept("Ashley");
+        producer.accept("Emma");
+        producer.accept("Anna");
+        producer.accept("Erin");
+    }
+}
+```
 
 #### Example Output:
 
-### LookupInserter
+```
+(Autumn) matched.
+(Elle) did not match.
+(Ashley) matched.
+(Emma) did not match.
+(Anna) matched.
+(Erin) did not match.
+```
 
+### LookupInserter
 
 #### Example Program:
 
