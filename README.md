@@ -797,7 +797,71 @@ public final class Example
 
 #### Example Program:
 
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.LookupInserter;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.Printer;
+import java.io.IOException;
+
+public final class Example
+{
+    public static void main (String[] args)
+            throws IOException
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This actor merely simulates a data producer.
+         */
+        final Processor<Integer> processor = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose behavior is being demonstrated.
+         */
+        final LookupInserter<Integer> inserter = LookupInserter.newLookupInserter(stage);
+
+        /**
+         * These actors will print the results to standard-output.
+         */
+        final Printer<Integer> printer0 = Printer.newPrintln(stage, "Small = %s");
+        final Printer<Integer> printer1 = Printer.newPrintln(stage, "Medium = %s");
+        final Printer<Integer> printer2 = Printer.newPrintln(stage, "Large = %s");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        processor.dataOut().connect(inserter.dataIn());
+        inserter.selectIf(x -> x < 10).connect(printer0.dataIn());
+        inserter.selectIf(x -> x < 100).connect(printer1.dataIn());
+        inserter.dataOut().connect(printer2.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        processor.accept(3);
+        processor.accept(19);
+        processor.accept(5);
+        processor.accept(123);
+        processor.accept(7);
+        processor.accept(41);
+    }
+}
+```
+
 #### Example Output:
+
+```
+Small = 3
+Medium = 19
+Small = 5
+Large = 123
+Small = 7
+Medium = 41
+```
 
 ### Mapper
 
@@ -939,7 +1003,52 @@ Tick = 2019-02-13T04:58:51.849Z
 
 #### Example Program:
 
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.io.Printer;
+import java.io.IOException;
+
+public final class Example
+{
+    public static void main (String[] args)
+            throws IOException
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This actor merely simulates a data producer.
+         */
+        final Processor<String> processor = Processor.newConnector(stage);
+
+        /**
+         * These actors will print the results to standard-output.
+         */
+        final Printer<String> printer = Printer.newPrintln(stage, "Welcome to %s.");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        processor.dataOut().connect(printer.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        processor.accept("Earth");
+        processor.accept("Mars");
+    }
+}
+```
+
 #### Example Output:
+
+```
+Welcome to Earth.
+Welcome to Mars.
+```
 
 ### Processor
 
@@ -976,7 +1085,73 @@ Tick = 2019-02-13T04:58:51.849Z
 
 #### Example Program:
 
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.flow.TableInserter;
+import com.mackenziehigh.socius.io.Printer;
+import java.io.IOException;
+import java.util.function.Function;
+
+public final class Example
+{
+    public static void main (String[] args)
+            throws IOException
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This actor merely simulates a data producer.
+         */
+        final Processor<String> processor = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose behavior is being demonstrated.
+         */
+        final Function<String, Integer> keyFunction = x -> x.length();
+        final TableInserter<Integer, String> inserter = TableInserter.<Integer, String>newTableInserter(stage, keyFunction);
+
+        /**
+         * These actors will print the results to standard-output.
+         */
+        final Printer<String> printer0 = Printer.newPrintln(stage, "len(five) = %s");
+        final Printer<String> printer1 = Printer.newPrintln(stage, "len(six) = %s");
+        final Printer<String> printer2 = Printer.newPrintln(stage, "other = %s");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        processor.dataOut().connect(inserter.dataIn());
+        inserter.selectIf(5).connect(printer0.dataIn());
+        inserter.selectIf(6).connect(printer1.dataIn());
+        inserter.dataOut().connect(printer2.dataIn());
+
+        /**
+         * Cause data to flow through the network.
+         */
+        processor.accept("Mercury");
+        processor.accept("Venus");
+        processor.accept("Saturn");
+        processor.accept("Earth");
+        processor.accept("Uranus");
+        processor.accept("Neptune");
+    }
+}
+```
+
 #### Example Output:
+
+```
+other = Mercury
+len(five) = Venus
+len(six) = Saturn
+len(five) = Earth
+len(six) = Uranus
+other = Neptune
+```
 
 ### Unbatcher
 
