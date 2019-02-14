@@ -1136,7 +1136,81 @@ Printer #2 got message (F).
 
 #### Example Program:
 
+```Java
+package example;
+
+import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.flow.Router;
+import com.mackenziehigh.socius.io.Printer;
+import java.io.IOException;
+
+public final class Example
+{
+    public static void main (String[] args)
+            throws IOException
+    {
+        final Stage stage = Cascade.newStage();
+
+        /**
+         * This actor merely simulates a data producer.
+         */
+        final Processor<Character> processorEven = Processor.newConnector(stage);
+        final Processor<Character> processorOdd = Processor.newConnector(stage);
+
+        /**
+         * This is the actor whose behavior is being demonstrated.
+         */
+        final Router<String, Character> router = Router.newRouter(stage);
+
+        /**
+         * These actors will print the results to standard-output.
+         */
+        final Printer<Character> printer2 = Printer.newPrintln(stage, "Printer #2 got message (%s).");
+        final Printer<Character> printer3 = Printer.newPrintln(stage, "Printer #3 got message (%s).");
+        final Printer<Character> printer4 = Printer.newPrintln(stage, "Printer #4 got message (%s).");
+        final Printer<Character> printer5 = Printer.newPrintln(stage, "Printer #5 got message (%s).");
+
+        /**
+         * Connect the actors to form a network.
+         */
+        router.publish(processorEven.dataOut(), "even");
+        router.publish(processorOdd.dataOut(), "odd");
+        router.subscribe(printer2.dataIn(), "even");
+        router.subscribe(printer4.dataIn(), "even");
+        router.subscribe(printer3.dataIn(), "odd");
+        router.subscribe(printer5.dataIn(), "odd");
+
+        /**
+         * Cause data to flow through the network.
+         */
+        processorEven.accept('A');
+        processorEven.accept('B');
+        processorEven.accept('C');
+        processorOdd.accept('X');
+        processorOdd.accept('Y');
+        processorOdd.accept('Z');
+    }
+}
+```
+
 #### Example Output:
+
+```
+Printer #4 got message (A).
+Printer #2 got message (A).
+Printer #3 got message (X).
+Printer #5 got message (X).
+Printer #4 got message (B).
+Printer #2 got message (B).
+Printer #3 got message (Y).
+Printer #5 got message (Y).
+Printer #4 got message (C).
+Printer #2 got message (C).
+Printer #3 got message (Z).
+Printer #5 got message (Z).
+```
 
 ### ShuntingYard
 
