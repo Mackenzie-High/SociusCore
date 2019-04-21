@@ -40,8 +40,8 @@ public final class Caster<I, O>
     {
         Objects.requireNonNull(stage, "stage");
         this.type = Objects.requireNonNull(type, "type");
-        this.actorCast = Mapper.newFunction(stage, this::onMessage);
-        this.actorFail = Processor.newConnector(stage);
+        this.actorCast = Mapper.fromFunctionScript(stage, this::onMessage);
+        this.actorFail = Processor.fromIdentityScript(stage);
     }
 
     private O onMessage (final I message)

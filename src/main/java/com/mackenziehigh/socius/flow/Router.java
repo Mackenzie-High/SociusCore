@@ -90,8 +90,8 @@ public final class Router<K, M>
     private Router (final ActorFactory stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
-        this.sinkAll = Processor.newConnector(stage);
-        this.sinkDead = Processor.newConnector(stage);
+        this.sinkAll = Processor.fromIdentityScript(stage);
+        this.sinkDead = Processor.fromIdentityScript(stage);
     }
 
     /**
@@ -141,7 +141,7 @@ public final class Router<K, M>
         {
             if (publishers.contains(key, connector) == false)
             {
-                final Processor<M> actor = Processor.newConsumer(stage, msg -> send(key, msg));
+                final Processor<M> actor = Processor.fromConsumerScript(stage, msg -> send(key, msg));
                 publishers.put(key, connector, actor);
                 connector.connect(actor.dataIn());
             }

@@ -1,10 +1,12 @@
 package com.mackenziehigh.socius.flow;
 
+import com.google.common.collect.ImmutableSet;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -23,13 +25,13 @@ import java.util.function.Function;
  * @param <I> is the type of the incoming messages.
  * @param <O> is the type of the outgoing messages.
  */
-public final class Tower<K, I, O>
-        implements DataPipeline<I, O>
+public final class ExpandoYard<K, I, O>
+        implements DataYard<I, O, DataYard.Siding<I, O>>
 {
     /**
      * This map maps keys to corresponding pipelines (floors).
      */
-    private final Map<K, DataPipeline<I, O>> floors = new ConcurrentHashMap<>();
+    private final Map<K, DataYard.Siding<I, O>> options = new ConcurrentHashMap<>();
 
     /**
      * This processors receives the incoming messages
@@ -54,16 +56,16 @@ public final class Tower<K, I, O>
      * This function is used to construct new floors
      * given the keys that will identify them herein.
      */
-    private final Function<K, DataPipeline<I, O>> floorBuilder;
+    private final Function<K, DataYard.Siding<I, O>> floorBuilder;
 
-    private Tower (final ActorFactory stage,
-                   final Function<I, K> keyFunction,
-                   final Function<K, DataPipeline<I, O>> floorBuilder)
+    private ExpandoYard (final ActorFactory stage,
+                         final Function<I, K> keyFunction,
+                         final Function<K, DataYard.Siding<I, O>> floorBuilder)
     {
         this.floorBuilder = Objects.requireNonNull(floorBuilder, "floorBuilder");
         this.keyFunction = Objects.requireNonNull(keyFunction, "keyFunction");
-        this.procIn = Processor.newConsumer(stage, this::onMessage);
-        this.procOut = Processor.newConnector(stage);
+        this.procIn = Processor.fromConsumerScript(stage, this::onMessage);
+        this.procOut = Processor.fromIdentityScript(stage);
     }
 
     /**
@@ -77,11 +79,11 @@ public final class Tower<K, I, O>
      * @param floorBuilder will be used to create new floors, as needed.
      * @return the newly constructed object.
      */
-    public static <K, I, O> Tower<K, I, O> newTower (final ActorFactory stage,
-                                                     final Function<I, K> keyFunction,
-                                                     final Function<K, DataPipeline<I, O>> floorBuilder)
+    public static <K, I, O> ExpandoYard<K, I, O> newTower (final ActorFactory stage,
+                                                           final Function<I, K> keyFunction,
+                                                           final Function<K, DataYard.Siding<I, O>> floorBuilder)
     {
-        return new Tower<>(stage, keyFunction, floorBuilder);
+        return new ExpandoYard<>(stage, keyFunction, floorBuilder);
     }
 
     private void onMessage (final I message)
@@ -94,17 +96,17 @@ public final class Tower<K, I, O>
         /**
          * If the floor does not exist, then create it.
          */
-        if (floors.containsKey(key) == false)
+        if (options.containsKey(key) == false)
         {
-            final DataPipeline<I, O> floor = floorBuilder.apply(key);
+            final DataYard.Siding<I, O> floor = floorBuilder.apply(key);
             floor.dataOut().connect(procOut.dataIn());
-            floors.put(key, floor);
+            options.put(key, floor);
         }
 
         /**
          * Send the message to the corresponding floor.
          */
-        final DataPipeline<I, O> dest = floors.get(key);
+        final DataPipeline<I, O> dest = options.get(key);
         dest.accept(message);
     }
 
@@ -130,4 +132,24 @@ public final class Tower<K, I, O>
         return procOut.dataOut();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<Siding<I, O>> options ()
+    {
+        return ImmutableSet.copyOf(options.values());
+    }
+
+    public ExpandoYard<K, I, O> removeOption (final K key)
+    {
+        final Siding<I, O> option = options.remove(key);
+
+        if (option != null)
+        {
+            option.dataOut().disconnect(procOut.dataIn());
+        }
+
+        return this;
+    }
 }

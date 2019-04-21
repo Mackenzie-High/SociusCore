@@ -28,7 +28,7 @@ public final class MapperTest
             throws Throwable
     {
         final ActorTester tester = new ActorTester();
-        final Mapper<Integer, String> actor = Mapper.newFunction(tester.stage(), (Integer x) -> String.format("%d ** 2 = %d", x, x * x));
+        final Mapper<Integer, String> actor = Mapper.fromFunctionScript(tester.stage(), (Integer x) -> String.format("%d ** 2 = %d", x, x * x));
 
         tester.send(actor.dataIn(), 2);
         tester.send(actor.dataIn(), 3);

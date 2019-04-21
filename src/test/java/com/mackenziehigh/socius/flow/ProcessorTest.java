@@ -28,7 +28,7 @@ public final class ProcessorTest
             throws Throwable
     {
         final ActorTester tester = new ActorTester();
-        final Processor<Integer> actor = Processor.newFunction(tester.stage(), (Integer x) -> x * x);
+        final Processor<Integer> actor = Processor.fromFunctionScript(tester.stage(), (Integer x) -> x * x);
 
         tester.send(actor.dataIn(), 2);
         tester.send(actor.dataIn(), 3);

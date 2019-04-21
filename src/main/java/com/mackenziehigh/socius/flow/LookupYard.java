@@ -16,6 +16,7 @@
 package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
@@ -23,6 +24,7 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -31,8 +33,8 @@ import java.util.function.Predicate;
  * @param <I> is the type of the incoming messages.
  * @param <O> is the type of the outgoing messages.
  */
-public final class ShuntingYard<I, O>
-        implements DataPipeline<I, O>
+public final class LookupYard<I, O>
+        implements DataYard<I, O, LookupYard.LookupSiding<I, O>>
 {
     /**
      * An option that may receive messages.
@@ -40,8 +42,8 @@ public final class ShuntingYard<I, O>
      * @param <I> is the type of the incoming messages.
      * @param <O> is the type of the outgoing messages.
      */
-    public interface Siding<I, O>
-            extends DataPipeline<I, O>
+    public interface LookupSiding<I, O>
+            extends DataYard.Siding<I, O>
     {
         /**
          * Determines whether an incoming message should be routed to this option-handler.
@@ -76,7 +78,12 @@ public final class ShuntingYard<I, O>
     /**
      * These are the available options for processing incoming messages.
      */
-    private final List<Siding<I, O>> options;
+    private final List<LookupSiding<I, O>> options;
+
+    /**
+     * These are the available options for processing incoming messages, as a Set.
+     */
+    private final Set<LookupSiding<I, O>> optionsSet;
 
     /**
      * This object will route incoming messages to the appropriate option-handlers.
@@ -93,15 +100,16 @@ public final class ShuntingYard<I, O>
      */
     private final Funnel<O> funnel;
 
-    private ShuntingYard (final ActorFactory stage,
-                          final List<Siding<I, O>> mappers)
+    private LookupYard (final ActorFactory stage,
+                        final List<LookupSiding<I, O>> mappers)
     {
-        this.router = Processor.newConsumer(stage, this::onInput);
-        this.deadDrop = Processor.newConnector(stage);
+        this.router = Processor.fromConsumerScript(stage, this::onInput);
+        this.deadDrop = Processor.fromIdentityScript(stage);
         this.funnel = Funnel.newFunnel(stage);
         this.options = ImmutableList.copyOf(mappers);
+        this.optionsSet = ImmutableSet.copyOf(mappers);
 
-        for (Siding<I, O> option : options)
+        for (LookupSiding<I, O> option : options)
         {
             option.dataOut().connect(funnel.dataIn(new Object()));
         }
@@ -113,7 +121,7 @@ public final class ShuntingYard<I, O>
          * Route the message to the first option
          * that is willing to accept it.
          */
-        for (Siding<I, O> option : options)
+        for (LookupSiding<I, O> option : options)
         {
 
             if (option.isMatch(message))
@@ -163,6 +171,15 @@ public final class ShuntingYard<I, O>
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<LookupSiding<I, O>> options ()
+    {
+        return optionsSet;
+    }
+
+    /**
      * Factory method.
      *
      * @param <I> is the type of the incoming messages.
@@ -185,7 +202,7 @@ public final class ShuntingYard<I, O>
     {
         private final ActorFactory stage;
 
-        private final List<Siding<I, O>> options = Lists.newLinkedList();
+        private final List<LookupSiding<I, O>> options = Lists.newLinkedList();
 
         private Builder (final ActorFactory stage)
         {
@@ -199,7 +216,7 @@ public final class ShuntingYard<I, O>
          * @param option is the additional option.
          * @return this.
          */
-        public Builder<I, O> withOption (final Siding<I, O> option)
+        public Builder<I, O> withOption (final LookupSiding<I, O> option)
         {
             Objects.requireNonNull(option, "option");
             options.add(option);
@@ -219,8 +236,8 @@ public final class ShuntingYard<I, O>
         {
             Objects.requireNonNull(condition, "condition");
             Objects.requireNonNull(transform, "transform");
-            final Mapper<I, O> mapper = Mapper.newFunction(stage, transform);
-            final Siding<I, O> option = new Siding<I, O>()
+            final Mapper<I, O> mapper = Mapper.fromFunctionScript(stage, transform);
+            final LookupSiding<I, O> option = new LookupSiding<I, O>()
             {
                 @Override
                 public boolean isMatch (final I message)
@@ -249,9 +266,9 @@ public final class ShuntingYard<I, O>
          *
          * @return the new option-hierarchy.
          */
-        public ShuntingYard<I, O> build ()
+        public LookupYard<I, O> build ()
         {
-            return new ShuntingYard<>(stage, options);
+            return new LookupYard<>(stage, options);
         }
     }
 }

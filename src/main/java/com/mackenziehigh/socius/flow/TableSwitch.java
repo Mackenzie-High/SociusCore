@@ -29,7 +29,7 @@ import java.util.function.Function;
  * @param <K> is the type of the routing-key that is contained in each message.
  * @param <T> is the type of the incoming and outgoing messages.
  */
-public final class TableInserter<K, T>
+public final class TableSwitch<K, T>
         implements DataPipeline<T, T>
 {
     private final ActorFactory stage;
@@ -59,12 +59,12 @@ public final class TableInserter<K, T>
      */
     private final Object lock = new Object();
 
-    private TableInserter (final ActorFactory stage,
+    private TableSwitch (final ActorFactory stage,
                            final Function<T, K> extractor)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
-        this.procDataIn = Processor.newConsumer(stage, this::onMessage);
-        this.procDataOut = Processor.newConnector(stage);
+        this.procDataIn = Processor.fromConsumerScript(stage, this::onMessage);
+        this.procDataOut = Processor.fromIdentityScript(stage);
         this.extractor = Objects.requireNonNull(extractor, "extractor");
     }
 
@@ -125,7 +125,7 @@ public final class TableInserter<K, T>
         {
             if (routingTable.containsKey(key) == false)
             {
-                final Processor<T> proc = Processor.newConnector(stage);
+                final Processor<T> proc = Processor.fromIdentityScript(stage);
                 routingTable.put(key, proc);
             }
         }
@@ -146,9 +146,9 @@ public final class TableInserter<K, T>
      * @param extractor knows how to extract routing-keys from messages.
      * @return the new inserter.
      */
-    public static <K, T> TableInserter<K, T> newTableInserter (final ActorFactory stage,
+    public static <K, T> TableSwitch<K, T> newTableInserter (final ActorFactory stage,
                                                                final Function<T, K> extractor)
     {
-        return new TableInserter(stage, extractor);
+        return new TableSwitch(stage, extractor);
     }
 }

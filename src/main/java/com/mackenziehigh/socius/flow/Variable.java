@@ -53,9 +53,9 @@ public final class Variable<T>
     private Variable (final ActorFactory stage,
                       final T initial)
     {
-        this.procClock = Processor.newFunction(stage, this::onGet);
-        this.procDataIn = Processor.newConsumer(stage, this::onSet);
-        this.procDataOut = Mapper.newFunction(stage, this::onSend);
+        this.procClock = Processor.fromFunctionScript(stage, this::onGet);
+        this.procDataIn = Processor.fromConsumerScript(stage, this::onSet);
+        this.procDataOut = Mapper.fromFunctionScript(stage, this::onSend);
         this.variable.set(initial);
     }
 

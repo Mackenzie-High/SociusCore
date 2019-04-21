@@ -30,7 +30,7 @@ import java.util.function.Predicate;
  *
  * @param <T> is the type of the incoming and outgoing messages.
  */
-public final class LookupInserter<T>
+public final class LookupSwitch<T>
         implements DataPipeline<T, T>
 {
     private final ActorFactory stage;
@@ -50,11 +50,11 @@ public final class LookupInserter<T>
      */
     private final List<Entry<Predicate<T>, Input<T>>> routes = Lists.newCopyOnWriteArrayList();
 
-    private LookupInserter (final ActorFactory stage)
+    private LookupSwitch (final ActorFactory stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
-        this.procDataIn = Processor.newConsumer(stage, this::onMessage);
-        this.procDataOut = Processor.newConnector(stage);
+        this.procDataIn = Processor.fromConsumerScript(stage, this::onMessage);
+        this.procDataOut = Processor.fromIdentityScript(stage);
     }
 
     private void onMessage (final T message)
@@ -120,7 +120,7 @@ public final class LookupInserter<T>
     public synchronized Output<T> selectIf (final Predicate<T> condition)
     {
         Objects.requireNonNull(condition, "condition");
-        final Processor<T> proc = Processor.newConnector(stage);
+        final Processor<T> proc = Processor.fromIdentityScript(stage);
         routes.add(new AbstractMap.SimpleImmutableEntry<>(condition, proc.dataIn()));
         return proc.dataOut();
     }
@@ -132,8 +132,8 @@ public final class LookupInserter<T>
      * @param stage will be used to create private actors.
      * @return the new inserter.
      */
-    public static <T> LookupInserter<T> newLookupInserter (final ActorFactory stage)
+    public static <T> LookupSwitch<T> newLookupInserter (final ActorFactory stage)
     {
-        return new LookupInserter(stage);
+        return new LookupSwitch(stage);
     }
 }

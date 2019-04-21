@@ -86,8 +86,8 @@ public final class Duplicator<T>
 
     private Duplicator (final Builder<T> builder)
     {
-        this.procDataIn = Processor.newConsumer(builder.stage, this::onMessage);
-        this.procDataOut = Processor.newConnector(builder.stage);
+        this.procDataIn = Processor.fromConsumerScript(builder.stage, this::onMessage);
+        this.procDataOut = Processor.fromIdentityScript(builder.stage);
         this.sequence = new ArrayDeque<>(builder.sequenceLength);
         this.sequenceLength = builder.sequenceLength;
         this.repeatCount = builder.repeatCount;

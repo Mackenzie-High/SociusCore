@@ -58,10 +58,10 @@ public final class Valve<T>
     private Valve (final ActorFactory stage,
                    final boolean open)
     {
-        this.procDataIn = Processor.newFunction(stage, this::onDataIn);
-        this.procDataOut = Processor.newConnector(stage);
-        this.procToggleIn = Processor.newConsumer(stage, this::onToggleIn);
-        this.procToggleOut = Processor.newFunction(stage, this::onToggleOut);
+        this.procDataIn = Processor.fromFunctionScript(stage, this::onDataIn);
+        this.procDataOut = Processor.fromIdentityScript(stage);
+        this.procToggleIn = Processor.fromConsumerScript(stage, this::onToggleIn);
+        this.procToggleOut = Processor.fromFunctionScript(stage, this::onToggleOut);
         this.procDataIn.dataOut().connect(this.procDataOut.dataIn());
         this.flag.set(open);
     }

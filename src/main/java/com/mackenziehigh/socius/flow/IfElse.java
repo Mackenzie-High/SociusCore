@@ -56,9 +56,9 @@ public final class IfElse<T>
     {
         Objects.requireNonNull(stage, "stage");
         this.condition = Objects.requireNonNull(condition, "condition");
-        this.checker = Processor.newConsumer(stage, this::onMessage);
-        this.trueOut = Processor.newConnector(stage);
-        this.falseOut = Processor.newConnector(stage);
+        this.checker = Processor.fromConsumerScript(stage, this::onMessage);
+        this.trueOut = Processor.fromIdentityScript(stage);
+        this.falseOut = Processor.fromIdentityScript(stage);
     }
 
     private void onMessage (final T message)

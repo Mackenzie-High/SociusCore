@@ -80,7 +80,7 @@ public final class Batcher<T>
                      final int arity,
                      final int capacity)
     {
-        this.dataOut = Processor.newConnector(stage);
+        this.dataOut = Processor.fromIdentityScript(stage);
         this.capacity = capacity;
 
         final ImmutableList.Builder<Processor<T>> builderDataIn = ImmutableList.builder();
@@ -89,7 +89,7 @@ public final class Batcher<T>
         for (int i = 0; i < arity; i++)
         {
             final int idx = i;
-            builderDataIn.add(Processor.newConsumer(stage, (T msg) -> onMessage(idx, msg)));
+            builderDataIn.add(Processor.fromConsumerScript(stage, (T msg) -> onMessage(idx, msg)));
             builderQueues.add(Queues.newArrayDeque());
         }
 

@@ -156,7 +156,7 @@ public final class ActorTesterTest
     public void test20190102182745669682 ()
             throws Throwable
     {
-        final Processor<String> actor = Processor.newConnector(tester.stage());
+        final Processor<String> actor = Processor.fromIdentityScript(tester.stage());
 
         tester.send(actor.dataIn(), "AXE");
         tester.expectLike(actor.dataOut(), x -> x.contains("X"), "No X");
@@ -177,7 +177,7 @@ public final class ActorTesterTest
     @Test
     public void test20190102190926244317 ()
     {
-        final Processor<String> actor = Processor.newConnector(tester.stage());
+        final Processor<String> actor = Processor.fromIdentityScript(tester.stage());
 
         try
         {
@@ -209,7 +209,7 @@ public final class ActorTesterTest
     public void test20190102183009191768 ()
             throws Throwable
     {
-        final Processor<String> actor = Processor.newConnector(tester.stage());
+        final Processor<String> actor = Processor.fromIdentityScript(tester.stage());
 
         tester.send(actor.dataIn(), "X");
         tester.expect(actor.dataOut(), "X");
@@ -233,7 +233,7 @@ public final class ActorTesterTest
     public void test20190102193050481608 ()
             throws Throwable
     {
-        final Processor<String> actor = Processor.newConnector(tester.stage());
+        final Processor<String> actor = Processor.fromIdentityScript(tester.stage());
 
         try
         {
@@ -276,7 +276,7 @@ public final class ActorTesterTest
     public void test20190102193541097937 ()
     {
         final Stage stage = Cascade.newStage();
-        final Processor<String> proc = Processor.newConnector(stage);
+        final Processor<String> proc = Processor.fromIdentityScript(stage);
         tester.connect(proc.dataOut());
     }
 }

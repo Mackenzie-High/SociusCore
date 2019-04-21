@@ -42,7 +42,7 @@ public final class Fanout<T>
     private Fanout (final ActorFactory stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
-        this.input = Processor.newConsumer(stage, this::send);
+        this.input = Processor.fromConsumerScript(stage, this::send);
     }
 
     private void send (final T message)
@@ -80,7 +80,7 @@ public final class Fanout<T>
         {
             if (outputs.containsKey(key) == false)
             {
-                final Processor output = Processor.newConnector(stage);
+                final Processor output = Processor.fromIdentityScript(stage);
                 outputs.put(key, output);
             }
         }

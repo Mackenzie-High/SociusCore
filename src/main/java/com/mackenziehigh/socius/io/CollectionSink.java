@@ -73,7 +73,7 @@ public final class CollectionSink<T>
     {
         Preconditions.checkNotNull(stage, "stage");
         Preconditions.checkNotNull(collection, "collection");
-        final Processor<T> proc = Processor.newConsumer(stage, (T x) -> collection.add(x));
+        final Processor<T> proc = Processor.fromConsumerScript(stage, (T x) -> collection.add(x));
         return new CollectionSink<>(proc);
     }
 }

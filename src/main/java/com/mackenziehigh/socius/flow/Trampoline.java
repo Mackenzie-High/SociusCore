@@ -12,9 +12,8 @@ import java.util.Objects;
 
 /**
  *
- * @author mackenzie
  */
-public final class TrampolineMachine<I, O>
+public final class Trampoline<I, O>
         implements DataPipeline<I, O>
 {
     public interface State<I, O>
@@ -31,13 +30,13 @@ public final class TrampolineMachine<I, O>
 
     private final Processor<O> procOut;
 
-    private TrampolineMachine (final ActorFactory stage,
-                               final State<I, O> initial)
+    private Trampoline (final ActorFactory stage,
+                        final State<I, O> initial)
     {
         this.initial = Objects.requireNonNull(initial, "initial");
         this.current = initial;
         this.procIn = stage.newActor().withContextScript(this::onMessage).create();
-        this.procOut = Processor.newConnector(stage);
+        this.procOut = Processor.fromIdentityScript(stage);
         this.procIn.output().connect(procOut.dataIn());
     }
 
@@ -68,16 +67,27 @@ public final class TrampolineMachine<I, O>
         return procOut.dataOut();
     }
 
-    public static <I, O> TrampolineMachine<I, O> newTrampolineMachine (final ActorFactory stage,
-                                                                       final State<I, O> initial)
+    public State<I, O> state ()
     {
-        return new TrampolineMachine<>(stage, initial);
+        return current;
+    }
+
+    public State<I, O> state (final State<I, O> state)
+    {
+        current = state;
+        return state;
+    }
+
+    public static <I, O> Trampoline<I, O> newTrampolineMachine (final ActorFactory stage,
+                                                                final State<I, O> initial)
+    {
+        return new Trampoline<>(stage, initial);
     }
 
     public static void main (String[] args)
     {
         final Stage stage = Cascade.newStage();
-        final TrampolineMachine<Integer, String> sm = TrampolineMachine.newTrampolineMachine(stage, TrampolineMachine::state1);
+        final Trampoline<Integer, String> sm = Trampoline.newTrampolineMachine(stage, Trampoline::state1);
         final Printer<String> p = Printer.newPrintln(stage, "X = %s");
         sm.dataOut().connect(p.dataIn());
 
@@ -95,11 +105,11 @@ public final class TrampolineMachine<I, O>
         if (message < 10)
         {
             System.err.println("A = " + message);
-            return TrampolineMachine::state1;
+            return Trampoline::state1;
         }
         else
         {
-            return TrampolineMachine::state2;
+            return Trampoline::state2;
         }
     }
 
@@ -109,11 +119,11 @@ public final class TrampolineMachine<I, O>
         if (message < 100)
         {
             System.err.println("B = " + message);
-            return TrampolineMachine::state2;
+            return Trampoline::state2;
         }
         else
         {
-            return TrampolineMachine::state1;
+            return Trampoline::state1;
         }
     }
 }

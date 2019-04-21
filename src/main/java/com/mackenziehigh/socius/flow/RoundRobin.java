@@ -52,12 +52,12 @@ public final class RoundRobin<T>
     {
         Preconditions.checkNotNull(stage, "stage");
         Preconditions.checkArgument(arity > 0, "arity <= 0");
-        this.input = Processor.newConsumer(stage, this::forwardFromHub);
+        this.input = Processor.fromConsumerScript(stage, this::forwardFromHub);
 
         final ImmutableList.Builder<Processor<T>> builderOutputs = ImmutableList.builder();
         for (int i = 0; i < arity; i++)
         {
-            builderOutputs.add(Processor.newConnector(stage));
+            builderOutputs.add(Processor.fromIdentityScript(stage));
         }
         this.outputs = builderOutputs.build();
 

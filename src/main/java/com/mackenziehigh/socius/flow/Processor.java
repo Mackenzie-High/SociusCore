@@ -18,6 +18,7 @@ package com.mackenziehigh.socius.flow;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.ConsumerScript;
+import com.mackenziehigh.cascade.Cascade.Stage.Actor.ContextScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -72,8 +73,22 @@ public final class Processor<T>
      * @param script defines the processing to perform.
      * @return the new processor.
      */
-    public static <T> Processor<T> newFunction (final ActorFactory stage,
-                                                final FunctionScript<T, T> script)
+    public static <T> Processor<T> fromContextScript (final ActorFactory stage,
+                                                      final ContextScript<T, T> script)
+    {
+        return new Processor<>(stage.newActor().withContextScript(script).create());
+    }
+
+    /**
+     * Factory Method.
+     *
+     * @param <T> is the type of the incoming and outgoing messages.
+     * @param stage will be used t create private actors.
+     * @param script defines the processing to perform.
+     * @return the new processor.
+     */
+    public static <T> Processor<T> fromFunctionScript (final ActorFactory stage,
+                                                       final FunctionScript<T, T> script)
     {
         return new Processor<>(stage.newActor().withFunctionScript(script).create());
     }
@@ -86,8 +101,8 @@ public final class Processor<T>
      * @param script defines the processing to perform.
      * @return the new processor.
      */
-    public static <T> Processor<T> newConsumer (final ActorFactory stage,
-                                                final ConsumerScript<T> script)
+    public static <T> Processor<T> fromConsumerScript (final ActorFactory stage,
+                                                       final ConsumerScript<T> script)
     {
         return new Processor<>(stage.newActor().withConsumerScript(script).create());
     }
@@ -104,9 +119,9 @@ public final class Processor<T>
      * @param stage will be used t create private actors.
      * @return the new processor.
      */
-    public static <T> Processor<T> newConnector (final ActorFactory stage)
+    public static <T> Processor<T> fromIdentityScript (final ActorFactory stage)
     {
-        return newFunction(stage, (T x) -> x);
+        return fromFunctionScript(stage, (T x) -> x);
     }
 
 }

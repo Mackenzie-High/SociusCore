@@ -38,7 +38,7 @@ public final class ShuntingYardTest
     public void test20181210220416465169 ()
             throws Throwable
     {
-        final ShuntingYard<Integer, String> object = ShuntingYard.<Integer, String>newBuilder(tester.stage())
+        final LookupYard<Integer, String> object = LookupYard.<Integer, String>newBuilder(tester.stage())
                 .withOption(x -> x % 3 == 0, x -> "fizz = " + x)
                 .withOption(x -> x % 5 == 0, x -> "buzz = " + x)
                 .build();

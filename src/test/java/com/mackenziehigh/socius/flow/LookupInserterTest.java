@@ -30,7 +30,7 @@ public final class LookupInserterTest
             throws Throwable
     {
         final ActorTester tester = new ActorTester();
-        final LookupInserter<Integer> inserter = LookupInserter.newLookupInserter(tester.stage());
+        final LookupSwitch<Integer> inserter = LookupSwitch.newLookupInserter(tester.stage());
         final Output<Integer> primes = inserter.selectIf(x -> BigInteger.valueOf(x).isProbablePrime(10));
         final Output<Integer> power2 = inserter.selectIf(x -> (x & (x - 1)) == 0);
         final Output<Integer> others = inserter.dataOut();

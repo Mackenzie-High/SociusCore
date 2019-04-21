@@ -89,7 +89,7 @@ public final class Clock
         this.period = builder.period;
         this.service = builder.service != null ? builder.service : DefaultExecutor.get();
         final ActorFactory stage = Cascade.newStage(service);
-        this.procClockOut = Processor.newConnector(stage);
+        this.procClockOut = Processor.fromIdentityScript(stage);
     }
 
     /**

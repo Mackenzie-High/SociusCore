@@ -17,6 +17,7 @@ package com.mackenziehigh.socius.flow;
 
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
+import com.mackenziehigh.cascade.Cascade.Stage.Actor.ContextScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -75,8 +76,23 @@ public final class Mapper<I, O>
      * @param script defines the processing to perform.
      * @return the new processor.
      */
-    public static <I, O> Mapper<I, O> newFunction (final ActorFactory stage,
-                                                   final FunctionScript<I, O> script)
+    public static <I, O> Mapper<I, O> fromContextScript (final ActorFactory stage,
+                                                         final ContextScript<I, O> script)
+    {
+        return new Mapper<>(stage.newActor().withContextScript(script).create());
+    }
+
+    /**
+     * Factory Method.
+     *
+     * @param <I> is the type of the incoming messages.
+     * @param <O> is the type of the outgoing messages.
+     * @param stage will be used t create private actors.
+     * @param script defines the processing to perform.
+     * @return the new processor.
+     */
+    public static <I, O> Mapper<I, O> fromFunctionScript (final ActorFactory stage,
+                                                          final FunctionScript<I, O> script)
     {
         return new Mapper<>(stage.newActor().withFunctionScript(script).create());
     }
@@ -91,9 +107,9 @@ public final class Mapper<I, O>
      * @param defaultValue is the default output, if the input is not in the mappings map.
      * @return the new processor.
      */
-    public static <I, O> Mapper<I, O> newFunction (final ActorFactory stage,
-                                                   final Map<I, O> mappings,
-                                                   final O defaultValue)
+    public static <I, O> Mapper<I, O> fromMap (final ActorFactory stage,
+                                               final Map<I, O> mappings,
+                                               final O defaultValue)
     {
         /**
          * The map may change during the call.
@@ -107,6 +123,6 @@ public final class Mapper<I, O>
             return output == null ? defaultValue : output;
         };
 
-        return newFunction(stage, script);
+        return fromFunctionScript(stage, script);
     }
 }

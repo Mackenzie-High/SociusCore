@@ -58,12 +58,12 @@ public final class Unbatcher<T>
         Preconditions.checkNotNull(stage, "stage");
         Preconditions.checkArgument(arity >= 0, "arity < 0");
         this.arity = arity;
-        this.input = Processor.newConsumer(stage, this::onMessage);
+        this.input = Processor.fromConsumerScript(stage, this::onMessage);
         final ImmutableList.Builder<Processor<T>> builder = ImmutableList.builder();
 
         for (int i = 0; i < arity; i++)
         {
-            builder.add(Processor.newConnector(stage));
+            builder.add(Processor.fromIdentityScript(stage));
         }
 
         this.outputs = builder.build();

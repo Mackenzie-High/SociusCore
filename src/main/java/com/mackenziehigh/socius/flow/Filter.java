@@ -39,7 +39,7 @@ public final class Filter<T>
     {
         Objects.requireNonNull(stage, "stage");
         this.condition = Objects.requireNonNull(condition, "condition");
-        this.actor = Processor.newFunction(stage, this::onMessage);
+        this.actor = Processor.fromFunctionScript(stage, this::onMessage);
     }
 
     private T onMessage (final T message)

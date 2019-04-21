@@ -42,7 +42,7 @@ public final class Funnel<T>
     private Funnel (final ActorFactory stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
-        this.output = Processor.newConnector(stage);
+        this.output = Processor.fromIdentityScript(stage);
     }
 
     /**
@@ -73,7 +73,7 @@ public final class Funnel<T>
             if (inputs.containsKey(key) == false)
             {
                 final Input<T> connector = output.dataIn();
-                final Processor<T> actor = Processor.newConsumer(stage, connector::send);
+                final Processor<T> actor = Processor.fromConsumerScript(stage, connector::send);
                 inputs.put(key, actor);
             }
         }

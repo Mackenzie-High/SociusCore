@@ -68,7 +68,7 @@ public final class Bus<T>
     private Bus (final ActorFactory stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
-        this.hub = Processor.newConsumer(stage, this::forwardFromHub);
+        this.hub = Processor.fromConsumerScript(stage, this::forwardFromHub);
     }
 
     /**
@@ -91,7 +91,7 @@ public final class Bus<T>
 
         if (inputs.containsKey(key) == false)
         {
-            inputs.put(key, Processor.newConsumer(stage, this::forwardToHub));
+            inputs.put(key, Processor.fromConsumerScript(stage, this::forwardToHub));
         }
 
         return inputs.get(key).dataIn();
@@ -117,7 +117,7 @@ public final class Bus<T>
 
         if (outputs.containsKey(key) == false)
         {
-            outputs.put(key, Processor.newConnector(stage));
+            outputs.put(key, Processor.fromIdentityScript(stage));
         }
 
         return outputs.get(key).dataOut();

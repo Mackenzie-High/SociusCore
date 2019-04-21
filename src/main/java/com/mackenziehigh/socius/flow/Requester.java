@@ -118,12 +118,12 @@ public final class Requester<K, I, R, O>
     private Requester (final Builder<K, I, R, O> builder)
     {
         this.stage = builder.stage;
-        this.dataIn = Processor.newConsumer(stage, this::onRequestIn);
-        this.requestOut = Processor.newConnector(stage);
-        this.replyIn = Processor.newConsumer(stage, this::onReplyIn);
-        this.resultOut = Processor.newConnector(stage);
-        this.droppedRequestOut = Processor.newConnector(stage);
-        this.droppedReplyOut = Processor.newConnector(stage);
+        this.dataIn = Processor.fromConsumerScript(stage, this::onRequestIn);
+        this.requestOut = Processor.fromIdentityScript(stage);
+        this.replyIn = Processor.fromConsumerScript(stage, this::onReplyIn);
+        this.resultOut = Processor.fromIdentityScript(stage);
+        this.droppedRequestOut = Processor.fromIdentityScript(stage);
+        this.droppedReplyOut = Processor.fromIdentityScript(stage);
         this.keyFuncI = builder.keyFuncI;
         this.keyFuncR = builder.keyFuncR;
         this.composer = builder.composer;
@@ -317,7 +317,7 @@ public final class Requester<K, I, R, O>
         /**
          * This actor will receive a message whenever the timeout expires.
          */
-        private final Processor<Object> callback = Processor.newConsumer(stage, this::onTimeoutExpired);
+        private final Processor<Object> callback = Processor.fromConsumerScript(stage, this::onTimeoutExpired);
 
         public Handler (final K key,
                         final I request)

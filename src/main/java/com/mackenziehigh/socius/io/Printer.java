@@ -59,7 +59,7 @@ public final class Printer<T>
                      final String format,
                      final boolean line)
     {
-        this.actor = Processor.newFunction(stage, this::print);
+        this.actor = Processor.fromFunctionScript(stage, this::print);
         this.format = Objects.requireNonNull(format, "format");
         this.stream = Objects.requireNonNull(stream, "stream");
         this.method = line ? stream::println : stream::print;
