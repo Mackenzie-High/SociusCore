@@ -20,6 +20,7 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.Map;
 
 /**
  * Applies a map-function to incoming messages and then forwards the results,
@@ -78,5 +79,34 @@ public final class Mapper<I, O>
                                                    final FunctionScript<I, O> script)
     {
         return new Mapper<>(stage.newActor().withFunctionScript(script).create());
+    }
+
+    /**
+     * Factory Method.
+     *
+     * @param <I> is the type of the incoming messages.
+     * @param <O> is the type of the outgoing messages.
+     * @param stage will be used t create private actors.
+     * @param mappings defines the the input and output pairings.
+     * @param defaultValue is the default output, if the input is not in the mappings map.
+     * @return the new processor.
+     */
+    public static <I, O> Mapper<I, O> newFunction (final ActorFactory stage,
+                                                   final Map<I, O> mappings,
+                                                   final O defaultValue)
+    {
+        /**
+         * The map may change during the call.
+         * Therefore, get the output and store in a local,
+         * rather than calling containsKey() and then get().
+         * Moreover, this is slightly faster conceptually.
+         */
+        final FunctionScript<I, O> script = msg ->
+        {
+            final O output = mappings.get(msg);
+            return output == null ? defaultValue : output;
+        };
+
+        return newFunction(stage, script);
     }
 }
