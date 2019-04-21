@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @param <T> is the type of messages that flow through the message-bus.
  */
 public final class Bus<T>
+        implements DataBus<T, T>
 {
     private final Stage stage;
 
@@ -83,6 +84,7 @@ public final class Bus<T>
      * @param key identifies the input to retrieve.
      * @return the named input.
      */
+    @Override
     public synchronized Input<T> dataIn (final Object key)
     {
         Objects.requireNonNull(key, "key");
@@ -108,6 +110,7 @@ public final class Bus<T>
      * @param key identifies the output to retrieve.
      * @return the named output.
      */
+    @Override
     public synchronized Output<T> dataOut (final Object key)
     {
         Objects.requireNonNull(key, "key");

@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.socius.testing.ActorTester;
+import com.mackenziehigh.socius.util.ActorTester;
 import com.mackenziehigh.socius.time.DelayedSender;
 import java.time.Duration;
 import java.util.Objects;

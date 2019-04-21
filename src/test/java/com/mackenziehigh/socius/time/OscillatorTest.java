@@ -49,7 +49,7 @@ public final class OscillatorTest
                 .withWaveform(x -> Duration.ofMillis(x * 100))
                 .build();
 
-        clock.clockOut().connect(sink.dataIn());
+        clock.dataOut().connect(sink.dataIn());
 
         assertEquals(0, clock.tickCount());
         assertTrue(clock.isUsingDefaultExecutor());

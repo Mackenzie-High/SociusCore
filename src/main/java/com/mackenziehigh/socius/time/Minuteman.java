@@ -17,6 +17,7 @@ package com.mackenziehigh.socius.time;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import com.mackenziehigh.socius.flow.DataSource;
 import com.mackenziehigh.socius.flow.Processor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * as close to the top of the minute as possible.
  */
 public final class Minuteman
+        implements DataSource<Instant>
 {
     /**
      * Effectively, this is the clock (time source) itself.
@@ -88,7 +90,8 @@ public final class Minuteman
      *
      * @return the clock output.
      */
-    public Output<Instant> clockOut ()
+    @Override
+    public Output<Instant> dataOut ()
     {
         return procClockOut.dataOut();
     }

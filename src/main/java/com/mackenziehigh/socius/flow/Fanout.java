@@ -28,6 +28,8 @@ import java.util.Objects;
  * @param <T> is the type of the messages passing through the fanout.
  */
 public final class Fanout<T>
+        implements DataSink<T>,
+                   DataFanout<T>
 {
     private final Stage stage;
 
@@ -53,6 +55,7 @@ public final class Fanout<T>
      *
      * @return return the input to the fanout.
      */
+    @Override
     public Input<T> dataIn ()
     {
         return input.dataIn();
@@ -64,6 +67,7 @@ public final class Fanout<T>
      * @param key identifies the data-output to return.
      * @return the identified data-output.
      */
+    @Override
     public Output<T> dataOut (final Object key)
     {
         Objects.requireNonNull(key, "key");

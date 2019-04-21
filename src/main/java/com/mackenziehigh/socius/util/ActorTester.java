@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mackenziehigh.socius.testing;
+package com.mackenziehigh.socius.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -103,7 +103,7 @@ public final class ActorTester
         if (actualOutputs.containsKey(output) == false)
         {
             actualOutputs.put(output, new LinkedBlockingDeque<>());
-            final Actor<O, ?> sink = stage.newActor().withScript((O x) -> actualOutputs.get(output).add(x)).create();
+            final Actor<O, ?> sink = stage.newActor().withConsumerScript((O x) -> actualOutputs.get(output).add(x)).create();
             sink.input().connect(output);
         }
 

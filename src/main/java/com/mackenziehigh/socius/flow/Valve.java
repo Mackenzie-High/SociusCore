@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class Valve<T>
+        implements DataPipeline<T, T>
 {
     /**
      * Provides the data-input connector.
@@ -129,6 +130,7 @@ public final class Valve<T>
      *
      * @return the input that can be turned on/off by this valve.
      */
+    @Override
     public Input<T> dataIn ()
     {
         return procDataIn.dataIn();
@@ -140,6 +142,7 @@ public final class Valve<T>
      *
      * @return the output that can be turned on/off by this valve.
      */
+    @Override
     public Output<T> dataOut ()
     {
         return procDataOut.dataOut();

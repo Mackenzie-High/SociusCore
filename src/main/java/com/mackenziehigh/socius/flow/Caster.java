@@ -27,6 +27,7 @@ import java.util.Objects;
  * @param <O> is the type of the outgoing messages.
  */
 public final class Caster<I, O>
+        implements DataPipeline<I, O>
 {
     private final Class<O> type;
 
@@ -62,6 +63,7 @@ public final class Caster<I, O>
      *
      * @return the input that receives the messages to type-cast.
      */
+    @Override
     public Input<I> dataIn ()
     {
         return actorCast.dataIn();
@@ -72,6 +74,7 @@ public final class Caster<I, O>
      *
      * @return the output that forwards the messages after the type-cast.
      */
+    @Override
     public Output<O> dataOut ()
     {
         return actorCast.dataOut();

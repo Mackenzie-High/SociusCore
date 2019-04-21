@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius.flow;
 
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
-import com.mackenziehigh.socius.testing.ActorTester;
+import com.mackenziehigh.socius.util.ActorTester;
 import org.junit.Test;
 
 /**
@@ -28,15 +28,15 @@ public final class RouterTest
 
     private final Router<String, Integer> dispatcher = Router.newRouter(tester.stage());
 
-    private final Actor<Integer, Integer> actor1 = tester.stage().newActor().withScript((Integer x) -> x).create();
+    private final Actor<Integer, Integer> actor1 = tester.stage().newActor().withFunctionScript((Integer x) -> x).create();
 
-    private final Actor<Integer, Integer> actor2 = tester.stage().newActor().withScript((Integer x) -> x).create();
+    private final Actor<Integer, Integer> actor2 = tester.stage().newActor().withFunctionScript((Integer x) -> x).create();
 
-    private final Actor<Integer, Integer> actor3 = tester.stage().newActor().withScript((Integer x) -> x).create();
+    private final Actor<Integer, Integer> actor3 = tester.stage().newActor().withFunctionScript((Integer x) -> x).create();
 
-    private final Actor<Integer, Integer> actor4 = tester.stage().newActor().withScript((Integer x) -> x).create();
+    private final Actor<Integer, Integer> actor4 = tester.stage().newActor().withFunctionScript((Integer x) -> x).create();
 
-    private final Actor<Integer, Integer> actor5 = tester.stage().newActor().withScript((Integer x) -> x).create();
+    private final Actor<Integer, Integer> actor5 = tester.stage().newActor().withFunctionScript((Integer x) -> x).create();
 
     /**
      * Test: 20180923042734271117

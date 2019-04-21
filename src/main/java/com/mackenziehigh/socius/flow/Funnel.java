@@ -28,6 +28,8 @@ import java.util.Objects;
  * @param <T> is the type of the messages passing through the funnel.
  */
 public final class Funnel<T>
+        implements DataSource<T>,
+                   DataFunnel<T>
 {
     private final Stage stage;
 
@@ -48,6 +50,7 @@ public final class Funnel<T>
      *
      * @return the output of the funnel.
      */
+    @Override
     public Output<T> dataOut ()
     {
         return output.dataOut();

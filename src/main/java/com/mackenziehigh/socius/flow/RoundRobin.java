@@ -29,6 +29,7 @@ import java.util.Iterator;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class RoundRobin<T>
+        implements DataSink<T>
 {
 
     /**
@@ -73,6 +74,7 @@ public final class RoundRobin<T>
      *
      * @return the input that provides the messages to balance.
      */
+    @Override
     public Input<T> dataIn ()
     {
         return input.dataIn();

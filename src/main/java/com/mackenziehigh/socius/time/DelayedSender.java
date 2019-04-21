@@ -77,8 +77,17 @@ public final class DelayedSender
         Objects.requireNonNull(destination, "destination");
         Objects.requireNonNull(message, "message");
         Objects.requireNonNull(delay, "delay");
-        service.schedule(() -> destination.send(message), delay.toNanos(), TimeUnit.NANOSECONDS);
-        return this;
+
+        if (Duration.ZERO.equals(delay))
+        {
+            destination.send(message);
+            return this;
+        }
+        else
+        {
+            service.schedule(() -> destination.send(message), delay.toNanos(), TimeUnit.NANOSECONDS);
+            return this;
+        }
     }
 
     /**

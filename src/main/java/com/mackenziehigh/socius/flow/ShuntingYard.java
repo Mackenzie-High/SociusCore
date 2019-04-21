@@ -32,6 +32,7 @@ import java.util.function.Predicate;
  * @param <O> is the type of the outgoing messages.
  */
 public final class ShuntingYard<I, O>
+        implements DataPipeline<I, O>
 {
     /**
      * An option that may receive messages.
@@ -40,6 +41,7 @@ public final class ShuntingYard<I, O>
      * @param <O> is the type of the outgoing messages.
      */
     public interface Siding<I, O>
+            extends DataPipeline<I, O>
     {
         /**
          * Determines whether an incoming message should be routed to this option-handler.
@@ -59,6 +61,7 @@ public final class ShuntingYard<I, O>
          *
          * @return the data-input of this option-handler.
          */
+        @Override
         public Input<I> dataIn ();
 
         /**
@@ -66,6 +69,7 @@ public final class ShuntingYard<I, O>
          *
          * @return the data-output of this option-handler.
          */
+        @Override
         public Output<O> dataOut ();
     }
 
@@ -131,6 +135,7 @@ public final class ShuntingYard<I, O>
      *
      * @return the data-input.
      */
+    @Override
     public Input<I> dataIn ()
     {
         return router.dataIn();
@@ -141,6 +146,7 @@ public final class ShuntingYard<I, O>
      *
      * @return the data-output.
      */
+    @Override
     public Output<O> dataOut ()
     {
         return funnel.dataOut();

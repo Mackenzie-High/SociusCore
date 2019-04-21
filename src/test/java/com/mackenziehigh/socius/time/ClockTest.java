@@ -50,7 +50,7 @@ public final class ClockTest
                 .withPeriod(Duration.ofMillis(200))
                 .build();
 
-        clock.clockOut().connect(sink.dataIn());
+        clock.dataOut().connect(sink.dataIn());
 
         assertEquals(100, clock.delay().toMillis());
         assertEquals(200, clock.period().toMillis());

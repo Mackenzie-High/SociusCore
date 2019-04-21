@@ -30,6 +30,7 @@ import java.util.function.Function;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class TableInserter<K, T>
+        implements DataPipeline<T, T>
 {
     private final Stage stage;
 
@@ -88,6 +89,7 @@ public final class TableInserter<K, T>
      *
      * @return the input that provides the messages to select from.
      */
+    @Override
     public Input<T> dataIn ()
     {
         return procDataIn.dataIn();
@@ -98,6 +100,7 @@ public final class TableInserter<K, T>
      *
      * @return the output that receives the messages that were not selected
      */
+    @Override
     public Output<T> dataOut ()
     {
         return procDataOut.dataOut();

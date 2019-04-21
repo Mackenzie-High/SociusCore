@@ -51,6 +51,7 @@ import java.util.Queue;
  * @param <T> is the type of the messages flowing through.
  */
 public final class Batcher<T>
+        implements DataSource<List<T>>
 {
     /**
      * Provides the data-output connector.
@@ -181,6 +182,7 @@ public final class Batcher<T>
      *
      * @return the data-output.
      */
+    @Override
     public Output<List<T>> dataOut ()
     {
         return dataOut.dataOut();

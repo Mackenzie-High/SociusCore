@@ -28,6 +28,7 @@ import java.util.function.Predicate;
  * @param <T> is the type of messages flowing through the filter.
  */
 public final class Filter<T>
+        implements DataPipeline<T, T>
 {
     private final Processor<T> actor;
 
@@ -51,6 +52,7 @@ public final class Filter<T>
      *
      * @return the input the provides the messages to filter.
      */
+    @Override
     public Input<T> dataIn ()
     {
         return actor.dataIn();
@@ -61,6 +63,7 @@ public final class Filter<T>
      *
      * @return the output that will receive messages that the filter accepted.
      */
+    @Override
     public Output<T> dataOut ()
     {
         return actor.dataOut();

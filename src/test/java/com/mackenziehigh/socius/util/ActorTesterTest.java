@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mackenziehigh.socius.testing;
+package com.mackenziehigh.socius.util;
 
+import com.mackenziehigh.socius.util.ActorTester;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.socius.flow.Processor;
 import com.mackenziehigh.socius.io.CollectionSink;
-import com.mackenziehigh.socius.testing.ActorTester.StepException;
+import com.mackenziehigh.socius.util.ActorTester.StepException;
 import java.util.ArrayList;
 import java.util.List;
 import static org.junit.Assert.*;

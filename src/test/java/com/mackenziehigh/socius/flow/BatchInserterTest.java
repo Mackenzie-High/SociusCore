@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.ImmutableList;
-import com.mackenziehigh.socius.testing.ActorTester;
+import com.mackenziehigh.socius.util.ActorTester;
 import org.junit.Test;
 
 /**

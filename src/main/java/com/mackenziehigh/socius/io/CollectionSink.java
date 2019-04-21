@@ -21,6 +21,7 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.flow.Processor;
 import java.util.Collection;
+import com.mackenziehigh.socius.flow.DataPipeline;
 
 /**
  * Adds incoming messages to a specified <code>Collection</code>.
@@ -28,6 +29,7 @@ import java.util.Collection;
  * @param <T> is the type of messages in the collection.
  */
 public final class CollectionSink<T>
+        implements DataPipeline<T, T>
 {
     private final Processor<T> actor;
 
@@ -41,6 +43,7 @@ public final class CollectionSink<T>
      *
      * @return the input that provides the messages to add to the collection.
      */
+    @Override
     public Input<T> dataIn ()
     {
         return actor.dataIn();
@@ -51,6 +54,7 @@ public final class CollectionSink<T>
      *
      * @return the output that merely forwards the messages from data-in.
      */
+    @Override
     public Output<T> dataOut ()
     {
         return actor.dataOut();

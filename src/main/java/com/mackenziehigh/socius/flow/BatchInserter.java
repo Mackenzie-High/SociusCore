@@ -33,6 +33,7 @@ import java.util.function.Predicate;
  * @param <T> is the type of the messages flowing through the inserter.
  */
 public final class BatchInserter<T>
+        implements DataPipeline<T, T>
 {
     private static final boolean ADDED_TO_BATCH = true;
 
@@ -129,6 +130,7 @@ public final class BatchInserter<T>
      *
      * @return the input connector.
      */
+    @Override
     public Input<T> dataIn ()
     {
         return procDataIn.dataIn();
@@ -139,6 +141,7 @@ public final class BatchInserter<T>
      *
      * @return the output connector.
      */
+    @Override
     public Output<T> dataOut ()
     {
         return procDataOut.dataOut();

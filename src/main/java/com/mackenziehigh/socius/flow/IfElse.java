@@ -27,6 +27,7 @@ import java.util.function.Predicate;
  * @param <T> is the type of messages that flow through the if-else router.
  */
 public final class IfElse<T>
+        implements DataSink<T>
 {
     /**
      * This is the user-defined condition that determines
@@ -77,6 +78,7 @@ public final class IfElse<T>
      *
      * @return the only input.
      */
+    @Override
     public Input<T> dataIn ()
     {
         return checker.dataIn();

@@ -20,7 +20,6 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import java.util.function.Consumer;
 
 /**
  * Applies a map-function to incoming messages and then forwards the results,
@@ -35,7 +34,7 @@ import java.util.function.Consumer;
  * @param <O> is the type of the outgoing messages.
  */
 public final class Mapper<I, O>
-        implements Consumer<I>
+        implements DataPipeline<I, O>
 {
     private final Actor<I, O> actor;
 
@@ -49,6 +48,7 @@ public final class Mapper<I, O>
      *
      * @return the input that supplies the messages to be processed.
      */
+    @Override
     public Input<I> dataIn ()
     {
         return actor.input();
@@ -59,18 +59,10 @@ public final class Mapper<I, O>
      *
      * @return the output that receives the results of processing the messages.
      */
+    @Override
     public Output<O> dataOut ()
     {
         return actor.output();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void accept (final I message)
-    {
-        dataIn().send(message);
     }
 
     /**
@@ -85,6 +77,6 @@ public final class Mapper<I, O>
     public static <I, O> Mapper<I, O> newFunction (final Stage stage,
                                                    final FunctionScript<I, O> script)
     {
-        return new Mapper<>(stage.newActor().withScript(script).create());
+        return new Mapper<>(stage.newActor().withFunctionScript(script).create());
     }
 }

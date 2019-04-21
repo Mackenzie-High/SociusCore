@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.socius.testing.ActorTester;
+import com.mackenziehigh.socius.util.ActorTester;
 import java.time.Instant;
 import org.junit.Test;
 

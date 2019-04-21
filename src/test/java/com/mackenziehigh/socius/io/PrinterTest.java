@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.io;
 
-import com.mackenziehigh.socius.testing.ActorTester;
+import com.mackenziehigh.socius.util.ActorTester;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.After;

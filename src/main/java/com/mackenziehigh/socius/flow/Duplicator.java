@@ -53,6 +53,7 @@ import java.util.Objects;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class Duplicator<T>
+        implements DataPipeline<T, T>
 {
 
     /**
@@ -123,6 +124,7 @@ public final class Duplicator<T>
      *
      * @return the data-input that provides the messages to repeat.
      */
+    @Override
     public Input<T> dataIn ()
     {
         return procDataIn.dataIn();
@@ -133,6 +135,7 @@ public final class Duplicator<T>
      *
      * @return the data-output that receives the repeated subsequences.
      */
+    @Override
     public Output<T> dataOut ()
     {
         return procDataOut.dataOut();

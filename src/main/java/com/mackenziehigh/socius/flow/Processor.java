@@ -21,7 +21,6 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.ConsumerScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import java.util.function.Consumer;
 
 /**
  * Applies a map-function to incoming messages and then forwards the results.
@@ -34,7 +33,7 @@ import java.util.function.Consumer;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class Processor<T>
-        implements Consumer<T>
+        implements DataPipeline<T, T>
 {
     private final Actor<T, T> actor;
 
@@ -48,6 +47,7 @@ public final class Processor<T>
      *
      * @return the input that supplies the messages to be processed.
      */
+    @Override
     public Input<T> dataIn ()
     {
         return actor.input();
@@ -58,18 +58,10 @@ public final class Processor<T>
      *
      * @return the output that receives the results of processing the messages.
      */
+    @Override
     public Output<T> dataOut ()
     {
         return actor.output();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void accept (final T message)
-    {
-        dataIn().send(message);
     }
 
     /**
@@ -83,7 +75,7 @@ public final class Processor<T>
     public static <T> Processor<T> newFunction (final Stage stage,
                                                 final FunctionScript<T, T> script)
     {
-        return new Processor<>(stage.newActor().withScript(script).create());
+        return new Processor<>(stage.newActor().withFunctionScript(script).create());
     }
 
     /**
@@ -97,7 +89,7 @@ public final class Processor<T>
     public static <T> Processor<T> newConsumer (final Stage stage,
                                                 final ConsumerScript<T> script)
     {
-        return new Processor<>(stage.newActor().withScript(script).create());
+        return new Processor<>(stage.newActor().withConsumerScript(script).create());
     }
 
     /**
@@ -114,7 +106,7 @@ public final class Processor<T>
      */
     public static <T> Processor<T> newConnector (final Stage stage)
     {
-        return new Processor<>(stage.newActor().withScript((T x) -> x).create());
+        return newFunction(stage, (T x) -> x);
     }
 
 }

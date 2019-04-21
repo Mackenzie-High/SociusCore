@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius.flow;
 
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.testing.ActorTester;
+import com.mackenziehigh.socius.util.ActorTester;
 import java.math.BigInteger;
 import org.junit.Test;
 
