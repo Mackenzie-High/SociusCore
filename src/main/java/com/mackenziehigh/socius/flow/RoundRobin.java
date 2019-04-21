@@ -18,7 +18,7 @@ package com.mackenziehigh.socius.flow;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Iterator;
@@ -47,7 +47,7 @@ public final class RoundRobin<T>
      */
     private final Iterator<Processor<T>> iter;
 
-    private RoundRobin (final Stage stage,
+    private RoundRobin (final ActorFactory stage,
                         final int arity)
     {
         Preconditions.checkNotNull(stage, "stage");
@@ -109,7 +109,7 @@ public final class RoundRobin<T>
      * @param arity will be the number of output connections.
      * @return the new balancer.
      */
-    public static <T> RoundRobin<T> newRoundRobin (final Stage stage,
+    public static <T> RoundRobin<T> newRoundRobin (final ActorFactory stage,
                                                    final int arity)
     {
         return new RoundRobin<>(stage, arity);

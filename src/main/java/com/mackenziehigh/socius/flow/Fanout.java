@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.Maps;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Map;
@@ -31,7 +31,7 @@ public final class Fanout<T>
         implements DataSink<T>,
                    DataFanout<T>
 {
-    private final Stage stage;
+    private final ActorFactory stage;
 
     private final Processor<T> input;
 
@@ -39,7 +39,7 @@ public final class Fanout<T>
 
     private final Object lock = new Object();
 
-    private Fanout (final Stage stage)
+    private Fanout (final ActorFactory stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.input = Processor.newConsumer(stage, this::send);
@@ -95,7 +95,7 @@ public final class Fanout<T>
      * @param stage will be used to create private actors.
      * @return the new fanout.
      */
-    public static <T> Fanout<T> newFanout (final Stage stage)
+    public static <T> Fanout<T> newFanout (final ActorFactory stage)
     {
         return new Fanout<>(stage);
     }

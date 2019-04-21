@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Objects;
@@ -51,7 +51,7 @@ public final class IfElse<T>
      */
     private final Processor<T> falseOut;
 
-    private IfElse (final Stage stage,
+    private IfElse (final ActorFactory stage,
                     final Predicate<T> condition)
     {
         Objects.requireNonNull(stage, "stage");
@@ -114,7 +114,7 @@ public final class IfElse<T>
      * @param condition will be used to decide which route messages take.
      * @return this.
      */
-    public static <T> IfElse<T> newIfElse (final Stage stage,
+    public static <T> IfElse<T> newIfElse (final ActorFactory stage,
                                            final Predicate<T> condition)
     {
         return new IfElse<>(stage, condition);

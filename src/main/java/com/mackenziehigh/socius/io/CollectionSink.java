@@ -68,7 +68,7 @@ public final class CollectionSink<T>
      * @param collection will receive the messages from data-in.
      * @return the new sink.
      */
-    public static <T> CollectionSink<T> newCollectionSink (final Cascade.Stage stage,
+    public static <T> CollectionSink<T> newCollectionSink (final Cascade.ActorFactory stage,
                                                            final Collection<T> collection)
     {
         Preconditions.checkNotNull(stage, "stage");

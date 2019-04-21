@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Collection;
@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class Bus<T>
         implements DataBus<T, T>
 {
-    private final Stage stage;
+    private final ActorFactory stage;
 
     /**
      * This processor is used to connect the inputs to the outputs.
@@ -65,7 +65,7 @@ public final class Bus<T>
      */
     private final Collection<Processor<T>> outputsView = outputs.values();
 
-    private Bus (final Stage stage)
+    private Bus (final ActorFactory stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.hub = Processor.newConsumer(stage, this::forwardFromHub);
@@ -130,7 +130,7 @@ public final class Bus<T>
      * @param stage will be used to create private actors.
      * @return the new message-bus.
      */
-    public static <M> Bus<M> newBus (final Stage stage)
+    public static <M> Bus<M> newBus (final ActorFactory stage)
     {
         return new Bus<>(stage);
     }

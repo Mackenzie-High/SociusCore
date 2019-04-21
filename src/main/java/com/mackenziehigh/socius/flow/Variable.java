@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.time.Instant;
@@ -50,7 +50,7 @@ public final class Variable<T>
      */
     private final AtomicReference<T> variable = new AtomicReference<>();
 
-    private Variable (final Stage stage,
+    private Variable (final ActorFactory stage,
                       final T initial)
     {
         this.procClock = Processor.newFunction(stage, this::onGet);
@@ -158,7 +158,7 @@ public final class Variable<T>
      * @param initial will be the initial value stored in the variable.
      * @return the new variable.
      */
-    public static <T> Variable<T> newVariable (final Stage stage,
+    public static <T> Variable<T> newVariable (final ActorFactory stage,
                                                final T initial)
     {
         Objects.requireNonNull(stage, "stage");

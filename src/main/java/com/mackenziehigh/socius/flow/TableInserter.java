@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.Maps;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Map;
@@ -32,7 +32,7 @@ import java.util.function.Function;
 public final class TableInserter<K, T>
         implements DataPipeline<T, T>
 {
-    private final Stage stage;
+    private final ActorFactory stage;
 
     /**
      * Provides the data-input connector.
@@ -59,7 +59,7 @@ public final class TableInserter<K, T>
      */
     private final Object lock = new Object();
 
-    private TableInserter (final Stage stage,
+    private TableInserter (final ActorFactory stage,
                            final Function<T, K> extractor)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
@@ -146,7 +146,7 @@ public final class TableInserter<K, T>
      * @param extractor knows how to extract routing-keys from messages.
      * @return the new inserter.
      */
-    public static <K, T> TableInserter<K, T> newTableInserter (final Stage stage,
+    public static <K, T> TableInserter<K, T> newTableInserter (final ActorFactory stage,
                                                                final Function<T, K> extractor)
     {
         return new TableInserter(stage, extractor);

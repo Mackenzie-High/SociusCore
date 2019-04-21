@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Objects;
@@ -35,7 +35,7 @@ public final class Caster<I, O>
 
     private final Processor<I> actorFail;
 
-    private Caster (final Stage stage,
+    private Caster (final ActorFactory stage,
                     final Class<O> type)
     {
         Objects.requireNonNull(stage, "stage");
@@ -99,7 +99,7 @@ public final class Caster<I, O>
      * @param type is the type of the outgoing messages.
      * @return the new converter.
      */
-    public static <I, O> Caster<I, O> newCaster (final Stage stage,
+    public static <I, O> Caster<I, O> newCaster (final ActorFactory stage,
                                                  final Class<O> type)
     {
         return new Caster<>(stage, type);

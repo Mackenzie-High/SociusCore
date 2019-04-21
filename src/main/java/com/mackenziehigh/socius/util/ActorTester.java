@@ -97,7 +97,7 @@ public final class ActorTester
     public <O> ActorTester connect (final Output<O> output)
     {
         requireOpen();
-        requireSyncStage(output.actor());
+        requireSyncActorFactory(output.actor());
         Objects.requireNonNull(output, "output");
 
         if (actualOutputs.containsKey(output) == false)
@@ -136,7 +136,7 @@ public final class ActorTester
                                  final I message)
     {
         requireOpen();
-        requireSyncStage(input.actor());
+        requireSyncActorFactory(input.actor());
         Objects.requireNonNull(input, "input");
         Objects.requireNonNull(message, "message");
         execute(() -> input.send(message));
@@ -191,10 +191,10 @@ public final class ActorTester
                                    final O message)
     {
         requireOpen();
-        requireSyncStage(output.actor());
+        requireSyncActorFactory(output.actor());
         Objects.requireNonNull(output, "output");
         Objects.requireNonNull(message, "message");
-        Preconditions.checkArgument(output.actor().stage().equals(stage), "Wrong Stage");
+        Preconditions.checkArgument(output.actor().stage().equals(stage), "Wrong ActorFactory");
 
         connect(output);
 
@@ -228,10 +228,10 @@ public final class ActorTester
                                        final String error)
     {
         requireOpen();
-        requireSyncStage(output.actor());
+        requireSyncActorFactory(output.actor());
         Objects.requireNonNull(output, "output");
         Objects.requireNonNull(condition, "condition");
-        Preconditions.checkArgument(output.actor().stage().equals(stage), "Wrong Stage");
+        Preconditions.checkArgument(output.actor().stage().equals(stage), "Wrong ActorFactory");
 
         connect(output);
 
@@ -295,7 +295,7 @@ public final class ActorTester
         }
     }
 
-    private void requireSyncStage (final Actor<?, ?> actor)
+    private void requireSyncActorFactory (final Actor<?, ?> actor)
     {
         if (actor.stage().equals(stage) == false)
         {
@@ -315,7 +315,6 @@ public final class ActorTester
         }
 
         @Override
-
         protected void onStageClose ()
         {
             // Pass.

@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.io;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.flow.Processor;
@@ -54,7 +54,7 @@ public final class Printer<T>
      */
     private final PrintStream stream;
 
-    private Printer (final Stage stage,
+    private Printer (final ActorFactory stage,
                      final PrintStream stream,
                      final String format,
                      final boolean line)
@@ -110,7 +110,7 @@ public final class Printer<T>
      * @param format describes how to print the message.
      * @return the new printer.
      */
-    public static <T> Printer<T> newPrint (final Stage stage,
+    public static <T> Printer<T> newPrint (final ActorFactory stage,
                                            final String format)
     {
         return new Printer<>(stage, System.out, format, false);
@@ -124,7 +124,7 @@ public final class Printer<T>
      * @param stage will be used to create private actors.
      * @return the new printer.
      */
-    public static <T> Printer<T> newPrint (final Stage stage)
+    public static <T> Printer<T> newPrint (final ActorFactory stage)
     {
         return new Printer<>(stage, System.out, "%s", false);
     }
@@ -137,7 +137,7 @@ public final class Printer<T>
      * @param stage will be used to create private actors.
      * @return the new printer.
      */
-    public static <T> Printer<T> newPrinterr (final Stage stage)
+    public static <T> Printer<T> newPrinterr (final ActorFactory stage)
     {
         return new Printer<>(stage, System.err, "%s", false);
     }
@@ -157,7 +157,7 @@ public final class Printer<T>
      * @param format describes how to print the message.
      * @return the new printer.
      */
-    public static <T> Printer<T> newPrintln (final Stage stage,
+    public static <T> Printer<T> newPrintln (final ActorFactory stage,
                                              final String format)
     {
 
@@ -172,7 +172,7 @@ public final class Printer<T>
      * @param stage will be used to create private actors.
      * @return the new printer.
      */
-    public static <T> Printer<T> newPrintln (final Stage stage)
+    public static <T> Printer<T> newPrintln (final ActorFactory stage)
     {
         return new Printer<>(stage, System.out, "%s", true);
     }
@@ -192,7 +192,7 @@ public final class Printer<T>
      * @param format describes how to print the message.
      * @return the new printer.
      */
-    public static <T> Printer<T> newPrinterr (final Stage stage,
+    public static <T> Printer<T> newPrinterr (final ActorFactory stage,
                                               final String format)
     {
         return new Printer<>(stage, System.err, format, false);
@@ -213,7 +213,7 @@ public final class Printer<T>
      * @param format describes how to print the message.
      * @return the new printer.
      */
-    public static <T> Printer<T> newPrinterrln (final Stage stage,
+    public static <T> Printer<T> newPrinterrln (final ActorFactory stage,
                                                 final String format)
     {
 
@@ -228,7 +228,7 @@ public final class Printer<T>
      * @param stage will be used to create private actors.
      * @return the new printer.
      */
-    public static <T> Printer<T> newPrinterrln (final Stage stage)
+    public static <T> Printer<T> newPrinterrln (final ActorFactory stage)
     {
         return new Printer<>(stage, System.err, "%s", true);
     }

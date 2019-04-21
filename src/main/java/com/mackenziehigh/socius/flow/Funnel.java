@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.Maps;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Map;
@@ -31,7 +31,7 @@ public final class Funnel<T>
         implements DataSource<T>,
                    DataFunnel<T>
 {
-    private final Stage stage;
+    private final ActorFactory stage;
 
     private final Processor<T> output;
 
@@ -39,7 +39,7 @@ public final class Funnel<T>
 
     private final Object lock = new Object();
 
-    private Funnel (final Stage stage)
+    private Funnel (final ActorFactory stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.output = Processor.newConnector(stage);
@@ -88,7 +88,7 @@ public final class Funnel<T>
      * @param stage will be used to create private actors.
      * @return the new funnel.
      */
-    public static <T> Funnel<T> newFunnel (final Stage stage)
+    public static <T> Funnel<T> newFunnel (final ActorFactory stage)
     {
         return new Funnel<>(stage);
     }

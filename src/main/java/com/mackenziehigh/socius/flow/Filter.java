@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Objects;
@@ -34,7 +34,7 @@ public final class Filter<T>
 
     private final Predicate<T> condition;
 
-    private Filter (final Stage stage,
+    private Filter (final ActorFactory stage,
                     final Predicate<T> condition)
     {
         Objects.requireNonNull(stage, "stage");
@@ -77,7 +77,7 @@ public final class Filter<T>
      * @param condition determines whether a message should be allowed through the filter.
      * @return this.
      */
-    public static <T> Filter<T> newFilter (final Stage stage,
+    public static <T> Filter<T> newFilter (final ActorFactory stage,
                                            final Predicate<T> condition)
     {
         return new Filter<>(stage, condition);

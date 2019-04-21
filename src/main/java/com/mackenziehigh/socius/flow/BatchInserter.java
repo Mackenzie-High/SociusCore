@@ -17,7 +17,7 @@ package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.List;
@@ -66,7 +66,7 @@ public final class BatchInserter<T>
      */
     private final AtomicInteger batchSize = new AtomicInteger();
 
-    private BatchInserter (final Stage stage,
+    private BatchInserter (final ActorFactory stage,
                            final List<Selector<T>> selectors)
     {
         this.selectors = ImmutableList.copyOf(selectors);
@@ -164,7 +164,7 @@ public final class BatchInserter<T>
      * @param stage will be used to create private actors.
      * @return a builder that can create a new inserter.
      */
-    public static <T> Builder<T> newBatchInserter (final Stage stage)
+    public static <T> Builder<T> newBatchInserter (final ActorFactory stage)
     {
         return new Builder<>(stage);
     }
@@ -176,11 +176,11 @@ public final class BatchInserter<T>
      */
     public static final class Builder<T>
     {
-        private final Stage stage;
+        private final ActorFactory stage;
 
         private final List<Selector<T>> actions = Lists.newLinkedList();
 
-        private Builder (final Stage stage)
+        private Builder (final ActorFactory stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
         }

@@ -17,7 +17,7 @@ package com.mackenziehigh.socius.flow;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -93,7 +93,7 @@ public final class ShuntingYard<I, O>
      */
     private final Funnel<O> funnel;
 
-    private ShuntingYard (final Stage stage,
+    private ShuntingYard (final ActorFactory stage,
                           final List<Siding<I, O>> mappers)
     {
         this.router = Processor.newConsumer(stage, this::onInput);
@@ -170,7 +170,7 @@ public final class ShuntingYard<I, O>
      * @param stage will be used to create private actors.
      * @return a new builder that can build an option-hierarchy.
      */
-    public static <I, O> Builder<I, O> newBuilder (final Stage stage)
+    public static <I, O> Builder<I, O> newBuilder (final ActorFactory stage)
     {
         return new Builder(stage);
     }
@@ -183,11 +183,11 @@ public final class ShuntingYard<I, O>
      */
     public static final class Builder<I, O>
     {
-        private final Stage stage;
+        private final ActorFactory stage;
 
         private final List<Siding<I, O>> options = Lists.newLinkedList();
 
-        private Builder (final Stage stage)
+        private Builder (final ActorFactory stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
         }

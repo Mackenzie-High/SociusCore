@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.time;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.flow.DataSource;
 import com.mackenziehigh.socius.flow.Processor;
@@ -60,7 +60,7 @@ public final class Minuteman
      */
     private volatile Instant time;
 
-    private Minuteman (final Stage stage)
+    private Minuteman (final ActorFactory stage)
     {
         Objects.requireNonNull(stage, "stage");
         this.timer = new Timer(getClass().getSimpleName(), true);
@@ -162,7 +162,7 @@ public final class Minuteman
      * @param stage will be used to create private actors.
      * @return a builder that can be used to create a clock.
      */
-    public static Minuteman newMinuteman (final Stage stage)
+    public static Minuteman newMinuteman (final ActorFactory stage)
     {
         return new Minuteman(stage);
     }

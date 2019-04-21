@@ -17,7 +17,7 @@ package com.mackenziehigh.socius.flow;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.List;
@@ -52,7 +52,7 @@ public final class Unbatcher<T>
      */
     private final int arity;
 
-    private Unbatcher (final Stage stage,
+    private Unbatcher (final ActorFactory stage,
                        final int arity)
     {
         Preconditions.checkNotNull(stage, "stage");
@@ -123,7 +123,7 @@ public final class Unbatcher<T>
      * @param arity will be the number of element messages in each batch.
      * @return the new object.
      */
-    public static <T> Unbatcher<T> newUnbatcher (final Stage stage,
+    public static <T> Unbatcher<T> newUnbatcher (final ActorFactory stage,
                                                  final int arity)
     {
         return new Unbatcher<>(stage, arity);

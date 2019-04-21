@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius.flow;
 
 import com.google.common.base.Preconditions;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.ArrayDeque;
@@ -148,7 +148,7 @@ public final class Duplicator<T>
      * @param stage will be used to create private actors.
      * @return a builder that can construct the new duplicator.
      */
-    public static <T> Builder<T> newDuplicator (final Stage stage)
+    public static <T> Builder<T> newDuplicator (final ActorFactory stage)
     {
         return new Builder<>(stage);
     }
@@ -160,13 +160,13 @@ public final class Duplicator<T>
      */
     public static final class Builder<T>
     {
-        private final Stage stage;
+        private final ActorFactory stage;
 
         private int sequenceLength = 1;
 
         private int repeatCount = 1;
 
-        private Builder (final Stage stage)
+        private Builder (final ActorFactory stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
         }

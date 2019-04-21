@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius.time;
 
 import com.mackenziehigh.cascade.Cascade;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.flow.DataSource;
 import com.mackenziehigh.socius.flow.Processor;
@@ -88,7 +88,7 @@ public final class Clock
         this.delay = builder.delay;
         this.period = builder.period;
         this.service = builder.service != null ? builder.service : DefaultExecutor.get();
-        final Stage stage = Cascade.newStage(service);
+        final ActorFactory stage = Cascade.newStage(service);
         this.procClockOut = Processor.newConnector(stage);
     }
 
@@ -137,6 +137,7 @@ public final class Clock
      *
      * @return the clock output.
      */
+    @Override
     public Output<Instant> dataOut ()
     {
         return procClockOut.dataOut();

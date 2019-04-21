@@ -18,7 +18,7 @@ package com.mackenziehigh.socius.flow;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Queues;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.List;
@@ -76,7 +76,7 @@ public final class Batcher<T>
      */
     private final int capacity;
 
-    private Batcher (final Stage stage,
+    private Batcher (final ActorFactory stage,
                      final int arity,
                      final int capacity)
     {
@@ -195,7 +195,7 @@ public final class Batcher<T>
      * @param stage will be used to create private actors.
      * @return a builder that can build the batcher.
      */
-    public static <T> Builder<T> newBatcher (final Stage stage)
+    public static <T> Builder<T> newBatcher (final ActorFactory stage)
     {
         return new Builder<>(stage);
     }
@@ -207,13 +207,13 @@ public final class Batcher<T>
      */
     public static final class Builder<T>
     {
-        private final Stage stage;
+        private final ActorFactory stage;
 
         private int arity;
 
         private int capacity = Integer.MAX_VALUE;
 
-        private Builder (final Stage stage)
+        private Builder (final ActorFactory stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
         }

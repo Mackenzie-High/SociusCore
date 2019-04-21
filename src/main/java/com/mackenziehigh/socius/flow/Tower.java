@@ -1,6 +1,6 @@
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Map;
@@ -56,7 +56,7 @@ public final class Tower<K, I, O>
      */
     private final Function<K, DataPipeline<I, O>> floorBuilder;
 
-    private Tower (final Stage stage,
+    private Tower (final ActorFactory stage,
                    final Function<I, K> keyFunction,
                    final Function<K, DataPipeline<I, O>> floorBuilder)
     {
@@ -77,7 +77,7 @@ public final class Tower<K, I, O>
      * @param floorBuilder will be used to create new floors, as needed.
      * @return the newly constructed object.
      */
-    public static <K, I, O> Tower<K, I, O> newTower (final Stage stage,
+    public static <K, I, O> Tower<K, I, O> newTower (final ActorFactory stage,
                                                      final Function<I, K> keyFunction,
                                                      final Function<K, DataPipeline<I, O>> floorBuilder)
     {

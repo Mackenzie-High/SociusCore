@@ -19,7 +19,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Collection;
@@ -55,7 +55,7 @@ import java.util.Objects;
  */
 public final class Router<K, M>
 {
-    private final Stage stage;
+    private final ActorFactory stage;
 
     /**
      * Each row is identified by the key corresponding to a communication channel.
@@ -87,7 +87,7 @@ public final class Router<K, M>
      */
     private final Object lock = new Object();
 
-    private Router (final Stage stage)
+    private Router (final ActorFactory stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.sinkAll = Processor.newConnector(stage);
@@ -285,7 +285,7 @@ public final class Router<K, M>
      * @param stage will be used to create private actors.
      * @return the new router.
      */
-    public static <K, M> Router<K, M> newRouter (final Stage stage)
+    public static <K, M> Router<K, M> newRouter (final ActorFactory stage)
     {
         return new Router<>(stage);
     }

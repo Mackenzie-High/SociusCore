@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -55,7 +55,7 @@ public final class Valve<T>
      */
     private final AtomicBoolean flag = new AtomicBoolean();
 
-    private Valve (final Stage stage,
+    private Valve (final ActorFactory stage,
                    final boolean open)
     {
         this.procDataIn = Processor.newFunction(stage, this::onDataIn);
@@ -179,7 +179,7 @@ public final class Valve<T>
      * @param stage will be used to create private actors.
      * @return the new valve.
      */
-    public static <T> Valve<T> newOpenValve (final Stage stage)
+    public static <T> Valve<T> newOpenValve (final ActorFactory stage)
     {
         return new Valve<>(stage, true);
     }
@@ -191,7 +191,7 @@ public final class Valve<T>
      * @param stage will be used to create private actors.
      * @return the new valve.
      */
-    public static <T> Valve<T> newClosedValve (final Stage stage)
+    public static <T> Valve<T> newClosedValve (final ActorFactory stage)
     {
         return new Valve<>(stage, false);
     }

@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius.flow;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
@@ -74,7 +74,7 @@ public final class Mapper<I, O>
      * @param script defines the processing to perform.
      * @return the new processor.
      */
-    public static <I, O> Mapper<I, O> newFunction (final Stage stage,
+    public static <I, O> Mapper<I, O> newFunction (final ActorFactory stage,
                                                    final FunctionScript<I, O> script)
     {
         return new Mapper<>(stage.newActor().withFunctionScript(script).create());
