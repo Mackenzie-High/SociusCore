@@ -3,8 +3,9 @@ package com.mackenziehigh.socius.flow;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 
 /**
+ * An actor that receives messages from a set of named inputs.
  *
- * @author mackenzie
+ * @param <I> is the type of the incoming messages.
  */
 public interface DataFunnel<I>
 {

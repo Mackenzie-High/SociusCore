@@ -3,10 +3,11 @@ package com.mackenziehigh.socius.flow;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 
 /**
+ * An actor that sends messages to a set of named outputs.
  *
- * @author mackenzie
+ * @param <O> is the type of the outgoing messages.
  */
-public interface DataFanout<I>
+public interface DataFanout<O>
 {
     /**
      * Output Connection.
@@ -14,5 +15,5 @@ public interface DataFanout<I>
      * @param key identifies the data-output to return.
      * @return the identified data-output.
      */
-    public Output<I> dataOut (Object key);
+    public Output<O> dataOut (Object key);
 }

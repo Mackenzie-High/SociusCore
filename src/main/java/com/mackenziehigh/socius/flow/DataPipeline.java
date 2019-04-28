@@ -4,18 +4,15 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 
 /**
+ * An actor that consumes messages and then drop/transforms/forwards them to other actors.
  *
+ * @param <I> is the type of the incoming messages.
+ * @param <O> is the type of the outgoing messages.
  */
 public interface DataPipeline<I, O>
         extends DataSink<I>,
                 DataSource<O>
 {
-    @Override
-    public default void accept (I message)
-    {
-        dataIn().send(message);
-    }
-
     /**
      * Input Connection.
      *
