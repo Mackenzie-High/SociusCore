@@ -6,6 +6,8 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.flow.DataPipeline;
 import com.mackenziehigh.socius.flow.Processor;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -14,6 +16,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -30,11 +33,17 @@ public final class TcpServer<T>
 
     private final Thread acceptThread = new Thread(this::acceptLoop);
 
+    private final int readBufferSize;
+
+    private final int writeBufferSize;
+
     private TcpServer (final Builder<T> builder)
     {
         this.serverStage = builder.stage;
         this.socketsOut = Processor.fromIdentityScript(serverStage);
         this.socketFactory = Objects.requireNonNull(builder.socketFactory, "socketFactory");
+        this.readBufferSize = builder.readBufferSize;
+        this.writeBufferSize = builder.writeBufferSize;
     }
 
     private void acceptLoop ()
@@ -80,9 +89,16 @@ public final class TcpServer<T>
     public static final class SocketInputStream
             extends DataInputStream
     {
-        private SocketInputStream (final InputStream in)
+        SocketInputStream (final InputStream in)
         {
             super(in);
+        }
+
+        @Override
+        public void close ()
+                throws IOException
+        {
+            super.close();
         }
 
     }
@@ -95,6 +111,12 @@ public final class TcpServer<T>
             super(out);
         }
 
+        @Override
+        public void close ()
+                throws IOException
+        {
+            super.close();
+        }
     }
 
     @FunctionalInterface
@@ -117,7 +139,7 @@ public final class TcpServer<T>
     {
         private final Thread readerThread = new Thread(this::readLoop);
 
-        private final Thread writerThread = new Thread(this::write);
+        private final Thread writerThread = new Thread(this::writeLoop);
 
         private final BlockingQueue<T> pending;
 
@@ -139,8 +161,12 @@ public final class TcpServer<T>
                            final Socket socket)
                 throws IOException
         {
-            this.socketInputStream = new SocketInputStream(socket.getInputStream());
-            this.socketOutputStream = new SocketOutputStream(socket.getOutputStream());
+            final InputStream sin = socket.getInputStream();
+            final OutputStream sout = socket.getOutputStream();
+            final InputStream bin = server.readBufferSize > 0 ? new BufferedInputStream(sin, server.readBufferSize) : sin;
+            final OutputStream bout = server.writeBufferSize > 0 ? new BufferedOutputStream(sout, server.writeBufferSize) : sout;
+            this.socketInputStream = new SocketInputStream(bin);
+            this.socketOutputStream = new SocketOutputStream(bout);
             this.pending = new ArrayBlockingQueue<>(1024);
             this.dataIn = Processor.fromConsumerScript(server.serverStage, msg -> pending.add(msg));
             this.dataOut = Processor.fromIdentityScript(server.serverStage);
@@ -183,11 +209,11 @@ public final class TcpServer<T>
             }
             catch (Throwable ex)
             {
-
+                killSocket();
             }
         }
 
-        private void write ()
+        private void writeLoop ()
         {
             try (SocketOutputStream out = socketOutputStream)
             {
@@ -202,8 +228,13 @@ public final class TcpServer<T>
             }
             catch (Throwable ex)
             {
-
+                killSocket();
             }
+        }
+
+        private void killSocket ()
+        {
+
         }
     }
 
@@ -213,6 +244,10 @@ public final class TcpServer<T>
 
         private ServerSocketFactory socketFactory;
 
+        private int readBufferSize = 8192;
+
+        private int writeBufferSize = 8192;
+
         private Builder (final Stage stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
@@ -221,6 +256,30 @@ public final class TcpServer<T>
         public Builder<T> withSocketFactory (final ServerSocketFactory factory)
         {
             this.socketFactory = Objects.requireNonNull(factory, "factory");
+            return this;
+        }
+
+        public Builder<T> withSocket (final SocketAddress address)
+        {
+            Objects.requireNonNull(address, "address");
+            this.socketFactory = () ->
+            {
+                final ServerSocket server = new ServerSocket();
+                server.bind(address);
+                return server;
+            };
+            return this;
+        }
+
+        public Builder<T> withWriteBufferSize (final int capacity)
+        {
+            this.writeBufferSize = capacity;
+            return this;
+        }
+
+        public Builder<T> withReadBufferSize (final int capacity)
+        {
+            this.readBufferSize = capacity;
             return this;
         }
 
