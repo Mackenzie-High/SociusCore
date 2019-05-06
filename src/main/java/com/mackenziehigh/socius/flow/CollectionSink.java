@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mackenziehigh.socius.io;
+package com.mackenziehigh.socius.flow;
 
 import com.google.common.base.Preconditions;
 import com.mackenziehigh.cascade.Cascade;

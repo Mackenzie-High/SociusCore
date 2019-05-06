@@ -22,7 +22,7 @@ import org.junit.Test;
 /**
  * Unit Test.
  */
-public final class TableInserterTest
+public final class TableSwitchTest
 {
     @Test
     public void test ()

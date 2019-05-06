@@ -23,7 +23,7 @@ import org.junit.Test;
 /**
  * Unit Test.
  */
-public final class LookupInserterTest
+public final class LookupSwitchTest
 {
     @Test
     public void test ()

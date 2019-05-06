@@ -18,7 +18,7 @@ package com.mackenziehigh.socius.time;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.socius.io.CollectionSink;
+import com.mackenziehigh.socius.flow.CollectionSink;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
