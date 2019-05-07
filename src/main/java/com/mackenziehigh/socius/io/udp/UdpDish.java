@@ -1,4 +1,4 @@
-package com.mackenziehigh.socius.io;
+package com.mackenziehigh.socius.io.udp;
 
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
