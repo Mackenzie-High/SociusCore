@@ -7,10 +7,13 @@ import com.mackenziehigh.socius.flow.DataPipeline;
 import com.mackenziehigh.socius.flow.Processor;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -36,8 +39,16 @@ public final class TcpSocket<T>
          * @param socket shall be read from.
          * @throws IOException if something goes wrong.
          */
-        public void setSocket (Socket socket)
-                throws IOException;
+        public default void setSocket (Socket socket)
+                throws IOException
+        {
+            // Pass.
+        }
+
+        public default void setInputStream (InputStream stream)
+        {
+            // Pass.
+        }
 
         /**
          * This method will be repeatedly invoked by the <code>TcpSocket</code> object
@@ -46,8 +57,10 @@ public final class TcpSocket<T>
          * @return the next message from the socket.
          * @throws IOException if something goes wrong.
          */
-        public T read ()
+        public T onRead ()
                 throws IOException;
+
+        public boolean isComplete ();
     }
 
     /**
@@ -65,8 +78,16 @@ public final class TcpSocket<T>
          * @param socket shall be written to.
          * @throws IOException if something goes wrong.
          */
-        public void setSocket (Socket socket)
-                throws IOException;
+        public default void setSocket (Socket socket)
+                throws IOException
+        {
+            // Pass.
+        }
+
+        public default void setOutputStream (OutputStream stream)
+        {
+            // Pass.
+        }
 
         /**
          * This method will be repeatedly invoked by the <code>TcpSocket</code> object
@@ -75,8 +96,10 @@ public final class TcpSocket<T>
          * @param message is the next message to write to the socket.
          * @throws IOException if something goes wrong.
          */
-        public void write (T message)
+        public void onWrite (T message)
                 throws IOException;
+
+        public boolean isComplete ();
     }
 
     /**
@@ -111,6 +134,15 @@ public final class TcpSocket<T>
      */
     private final Processor<T> dataOut;
 
+    private final Processor<Throwable> rethrower;
+
+    /**
+     * This flag will become true, when the user decides to close the socket.
+     */
+    private final AtomicBoolean stop = new AtomicBoolean();
+
+    private final CountDownLatch shutdownLatch = new CountDownLatch(2);
+
     /**
      * This object performs the actual reading from the socket.
      */
@@ -121,18 +153,22 @@ public final class TcpSocket<T>
      */
     private volatile TcpSocket.SocketWriter<T> writer;
 
-    /**
-     * This flag will become true, when the user decides to close the socket.
-     */
-    private final AtomicBoolean stop = new AtomicBoolean();
+    private volatile boolean readerComplete = false;
 
-    TcpSocket (final Stage stage,
-               final Socket socket)
+    private volatile boolean writerComplete = false;
+
+    private TcpSocket (final Stage stage,
+                       final Socket socket)
     {
         this.socket = socket;
-        this.pending = new ArrayBlockingQueue<>(1024);
+        this.pending = new ArrayBlockingQueue<>(256);
         this.dataIn = Processor.fromConsumerScript(stage, msg -> pending.add(msg));
         this.dataOut = Processor.fromIdentityScript(stage);
+        this.rethrower = Processor.fromConsumerScript(stage, ex -> rethrow(ex));
+        this.readerThread.setName("TcpSocket.Reader");
+        this.writerThread.setName("TcpSocket.Writer");
+        this.readerThread.setDaemon(true);
+        this.writerThread.setDaemon(true);
     }
 
     /**
@@ -182,10 +218,26 @@ public final class TcpSocket<T>
      */
     public TcpSocket<T> stop ()
     {
-        stop.set(true);
-        readerThread.interrupt();
-        writerThread.interrupt();
+        if (stop.compareAndSet(false, true))
+        {
+            try
+            {
+                socket.close();
+                shutdownLatch.await();
+            }
+            catch (Throwable ex)
+            {
+                // Pass.
+            }
+        }
+
         return this;
+    }
+
+    private void rethrow (Throwable ex)
+            throws IOException
+    {
+        throw new IOException(ex);
     }
 
     /**
@@ -193,30 +245,42 @@ public final class TcpSocket<T>
      */
     private void readLoop ()
     {
-        try
+        try (SocketReader<T> sr = reader)
         {
             /**
              * Configure the reader object.
              */
             reader.setSocket(socket);
+            reader.setInputStream(socket.getInputStream());
 
             /**
              * Read messages from the socket and transmit them
              * out of this actor via the data-out connector.
              */
-            while (stop.get() == false)
+            while (isAlive())
             {
-                final T message = reader.read();
+                final T message = reader.onRead();
 
-                if (message != null)
+                if (message == null)
+                {
+                    throw new NullPointerException("Null was returned by onRead().");
+                }
+                else
                 {
                     dataOut.accept(message);
                 }
+
+                readerComplete = reader.isComplete();
             }
         }
         catch (Throwable ex)
         {
-            killSocket();
+            rethrower.accept(ex);
+        }
+        finally
+        {
+            shutdownLatch.countDown();
+            stop();
         }
     }
 
@@ -225,49 +289,57 @@ public final class TcpSocket<T>
      */
     private void writeLoop ()
     {
-        try
+        try (SocketWriter<T> sw = writer)
         {
             /**
              * Configure the writer object.
              */
             writer.setSocket(socket);
+            writer.setOutputStream(socket.getOutputStream());
 
             /**
              * Write the messages to the socket, which were sent
              * to us via the data-in connector.
              */
-            while (stop.get() == false)
+            while (isAlive())
             {
                 final T message = pending.take();
 
                 if (message != null)
                 {
-                    writer.write(message);
+                    writer.onWrite(message);
                 }
+
+                writerComplete = writer.isComplete();
             }
         }
         catch (Throwable ex)
         {
-            killSocket();
+            rethrower.accept(ex);
+        }
+        finally
+        {
+            shutdownLatch.countDown();
+            stop();
         }
     }
 
-    /**
-     * Close the socket due to abnormal circumstances.
-     */
-    private void killSocket ()
+    private boolean isAlive ()
     {
-        if (stop.get() == false)
-        {
-            try
-            {
-                stop();
-                socket.close();
-            }
-            catch (Throwable ex)
-            {
-                // Pass.
-            }
-        }
+        return !readerComplete && !writerComplete && !stop.get();
+    }
+
+    /**
+     * Create a new TCP socket.
+     *
+     * @param <T> is the type of the messages flowing through the socket.
+     * @param stage will be used to create private actors.
+     * @param socket is the underlying socket.
+     * @return the new socket.
+     */
+    public static <T> TcpSocket<T> newTcpSocket (final Stage stage,
+                                                 final Socket socket)
+    {
+        return new TcpSocket<>(stage, socket);
     }
 }

@@ -14,28 +14,28 @@ public final class Main01
 {
 
     public static void main (String[] args)
+            throws IOException
     {
         final Cascade.Stage stage = Cascade.newStage();
-        final TcpServer<String> server = TcpServer.<String>newTcpServer(stage, () -> newSocket());
 
-        final Processor<TcpSocket<String>> procConn = Processor.fromConsumerScript(stage, msg -> onConnection(stage, msg));
+        final ServerSocket sock = new ServerSocket();
+        sock.bind(new InetSocketAddress("127.0.0.1", 8080));
+        final TcpServerSocket server = TcpServerSocket.newTcpServer(stage, sock);
+
+        final Processor<Socket> procConn = Processor.fromConsumerScript(stage, msg -> onConnection(stage, msg));
 
         server.socketsOut().connect(procConn.dataIn());
 
         server.start();
-    }
 
-    private static ServerSocket newSocket ()
-            throws IOException
-    {
-        final ServerSocket sock = new ServerSocket();
-        sock.bind(new InetSocketAddress("127.0.0.1", 8080));
-        return sock;
+        System.in.read();
     }
 
     private static void onConnection (final Cascade.Stage stage,
-                                      final TcpSocket<String> conn)
+                                      final Socket sock)
     {
+        final TcpSocket<String> conn = TcpSocket.newTcpSocket(stage, sock);
+
         final Processor<String> echo = Processor.fromFunctionScript(stage, msg -> "S = " + msg + "\n");
         final Printer<String> printer = Printer.newPrintln(stage);
         conn.dataOut().connect(printer.dataIn());
@@ -58,10 +58,11 @@ public final class Main01
         }
 
         @Override
-        public String read ()
+        public String onRead ()
                 throws IOException
         {
-            return in.readLine();
+            final String line = in.readLine();
+            return line;
         }
 
         @Override
@@ -69,6 +70,12 @@ public final class Main01
                 throws IOException
         {
             // Pass.
+        }
+
+        @Override
+        public boolean isComplete ()
+        {
+            return false;
         }
     }
 
@@ -85,10 +92,16 @@ public final class Main01
         }
 
         @Override
-        public void write (String message)
+        public void onWrite (String message)
                 throws IOException
         {
             out.writeChars(message);
+        }
+
+        @Override
+        public boolean isComplete ()
+        {
+            return false;
         }
 
         @Override
