@@ -18,10 +18,6 @@ package com.mackenziehigh.socius.flow;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Message Bus for (N x N) <i>Intra</i>-Process-Communication.
@@ -30,94 +26,37 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class Bus<T>
 {
-    private final ActorFactory stage;
+    private final Funnel<T> funnel;
 
-    /**
-     * This processor is used to connect the inputs to the outputs.
-     */
-    private final Processor<T> hub;
-
-    /**
-     * Messages are routed from these processors to the hub.
-     *
-     * <p>
-     * In theory, the inputs could have been connected directly to the hub.
-     * However, in practice, that would be inefficient,
-     * because actors use copy-on-write lists in their connectors.
-     * </p>
-     */
-    private final Map<Object, Processor<T>> inputs = new ConcurrentHashMap<>();
-
-    /**
-     * Messages are routed from the hub to these processors.
-     *
-     * <p>
-     * In theory, the outputs could have been connected directly to the hub.
-     * However, in practice, that would be inefficient,
-     * because actors use copy-on-write lists in their connectors.
-     * </p>
-     */
-    private final Map<Object, Processor<T>> outputs = new ConcurrentHashMap<>();
-
-    /**
-     * Cache this, because we will be iterating over it frequently.
-     */
-    private final Collection<Processor<T>> outputsView = outputs.values();
+    private final Fanout<T> fanout;
 
     private Bus (final ActorFactory stage)
     {
-        this.stage = Objects.requireNonNull(stage, "stage");
-        this.hub = Processor.fromConsumerScript(stage, this::forwardFromHub);
+        fanout = Fanout.newFanout(stage);
+        funnel = Funnel.newFunnel(stage);
+        funnel.dataOut().connect(fanout.dataIn());
     }
 
     /**
      * Get a named input that supplies messages to this message-bus.
      *
-     * <p>
-     * This method is synchronized, since this method may need to
-     * create the connector that will be associated with the key.
-     * If two methods called, without synchronization,
-     * then two connectors could potentially be created.
-     * </p>
-     *
      * @param key identifies the input to retrieve.
      * @return the named input.
      */
-    public synchronized Input<T> dataIn (final Object key)
+    public Input<T> dataIn (final Object key)
     {
-        Objects.requireNonNull(key, "key");
-
-        if (inputs.containsKey(key) == false)
-        {
-            inputs.put(key, Processor.fromConsumerScript(stage, this::forwardToHub));
-        }
-
-        return inputs.get(key).dataIn();
+        return funnel.dataIn(key);
     }
 
     /**
      * Get a named output that transmits messages from this message-bus.
      *
-     * <p>
-     * This method is synchronized, since this method may need to
-     * create the connector that will be associated with the key.
-     * If two methods called, without synchronization,
-     * then two connectors could potentially be created.
-     * </p>
-     *
      * @param key identifies the output to retrieve.
      * @return the named output.
      */
-    public synchronized Output<T> dataOut (final Object key)
+    public Output<T> dataOut (final Object key)
     {
-        Objects.requireNonNull(key, "key");
-
-        if (outputs.containsKey(key) == false)
-        {
-            outputs.put(key, Processor.fromIdentityScript(stage));
-        }
-
-        return outputs.get(key).dataOut();
+        return fanout.dataOut(key);
     }
 
     /**
@@ -131,18 +70,4 @@ public final class Bus<T>
     {
         return new Bus<>(stage);
     }
-
-    private void forwardToHub (final T message)
-    {
-        hub.dataIn().send(message);
-    }
-
-    private void forwardFromHub (final T message)
-    {
-        for (Processor<T> output : outputsView)
-        {
-            output.dataIn().send(message);
-        }
-    }
-
 }
