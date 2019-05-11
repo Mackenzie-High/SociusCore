@@ -17,7 +17,6 @@ package com.mackenziehigh.socius;
 
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.socius.Router.EndPoint;
-import com.mackenziehigh.socius.util.ActorTester;
 import org.junit.Test;
 
 /**

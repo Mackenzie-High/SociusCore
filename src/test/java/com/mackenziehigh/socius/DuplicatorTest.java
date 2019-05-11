@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Duplicator;
-import com.mackenziehigh.socius.util.ActorTester;
 import org.junit.Test;
 
 /**

@@ -8,7 +8,10 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Objects;
 
 /**
+ * Facilitates easy implementation of a <code>Pipeline</code> via sub-classing.
  *
+ * @param <I> is the type of the incoming messages.
+ * @param <O> is the type of the outgoing messages.
  */
 public abstract class AbstractPipeline<I, O>
         implements Pipeline<I, O>
@@ -35,6 +38,26 @@ public abstract class AbstractPipeline<I, O>
     public final Context<I, O> context ()
     {
         return actor.context();
+    }
+
+    public final void sendTo (final I message)
+    {
+        context().sendTo(message);
+    }
+
+    public final void sendFrom (final O message)
+    {
+        context().sendFrom(message);
+    }
+
+    public final boolean offerTo (final I message)
+    {
+        return context().offerTo(message);
+    }
+
+    public final boolean offerFrom (final O message)
+    {
+        return context().offerFrom(message);
     }
 
     /**

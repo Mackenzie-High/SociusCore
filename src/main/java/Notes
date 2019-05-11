@@ -1,7 +1,7 @@
 
 
 Plan:
-+ Markov Balancer
++ Markov
 + Weight Balancer
 + Server Tower
 + Lookup Tower
@@ -9,13 +9,13 @@ Plan:
 + + Add auto-expansion.
 + Trampoline
 + Blocking Source
++ Blocking Sink
 + Router Redesign
-+ TCP Socket
-+ TCP Acceptor
++ TCP Messenger
 + UDP Radio
 + UDP Dish
-+ Messenger Client
-+ Messenger Server
 + Console
-+ Java 12 Upgrade???
++ Let Valves share flags?
++ Java 12 Upgrade ???
++ Guava Removal ???
 

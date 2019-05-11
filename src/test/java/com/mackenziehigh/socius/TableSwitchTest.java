@@ -15,9 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.TableSwitch;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.util.ActorTester;
 import org.junit.Test;
 
 /**

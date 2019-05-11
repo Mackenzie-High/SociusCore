@@ -15,11 +15,9 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.DefaultExecutor;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.Processor;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -28,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongFunction;
-import com.mackenziehigh.socius.Source;
 
 /**
  * A clock that sends ticks at a variable frequency.

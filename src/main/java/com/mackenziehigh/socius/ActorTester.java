@@ -1,3 +1,5 @@
+package com.mackenziehigh.socius;
+
 /*
  * Copyright 2019 Michael Mackenzie High
  *
@@ -13,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mackenziehigh.socius.util;
+
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;

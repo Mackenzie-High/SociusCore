@@ -16,7 +16,6 @@
 package com.mackenziehigh.socius;
 
 import com.google.common.collect.Lists;
-import com.mackenziehigh.socius.util.ActorTester;
 import org.junit.Test;
 
 /**

@@ -15,9 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Requester;
-import com.mackenziehigh.socius.util.ActorTester;
-import com.mackenziehigh.socius.DelayedSender;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.Executors;

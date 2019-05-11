@@ -15,9 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.CollectionSink;
 import com.google.common.collect.Lists;
-import com.mackenziehigh.socius.util.ActorTester;
 import java.util.List;
 import org.junit.Test;
 

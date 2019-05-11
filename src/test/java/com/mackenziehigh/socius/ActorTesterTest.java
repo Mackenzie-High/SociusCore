@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mackenziehigh.socius.util;
+package com.mackenziehigh.socius;
 
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.socius.CollectionSink;
-import com.mackenziehigh.socius.Processor;
-import com.mackenziehigh.socius.util.ActorTester.StepException;
+import com.mackenziehigh.socius.ActorTester.StepException;
 import java.util.ArrayList;
 import java.util.List;
 import static org.junit.Assert.*;
@@ -134,7 +132,7 @@ public final class ActorTesterTest
         catch (Throwable ex)
         {
             assertTrue(ex instanceof StepException);
-            assertTrue(ex.getMessage().startsWith("(class = com.mackenziehigh.socius.testing.ActorTesterTest, method = test20190102184936726325"));
+            assertTrue(ex.getMessage().startsWith("(class = com.mackenziehigh.socius.ActorTesterTest, method = test20190102184936726325"));
         }
     }
 

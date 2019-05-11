@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Processor;
-import com.mackenziehigh.socius.Pipeline;
 import com.google.common.collect.Maps;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
@@ -62,7 +60,7 @@ public final class TableSwitch<K, T>
     private final Object lock = new Object();
 
     private TableSwitch (final ActorFactory stage,
-                           final Function<T, K> extractor)
+                         final Function<T, K> extractor)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.procDataIn = Processor.fromConsumerScript(stage, this::onMessage);
@@ -149,7 +147,7 @@ public final class TableSwitch<K, T>
      * @return the new inserter.
      */
     public static <K, T> TableSwitch<K, T> newTableInserter (final ActorFactory stage,
-                                                               final Function<T, K> extractor)
+                                                             final Function<T, K> extractor)
     {
         return new TableSwitch(stage, extractor);
     }

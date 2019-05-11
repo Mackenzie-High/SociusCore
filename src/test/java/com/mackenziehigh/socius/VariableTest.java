@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Variable;
-import com.mackenziehigh.socius.util.ActorTester;
 import java.time.Instant;
 import org.junit.Test;
 

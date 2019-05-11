@@ -15,7 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.DefaultExecutor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import java.time.Duration;
 import java.util.Objects;
