@@ -53,7 +53,7 @@ import java.util.Objects;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class Duplicator<T>
-        implements DataPipeline<T, T>
+        implements Pipeline<T, T>
 {
 
     /**

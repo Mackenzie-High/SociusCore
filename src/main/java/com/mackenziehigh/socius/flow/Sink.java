@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  *
  * @param <I> is the type of the incoming messages.
  */
-public interface DataSink<I>
+public interface Sink<I>
         extends Consumer<I>
 {
     /**

@@ -22,7 +22,7 @@ import com.mackenziehigh.socius.flow.Processor;
 import java.io.PrintStream;
 import java.util.Objects;
 import java.util.function.Consumer;
-import com.mackenziehigh.socius.flow.DataPipeline;
+import com.mackenziehigh.socius.flow.Pipeline;
 
 /**
  * Prints the <code>String</code> representations
@@ -31,7 +31,7 @@ import com.mackenziehigh.socius.flow.DataPipeline;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class Printer<T>
-        implements DataPipeline<T, T>
+        implements Pipeline<T, T>
 {
     /**
      * Provides the connectors and performs the printing.

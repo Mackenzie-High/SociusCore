@@ -31,7 +31,7 @@ import java.util.function.Predicate;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class LookupSwitch<T>
-        implements DataPipeline<T, T>
+        implements Pipeline<T, T>
 {
     private final ActorFactory stage;
 

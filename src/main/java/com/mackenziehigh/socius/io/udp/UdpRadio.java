@@ -2,7 +2,6 @@ package com.mackenziehigh.socius.io.udp;
 
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
-import com.mackenziehigh.socius.flow.DataSink;
 import com.mackenziehigh.socius.flow.Processor;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -10,13 +9,14 @@ import java.net.DatagramSocket;
 import java.net.SocketAddress;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.mackenziehigh.socius.flow.Sink;
 
 /**
  *
  * @author mackenzie
  */
 public abstract class UdpRadio<T>
-        implements DataSink<T>
+        implements Sink<T>
 {
     private final SocketAddress address;
 

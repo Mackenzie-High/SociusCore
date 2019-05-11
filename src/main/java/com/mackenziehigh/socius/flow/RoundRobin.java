@@ -29,7 +29,7 @@ import java.util.Iterator;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class RoundRobin<T>
-        implements DataSink<T>
+        implements Sink<T>
 {
 
     /**

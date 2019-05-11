@@ -3,14 +3,14 @@ package com.mackenziehigh.socius.io.stdio;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.flow.DataPipeline;
 import com.mackenziehigh.socius.flow.Processor;
+import com.mackenziehigh.socius.flow.Pipeline;
 
 /**
  *
  */
 public final class Console
-        implements DataPipeline<String, String>
+        implements Pipeline<String, String>
 {
 
     private final Processor<String> procOut;

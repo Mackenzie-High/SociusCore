@@ -10,14 +10,14 @@ import java.util.Collection;
  * @param <O> is the type of the outgoing messages.
  */
 public interface DataTower<I, O>
-        extends DataPipeline<I, O>
+        extends Pipeline<I, O>
 {
     /**
      * Get the floors that make up this tower.
      *
      * @return the floors herein.
      */
-    public Collection<DataPipeline<I, O>> floors ();
+    public Collection<Pipeline<I, O>> floors ();
 
     /**
      * Output Connection.

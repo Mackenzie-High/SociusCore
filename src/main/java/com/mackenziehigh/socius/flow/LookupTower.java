@@ -94,7 +94,7 @@ public final class LookupTower<I, O>
      * @return this.
      */
     public LookupTower<I, O> pushFloor (final Predicate<I> condition,
-                                        final DataPipeline<I, O> floor)
+                                        final Pipeline<I, O> floor)
     {
         Objects.requireNonNull(condition, "condition");
         Objects.requireNonNull(floor, "floor");
@@ -110,7 +110,7 @@ public final class LookupTower<I, O>
      */
     public LookupTower<I, O> popFloor ()
     {
-        final DataPipeline<I, O> floor = floors.pop();
+        final Pipeline<I, O> floor = floors.pop();
         floor.dataOut().disconnect(outputConnector.dataIn());
         return this;
     }
@@ -119,7 +119,7 @@ public final class LookupTower<I, O>
      * {@inheritDoc}
      */
     @Override
-    public Collection<DataPipeline<I, O>> floors ()
+    public Collection<Pipeline<I, O>> floors ()
     {
         return Collections.unmodifiableList(new ArrayList<>(floors));
     }
@@ -152,7 +152,7 @@ public final class LookupTower<I, O>
     }
 
     private static <I, O> PredicatedFloor newPredicatedFloor (final Predicate<I> condition,
-                                                              final DataPipeline<I, O> floor)
+                                                              final Pipeline<I, O> floor)
     {
         Objects.requireNonNull(condition, "condition");
         Objects.requireNonNull(floor, "floor");
@@ -188,7 +188,7 @@ public final class LookupTower<I, O>
      * @param <O> is the type of the outgoing messages.
      */
     public interface PredicatedFloor<I, O>
-            extends DataPipeline<I, O>
+            extends Pipeline<I, O>
     {
         /**
          * Determine whether this floor is willing to handle the message.
@@ -224,7 +224,7 @@ public final class LookupTower<I, O>
          * @return this.
          */
         public Builder<I, O> withFloor (final Predicate<I> condition,
-                                        final DataPipeline<I, O> floor)
+                                        final Pipeline<I, O> floor)
         {
             withFloor(newPredicatedFloor(condition, floor));
             return this;

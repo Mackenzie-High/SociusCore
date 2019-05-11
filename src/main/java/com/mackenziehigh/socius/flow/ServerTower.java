@@ -40,7 +40,7 @@ public final class ServerTower<I, O>
     /**
      * This function will be used to create new floors, as needed.
      */
-    private final Supplier<DataPipeline<I, O>> factory;
+    private final Supplier<Pipeline<I, O>> factory;
 
     /**
      * A floor will be destroyed, when this predicate evaluates to true.
@@ -55,12 +55,12 @@ public final class ServerTower<I, O>
     /**
      * These are the floors that this tower consists of.
      */
-    private final Set<DataPipeline<I, O>> floors = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<Pipeline<I, O>> floors = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /**
      * These are the floors that this tower consists of, as an unmodifiable collection.
      */
-    private final Set<DataPipeline<I, O>> unmodFloors = Collections.unmodifiableSet(floors);
+    private final Set<Pipeline<I, O>> unmodFloors = Collections.unmodifiableSet(floors);
 
     private ServerTower (final Builder<I, O> builder)
     {
@@ -87,7 +87,7 @@ public final class ServerTower<I, O>
         /**
          * Create a floor to handle the incoming message.
          */
-        final DataPipeline<I, O> floor = factory.get();
+        final Pipeline<I, O> floor = factory.get();
 
         /**
          * This actor will monitor the outputs of the floor.
@@ -109,7 +109,7 @@ public final class ServerTower<I, O>
         floor.accept(message);
     }
 
-    private void onOutput (final DataPipeline<I, O> floor,
+    private void onOutput (final Pipeline<I, O> floor,
                            final O message)
     {
         /**
@@ -131,7 +131,7 @@ public final class ServerTower<I, O>
      * {@inheritDoc}
      */
     @Override
-    public Collection<DataPipeline<I, O>> floors ()
+    public Collection<Pipeline<I, O>> floors ()
     {
         return unmodFloors;
     }
@@ -173,7 +173,7 @@ public final class ServerTower<I, O>
     {
         private final Stage stage;
 
-        private Supplier<DataPipeline<I, O>> factory;
+        private Supplier<Pipeline<I, O>> factory;
 
         private Predicate<O> terminationCondition = x -> true;
 

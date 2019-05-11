@@ -49,13 +49,13 @@ public final class TableTower<K, I, O>
     /**
      * This map maps user-defined keys to user-defined floors.
      */
-    private final ConcurrentMap<K, DataPipeline<I, O>> floors = new ConcurrentHashMap<>();
+    private final ConcurrentMap<K, Pipeline<I, O>> floors = new ConcurrentHashMap<>();
 
     /**
      * This is merely an unmodifiable version of the floors map,
      * which can be provided to external code.
      */
-    private final Map<K, DataPipeline<I, O>> floorMap = Collections.unmodifiableMap(floors);
+    private final Map<K, Pipeline<I, O>> floorMap = Collections.unmodifiableMap(floors);
 
     private TableTower (final Builder<K, I, O> builder)
     {
@@ -64,7 +64,7 @@ public final class TableTower<K, I, O>
         this.dropsConnector = Processor.fromIdentityScript(builder.stage);
         this.keyFunction = builder.keyFunction;
 
-        for (Entry<K, DataPipeline<I, O>> floor : builder.floors.entrySet())
+        for (Entry<K, Pipeline<I, O>> floor : builder.floors.entrySet())
         {
             addFloor(floor.getKey(), floor.getValue());
         }
@@ -81,7 +81,7 @@ public final class TableTower<K, I, O>
         /**
          * Obtain that floor, if any.
          */
-        final DataPipeline<I, O> floor = floors.get(key);
+        final Pipeline<I, O> floor = floors.get(key);
 
         /**
          * If the floor does not exist, then drop the message;
@@ -119,7 +119,7 @@ public final class TableTower<K, I, O>
      * @return this.
      */
     public TableTower<K, I, O> addFloor (final K key,
-                                         final DataPipeline<I, O> floor)
+                                         final Pipeline<I, O> floor)
     {
         Objects.requireNonNull(key, "key");
         Objects.requireNonNull(floor, "floor");
@@ -138,7 +138,7 @@ public final class TableTower<K, I, O>
     {
         Objects.requireNonNull(key, "key");
 
-        final DataPipeline<I, O> floor = floors.remove(key);
+        final Pipeline<I, O> floor = floors.remove(key);
 
         if (floor != null)
         {
@@ -152,7 +152,7 @@ public final class TableTower<K, I, O>
      * {@inheritDoc}
      */
     @Override
-    public Collection<DataPipeline<I, O>> floors ()
+    public Collection<Pipeline<I, O>> floors ()
     {
         return floorMap().values();
     }
@@ -160,7 +160,7 @@ public final class TableTower<K, I, O>
     /**
      * {@inheritDoc}
      */
-    public Map<K, DataPipeline<I, O>> floorMap ()
+    public Map<K, Pipeline<I, O>> floorMap ()
     {
         return floorMap;
     }
@@ -205,7 +205,7 @@ public final class TableTower<K, I, O>
 
         private Function<I, K> keyFunction;
 
-        private final Map<K, DataPipeline<I, O>> floors = new HashMap<>();
+        private final Map<K, Pipeline<I, O>> floors = new HashMap<>();
 
         private Builder (final Stage stage)
         {
@@ -233,7 +233,7 @@ public final class TableTower<K, I, O>
          * @return this.
          */
         public Builder<K, I, O> withFloor (final K key,
-                                           final DataPipeline<I, O> floor)
+                                           final Pipeline<I, O> floor)
         {
             Objects.requireNonNull(key, "key");
             Objects.requireNonNull(floor, "floor");

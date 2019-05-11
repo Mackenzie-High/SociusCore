@@ -18,7 +18,6 @@ package com.mackenziehigh.socius.time;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.flow.DataSource;
 import com.mackenziehigh.socius.flow.Processor;
 import java.time.Duration;
 import java.time.Instant;
@@ -28,12 +27,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongFunction;
+import com.mackenziehigh.socius.flow.Source;
 
 /**
  * A clock that sends ticks at a variable frequency.
  */
 public final class Oscillator
-        implements DataSource<Instant>
+        implements Source<Instant>
 {
     /**
      * Effectively, this is the clock (time source) itself.

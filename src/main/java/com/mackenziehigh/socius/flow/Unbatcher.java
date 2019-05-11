@@ -35,7 +35,7 @@ import java.util.List;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class Unbatcher<T>
-        implements DataSink<List<T>>
+        implements Sink<List<T>>
 {
     /**
      * Provides the data-input connector.

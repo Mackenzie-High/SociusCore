@@ -28,8 +28,7 @@ import java.util.Objects;
  * @param <T> is the type of the messages passing through the funnel.
  */
 public final class Funnel<T>
-        implements DataSource<T>,
-                   DataFunnel<T>
+        implements Source<T>
 {
     private final ActorFactory stage;
 

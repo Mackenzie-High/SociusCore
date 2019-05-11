@@ -2,20 +2,20 @@ package com.mackenziehigh.socius.io.udp;
 
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.flow.DataSource;
 import com.mackenziehigh.socius.flow.Processor;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketAddress;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.mackenziehigh.socius.flow.Source;
 
 /**
  *
  * @author mackenzie
  */
 public abstract class UdpDish<T>
-        implements DataSource<T>
+        implements Source<T>
 {
     private final SocketAddress address;
 

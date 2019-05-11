@@ -27,7 +27,7 @@ import java.util.Objects;
  * @param <O> is the type of the outgoing messages.
  */
 public final class Caster<I, O>
-        implements DataPipeline<I, O>
+        implements Pipeline<I, O>
 {
     private final Class<O> type;
 

@@ -14,7 +14,7 @@ import java.util.Objects;
  * @param <O> is the type of the outgoing messages.
  */
 public final class Trampoline<I, O>
-        implements DataPipeline<I, O>
+        implements Pipeline<I, O>
 {
     /**
      * Defines the states and transitions.

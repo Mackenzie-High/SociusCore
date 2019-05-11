@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @param <T> is the type of the cached value.
  */
 public final class Variable<T>
-        implements DataPipeline<T, T>
+        implements Pipeline<T, T>
 {
     /**
      * Provides the data-input connector.

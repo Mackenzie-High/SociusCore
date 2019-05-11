@@ -7,7 +7,7 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
  *
  * @param <O> is the type of the outgoing messages.
  */
-public interface DataSource<O>
+public interface Source<O>
 {
     /**
      * Output Connection.

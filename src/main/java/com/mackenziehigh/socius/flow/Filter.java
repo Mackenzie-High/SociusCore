@@ -28,7 +28,7 @@ import java.util.function.Predicate;
  * @param <T> is the type of messages flowing through the filter.
  */
 public final class Filter<T>
-        implements DataPipeline<T, T>
+        implements Pipeline<T, T>
 {
     private final Processor<T> actor;
 

@@ -3,7 +3,6 @@ package com.mackenziehigh.socius.io.tcp;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.flow.DataPipeline;
 import com.mackenziehigh.socius.flow.Processor;
 import java.io.Closeable;
 import java.io.IOException;
@@ -15,6 +14,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.mackenziehigh.socius.flow.Pipeline;
 
 /**
  * Bidirectional message-oriented TCP-based socket.
@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class TcpSocket<T>
-        implements DataPipeline<T, T>
+        implements Pipeline<T, T>
 {
     /**
      * Reads a message from a socket.

@@ -27,7 +27,7 @@ import java.util.function.Predicate;
  * @param <T> is the type of messages that flow through the if-else router.
  */
 public final class IfElse<T>
-        implements DataSink<T>
+        implements Sink<T>
 {
     /**
      * This is the user-defined condition that determines

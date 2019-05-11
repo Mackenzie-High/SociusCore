@@ -18,7 +18,6 @@ package com.mackenziehigh.socius.time;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.flow.DataSource;
 import com.mackenziehigh.socius.flow.Processor;
 import java.time.Duration;
 import java.time.Instant;
@@ -28,6 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import com.mackenziehigh.socius.flow.Source;
 
 /**
  * A clock that sends ticks at a user-specified periodicity.
@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * </p>
  */
 public final class Clock
-        implements DataSource<Instant>
+        implements Source<Instant>
 {
     /**
      * Effectively, this is the clock (time source) itself.

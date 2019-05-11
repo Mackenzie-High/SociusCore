@@ -30,7 +30,7 @@ import java.util.Random;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class MarkovBalancer<T>
-        implements DataSink<T>
+        implements Sink<T>
 {
 
     /**

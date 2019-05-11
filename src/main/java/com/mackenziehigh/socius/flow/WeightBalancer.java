@@ -30,7 +30,7 @@ import java.util.function.ToIntFunction;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class WeightBalancer<T>
-        implements DataSink<T>
+        implements Sink<T>
 {
 
     /**

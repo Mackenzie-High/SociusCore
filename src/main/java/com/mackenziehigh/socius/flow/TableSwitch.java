@@ -30,7 +30,7 @@ import java.util.function.Function;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class TableSwitch<K, T>
-        implements DataPipeline<T, T>
+        implements Pipeline<T, T>
 {
     private final ActorFactory stage;
 

@@ -15,6 +15,7 @@
  */
 package com.mackenziehigh.socius.flow;
 
+import com.google.common.base.Preconditions;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.ConsumerScript;
@@ -22,37 +23,29 @@ import com.mackenziehigh.cascade.Cascade.Stage.Actor.ContextScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 /**
- * Applies a map-function to incoming messages and then forwards the results.
+ * Applies a function to incoming messages and then forwards the results.
  *
  * <p>
- * If the map-function returns null or void, then no message will be forwarded.
- * Thus, in effect, returning null or void causes the <code>Processor</code> to act as a <code>Filter</code>.
+ * If the function returns null or void, then no message will be forwarded.
+ * Thus, in effect, returning null or void causes the <code>Processor</code> to act as a filter.
  * </p>
  *
  * @param <T> is the type of the incoming and outgoing messages.
  */
-public final class Processor<T>
-        implements DataPipeline<T, T>
+public interface Processor<T>
+        extends Pipeline<T, T>
 {
-    private final Actor<T, T> actor;
-
-    private Processor (final Actor<T, T> actor)
-    {
-        this.actor = actor;
-    }
-
     /**
      * Input Connection.
      *
      * @return the input that supplies the messages to be processed.
      */
     @Override
-    public Input<T> dataIn ()
-    {
-        return actor.input();
-    }
+    public Input<T> dataIn ();
 
     /**
      * Output Connection.
@@ -60,51 +53,67 @@ public final class Processor<T>
      * @return the output that receives the results of processing the messages.
      */
     @Override
-    public Output<T> dataOut ()
+    public Output<T> dataOut ();
+
+    /**
+     * Factory Method.
+     *
+     * @param <T> is the type of the incoming and outgoing messages.
+     * @param actor will be wrapped in a pipeline facade.
+     * @return the new processor.
+     */
+    public static <T> Processor<T> fromActor (final Actor<T, T> actor)
     {
-        return actor.output();
+        Objects.requireNonNull(actor, "actor");
+        return fromIO(actor.input(), actor.output());
     }
 
     /**
      * Factory Method.
      *
      * @param <T> is the type of the incoming and outgoing messages.
-     * @param stage will be used t create private actors.
+     * @param stage will be used to create private actors.
      * @param script defines the processing to perform.
      * @return the new processor.
      */
     public static <T> Processor<T> fromContextScript (final ActorFactory stage,
                                                       final ContextScript<T, T> script)
     {
-        return new Processor<>(stage.newActor().withContextScript(script).create());
+        Objects.requireNonNull(stage, "stage");
+        Objects.requireNonNull(script, "script");
+        return fromActor(stage.newActor().withContextScript(script).create());
     }
 
     /**
      * Factory Method.
      *
      * @param <T> is the type of the incoming and outgoing messages.
-     * @param stage will be used t create private actors.
+     * @param stage will be used to create private actors.
      * @param script defines the processing to perform.
      * @return the new processor.
      */
     public static <T> Processor<T> fromFunctionScript (final ActorFactory stage,
                                                        final FunctionScript<T, T> script)
     {
-        return new Processor<>(stage.newActor().withFunctionScript(script).create());
+        Objects.requireNonNull(stage, "stage");
+        Objects.requireNonNull(script, "script");
+        return fromActor(stage.newActor().withFunctionScript(script).create());
     }
 
     /**
      * Factory Method.
      *
      * @param <T> is the type of the incoming and outgoing messages.
-     * @param stage will be used t create private actors.
+     * @param stage will be used to create private actors.
      * @param script defines the processing to perform.
      * @return the new processor.
      */
     public static <T> Processor<T> fromConsumerScript (final ActorFactory stage,
                                                        final ConsumerScript<T> script)
     {
-        return new Processor<>(stage.newActor().withConsumerScript(script).create());
+        Objects.requireNonNull(stage, "stage");
+        Objects.requireNonNull(script, "script");
+        return fromActor(stage.newActor().withConsumerScript(script).create());
     }
 
     /**
@@ -116,12 +125,86 @@ public final class Processor<T>
      * </p>
      *
      * @param <T> is the type of the incoming and outgoing messages.
-     * @param stage will be used t create private actors.
+     * @param stage will be used to create private actors.
      * @return the new processor.
      */
     public static <T> Processor<T> fromIdentityScript (final ActorFactory stage)
     {
+        Objects.requireNonNull(stage, "stage");
         return fromFunctionScript(stage, (T x) -> x);
     }
 
+    /**
+     * Factory Method.
+     *
+     * @param <T> is type of the incoming and outgoing messages.
+     * @param stage will be used to create private actors.
+     * @param condition determines whether a message should be allowed through the filter.
+     * @return this.
+     */
+    public static <T> Processor<T> fromFilter (final ActorFactory stage,
+                                               final Predicate<T> condition)
+    {
+        Objects.requireNonNull(stage, "stage");
+        Objects.requireNonNull(condition, "condition");
+        return fromFunctionScript(stage, x -> condition.test(x) ? x : null);
+    }
+
+    /**
+     * Factory Method.
+     *
+     * @param <T> is the type of the incoming and outgoing messages.
+     * @param input provides the incoming messages.
+     * @param output receives the outgoing messages.
+     * @return the new processor.
+     */
+    public static <T> Processor<T> fromIO (final Input<T> input,
+                                           final Output<T> output)
+    {
+        Objects.requireNonNull(input, "input");
+        Objects.requireNonNull(output, "output");
+
+        return new Processor<T>()
+        {
+            @Override
+            public Input<T> dataIn ()
+            {
+                return input;
+            }
+
+            @Override
+            public Output<T> dataOut ()
+            {
+                return output;
+            }
+        };
+    }
+
+    /**
+     * Create a processor composed of one-or-more other processors.
+     *
+     * <p>
+     * The members themselves will be connected together to form a pipeline.
+     * </p>
+     *
+     * @param <T> is the type of the incoming and outgoing messages.
+     * @param members are the processors that make up the new processor.
+     * @return a processor that is merely a wrapper around the members.
+     */
+    public static <T> Processor<T> compose (final Processor<T>... members)
+    {
+        Objects.requireNonNull(members, "members");
+        Preconditions.checkArgument(members.length >= 1, "Too Few Members");
+
+        Processor<T> p = members[0];
+
+        for (int i = 1; i < members.length; i++)
+        {
+            final Processor<T> q = members[i];
+            p.dataOut().connect(q.dataIn());
+            p = q;
+        }
+
+        return fromIO(members[0].dataIn(), p.dataOut());
+    }
 }

@@ -36,7 +36,7 @@ import java.util.Map;
  * @param <O> is the type of the outgoing messages.
  */
 public final class Mapper<I, O>
-        implements DataPipeline<I, O>
+        implements Pipeline<I, O>
 {
     private final Actor<I, O> actor;
 

@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @param <T> is the type of the incoming and outgoing messages.
  */
 public final class Valve<T>
-        implements DataPipeline<T, T>
+        implements Pipeline<T, T>
 {
     /**
      * Provides the data-input connector.

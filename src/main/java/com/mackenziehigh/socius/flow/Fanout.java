@@ -28,8 +28,7 @@ import java.util.Objects;
  * @param <T> is the type of the messages passing through the fanout.
  */
 public final class Fanout<T>
-        implements DataSink<T>,
-                   DataFanout<T>
+        implements Sink<T>
 {
     private final ActorFactory stage;
 
@@ -67,7 +66,6 @@ public final class Fanout<T>
      * @param key identifies the data-output to return.
      * @return the identified data-output.
      */
-    @Override
     public Output<T> dataOut (final Object key)
     {
         Objects.requireNonNull(key, "key");
