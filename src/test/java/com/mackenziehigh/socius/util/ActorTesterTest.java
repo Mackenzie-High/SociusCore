@@ -15,12 +15,11 @@
  */
 package com.mackenziehigh.socius.util;
 
-import com.mackenziehigh.socius.util.ActorTester;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.socius.flow.Processor;
-import com.mackenziehigh.socius.flow.CollectionSink;
+import com.mackenziehigh.socius.CollectionSink;
+import com.mackenziehigh.socius.Processor;
 import com.mackenziehigh.socius.util.ActorTester.StepException;
 import java.util.ArrayList;
 import java.util.List;
