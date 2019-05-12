@@ -17,7 +17,7 @@ import java.util.function.Supplier;
  * @param <I> is the type of the incoming messages.
  * @param <O> is the type of the outgoing messages.
  */
-public final class ServerTower<I, O>
+public final class RequestTower<I, O>
         implements Pipeline<I, O>
 {
     private final Stage stage;
@@ -62,7 +62,7 @@ public final class ServerTower<I, O>
      */
     private final Set<Pipeline<I, O>> unmodFloors = Collections.unmodifiableSet(floors);
 
-    private ServerTower (final Builder<I, O> builder)
+    private RequestTower (final Builder<I, O> builder)
     {
         this.stage = builder.stage;
         this.inputConnector = Processor.fromConsumerScript(builder.stage, this::onInput);
@@ -223,10 +223,10 @@ public final class ServerTower<I, O>
          *
          * @return the new tower.
          */
-        public ServerTower<I, O> build ()
+        public RequestTower<I, O> build ()
         {
             Objects.requireNonNull(factory, "factory");
-            return new ServerTower<>(this);
+            return new RequestTower<>(this);
         }
     }
 }

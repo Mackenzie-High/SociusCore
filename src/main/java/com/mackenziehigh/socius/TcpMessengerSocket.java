@@ -17,7 +17,7 @@ import java.util.UUID;
  *
  * @author mackenzie
  */
-public final class TcpMessenger<I, O>
+public final class TcpMessengerSocket<I, O>
         implements Pipeline<I, O>,
                    Closeable
 {
@@ -95,7 +95,7 @@ public final class TcpMessenger<I, O>
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public TcpMessenger<I, O> bind (final String host,
+    public TcpMessengerSocket<I, O> bind (final String host,
                                     final int port)
             throws IOException
     {
@@ -103,7 +103,7 @@ public final class TcpMessenger<I, O>
         return bind(address);
     }
 
-    public TcpMessenger<I, O> bind (final SocketAddress address)
+    public TcpMessengerSocket<I, O> bind (final SocketAddress address)
             throws IOException
     {
         final ServerSocket socket = new ServerSocket();
@@ -111,12 +111,12 @@ public final class TcpMessenger<I, O>
         return bind(socket);
     }
 
-    public TcpMessenger<I, O> bind (final ServerSocket socket)
+    public TcpMessengerSocket<I, O> bind (final ServerSocket socket)
     {
         return this;
     }
 
-    public TcpMessenger<I, O> connect (final String host,
+    public TcpMessengerSocket<I, O> connect (final String host,
                                        final int port)
             throws IOException
     {
@@ -124,7 +124,7 @@ public final class TcpMessenger<I, O>
         return connect(address);
     }
 
-    public TcpMessenger<I, O> connect (final SocketAddress address)
+    public TcpMessengerSocket<I, O> connect (final SocketAddress address)
             throws IOException
     {
         final Socket socket = new Socket();
@@ -132,7 +132,7 @@ public final class TcpMessenger<I, O>
         return connect(socket);
     }
 
-    public TcpMessenger<I, O> connect (final Socket socket)
+    public TcpMessengerSocket<I, O> connect (final Socket socket)
     {
         return this;
     }

@@ -26,40 +26,42 @@ public final class ProcessorTest
     public void testFromFunctionScript ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
+        final AsyncTestTool tester = new AsyncTestTool();
         final Processor<Integer> actor = Processor.fromFunctionScript(tester.stage(), (Integer x) -> x * x);
 
-        tester.send(actor.dataIn(), 2);
-        tester.send(actor.dataIn(), 3);
-        tester.send(actor.dataIn(), 4);
-        tester.send(actor.dataIn(), 5);
-        tester.send(actor.dataIn(), 6);
+        tester.connect(actor.dataOut());
+
+        actor.accept(2);
+        actor.accept(3);
+        actor.accept(4);
+        actor.accept(5);
+        actor.accept(6);
+
         tester.expect(actor.dataOut(), 4);
         tester.expect(actor.dataOut(), 9);
         tester.expect(actor.dataOut(), 16);
         tester.expect(actor.dataOut(), 25);
         tester.expect(actor.dataOut(), 36);
-        tester.requireEmptyOutputs();
-        tester.run();
     }
 
     @Test
     public void testFilter ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
+        final AsyncTestTool tester = new AsyncTestTool();
         final Processor<String> actor = Processor.fromFilter(tester.stage(), x -> !x.contains("e"));
 
-        tester.send(actor.dataIn(), "avril");
-        tester.send(actor.dataIn(), "emma");
-        tester.send(actor.dataIn(), "erin");
-        tester.send(actor.dataIn(), "t'pol");
-        tester.send(actor.dataIn(), "elle");
-        tester.send(actor.dataIn(), "olivia");
+        tester.connect(actor.dataOut());
+
+        actor.accept("avril");
+        actor.accept("emma");
+        actor.accept("erin");
+        actor.accept("t'pol");
+        actor.accept("elle");
+        actor.accept("olivia");
+
         tester.expect(actor.dataOut(), "avril");
         tester.expect(actor.dataOut(), "t'pol");
         tester.expect(actor.dataOut(), "olivia");
-        tester.requireEmptyOutputs();
-        tester.run();
     }
 }
