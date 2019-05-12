@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 
 /**
  * (Experimental API) Provides a mechanism for testing actors in unit-tests.
@@ -68,6 +69,16 @@ public final class AsyncTestTool
             output.connect(proc.dataIn());
             connections.put(output, queue);
         }
+    }
+
+    public <T> void await (final BooleanSupplier condition)
+    {
+        for (int i = 0; i < 500 && condition.getAsBoolean(); i++)
+        {
+            sleep(10);
+        }
+
+        throw new IllegalStateException("The condition never became true.");
     }
 
     /**
@@ -155,19 +166,4 @@ public final class AsyncTestTool
     {
         stage.close();
     }
-
-    public static void main (String[] args)
-    {
-        final AsyncTestTool tester = new AsyncTestTool();
-
-        final Processor<String> p = Processor.fromIdentityScript(tester.stage());
-
-        tester.connect(p.dataOut());
-        p.accept("A");
-        p.accept("B");
-
-        System.out.println("X = " + tester.await(p.dataOut()));
-        System.out.println("X = " + tester.await(p.dataOut()));
-    }
-
 }
