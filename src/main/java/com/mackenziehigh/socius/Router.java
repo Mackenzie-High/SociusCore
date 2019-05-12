@@ -1,7 +1,7 @@
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Processor;
 import com.google.common.collect.ImmutableList;
+import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -10,34 +10,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Provides a publish/subscribe mechanism.
  *
- * <p>
- * A router contains zero-or-more independent end-points.
- * Each end-point registers to send or receive messages.
- * </p>
- *
- * <p>
- * An output is provided that serves as a default sink,
- * which will receive all messages sent through the router,
- * regardless of where the messages were sent from.
- * </p>
- *
- * <p>
- * Another output is provided that serves as a default sink,
- * which will receive all messages that are sent through the router,
- * but for which no subscriber could be found.
- * </p>
- *
- * @param <T> is the type of the incoming and outgoing messages.
  */
-public final class Router<T>
+public class Router<T>
 {
     private final Stage stage;
 
-    private final ConcurrentMap<Object, ImmutableList<EndPoint<T>>> routeMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Object, ImmutableList<Subscriber<T>>> routeMap = new ConcurrentHashMap<>();
 
     /**
      * Provides the sink-all output connector.
@@ -49,21 +31,28 @@ public final class Router<T>
      */
     private final Processor<T> sinkDead;
 
-    private Router (final Stage stage)
+    private volatile boolean sync = false;
+
+    private Router (final Cascade.Stage stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.sinkAll = Processor.fromIdentityScript(stage);
         this.sinkDead = Processor.fromIdentityScript(stage);
     }
 
-    public static <T> Router<T> newRouter (final Stage stage)
+    public static <T> Router<T> newRouter (final Cascade.Stage stage)
     {
         return new Router<>(stage);
     }
 
-    public EndPoint<T> newEndPoint ()
+    public Publisher<T> newPublisher (final String key)
     {
-        return new EndPoint(this);
+        return new Publisher(this, key);
+    }
+
+    public Subscriber<T> newSubscriber (final String key)
+    {
+        return new Subscriber(this, key);
     }
 
     /**
@@ -103,24 +92,35 @@ public final class Router<T>
      * @param keys
      * @param message
      */
-    private void send (final ImmutableList<Object> keys,
+    private void send (final Object key,
                        final T message)
+    {
+        if (sync)
+        {
+            synchronized (this)
+            {
+                sendImp(key, message);
+            }
+        }
+        else
+        {
+            sendImp(key, message);
+        }
+    }
+
+    private void sendImp (final Object key,
+                          final T message)
     {
         sinkAll.accept(message);
 
         boolean none = true;
 
-        for (int i = 0; i < keys.size(); i++)
+        final ImmutableList<Subscriber<T>> routeList = routeMap.get(key);
+
+        for (int k = 0; k < routeList.size(); k++)
         {
-            final Object key = keys.get(i);
-
-            final ImmutableList<EndPoint<T>> routeList = routeMap.get(key);
-
-            for (int k = 0; k < routeList.size(); k++)
-            {
-                routeList.get(k).connectorOut.accept(message);
-                none = false;
-            }
+            routeList.get(k).connector.accept(message);
+            none = false;
         }
 
         if (none)
@@ -130,19 +130,19 @@ public final class Router<T>
     }
 
     private synchronized void subscribe (final Object key,
-                                         final EndPoint<T> route)
+                                         final Subscriber<T> route)
     {
         routeMap.putIfAbsent(key, ImmutableList.of());
-        final Set<EndPoint<T>> copy = new HashSet<>(routeMap.get(key));
+        final Set<Subscriber<T>> copy = new HashSet<>(routeMap.get(key));
         copy.add(route);
         routeMap.put(key, ImmutableList.copyOf(copy));
     }
 
     private synchronized void unsubscribe (final Object key,
-                                           final EndPoint<T> route)
+                                           final Subscriber<T> route)
     {
         routeMap.putIfAbsent(key, ImmutableList.of());
-        final Set<EndPoint<T>> copy = new HashSet<>(routeMap.get(key));
+        final Set<Subscriber<T>> copy = new HashSet<>(routeMap.get(key));
         copy.add(route);
         routeMap.put(key, ImmutableList.copyOf(copy));
     }
@@ -153,58 +153,42 @@ public final class Router<T>
      *
      * @param <T> is the type of the incoming and outgoing messages.
      */
-    public static final class EndPoint<T>
-            implements Sink<T>,
-                       Source<T>
+    public static final class Publisher<T>
+            implements Sink<T>
     {
         private final Router<T> router;
 
-        private final Processor<T> connectorIn;
+        private final String key;
 
-        private final Processor<T> connectorOut;
+        private final Processor<T> connector;
 
-        private final Set<Object> subscriptionsSet = new HashSet<>();
+        private final AtomicBoolean active = new AtomicBoolean();
 
-        private volatile ImmutableList<Object> subscriptionsList = ImmutableList.of();
-
-        private EndPoint (final Router<T> container)
+        private Publisher (final Router<T> router,
+                           final String key)
         {
-            router = container;
-            connectorIn = Processor.fromConsumerScript(router.stage, msg -> router.send(subscriptionsList, msg));
-            connectorOut = Processor.fromIdentityScript(router.stage);
+            this.router = router;
+            this.key = Objects.requireNonNull(key, "key");
+            this.connector = Processor.fromConsumerScript(router.stage, this::onMessage);
         }
 
-        /**
-         *
-         * <p>
-         * This method is a no-op, if the subscription already exists.
-         * </p>
-         *
-         * @param key
-         * @return
-         */
-        public synchronized EndPoint<T> subscribe (final Object key)
+        private void onMessage (final T message)
         {
-            subscriptionsSet.add(key);
-            subscriptionsList = ImmutableList.copyOf(subscriptionsSet);
-            router.subscribe(key, this);
+            if (active.get())
+            {
+                router.send(key, message);
+            }
+        }
+
+        public Publisher<T> activate ()
+        {
+            active.set(true);
             return this;
         }
 
-        /**
-         *
-         * * <p>
-         * This method is a no-op, if the subscription does not exist.
-         * </p>
-         *
-         * @param key
-         * @return
-         */
-        public synchronized EndPoint<T> unsubscribe (final Object key)
+        public Publisher<T> deactivate ()
         {
-            subscriptionsSet.remove(key);
-            subscriptionsList = ImmutableList.copyOf(subscriptionsSet);
-            router.unsubscribe(key, this);
+            active.set(false);
             return this;
         }
 
@@ -214,7 +198,58 @@ public final class Router<T>
         @Override
         public Input<T> dataIn ()
         {
-            return connectorIn.dataIn();
+            return connector.dataIn();
+        }
+    }
+
+    /**
+     * An end-point connected to zero-or-more publishers and subscribers,
+     * which are interested in sending and receiving the same messages.
+     *
+     * @param <T> is the type of the incoming and outgoing messages.
+     */
+    public static final class Subscriber<T>
+            implements Source<T>
+    {
+        private final Router<T> router;
+
+        private final String key;
+
+        private final Processor<T> connector;
+
+        private final AtomicBoolean active = new AtomicBoolean();
+
+        private Subscriber (final Router<T> router,
+                            final String key)
+        {
+            this.router = router;
+            this.key = Objects.requireNonNull(key, "key");
+            this.connector = Processor.fromFunctionScript(router.stage, this::onMessage);
+        }
+
+        private T onMessage (final T message)
+        {
+            return active.get() ? message : null;
+        }
+
+        public Subscriber<T> activate ()
+        {
+            if (active.compareAndSet(false, true))
+            {
+                router.subscribe(key, this);
+            }
+
+            return this;
+        }
+
+        public Subscriber<T> deactivate ()
+        {
+            if (active.compareAndSet(true, false))
+            {
+                router.unsubscribe(key, this);
+            }
+
+            return this;
         }
 
         /**
@@ -223,7 +258,7 @@ public final class Router<T>
         @Override
         public Output<T> dataOut ()
         {
-            return connectorOut.dataOut();
+            return connector.dataOut();
         }
     }
 }
