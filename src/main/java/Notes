@@ -8,14 +8,9 @@ Plan:
 + Table Tower
 + + Add auto-expansion.
 + Trampoline
-+ Blocking Source
-+ Blocking Sink
 + Router Redesign
-+ TCP Messenger
-+ UDP Radio
-+ UDP Dish
 + Console
 + Let Valves share flags?
-+ Java 12 Upgrade ???
 + Guava Removal ???
++ Finish Async Test Tool
 

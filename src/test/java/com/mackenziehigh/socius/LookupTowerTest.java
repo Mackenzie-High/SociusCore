@@ -23,7 +23,7 @@ import org.junit.Test;
  */
 public final class LookupTowerTest
 {
-    private final ActorTester tester = new ActorTester();
+    private final AsyncTestTool tester = new AsyncTestTool();
 
     /**
      * Test: 20190505205229540228

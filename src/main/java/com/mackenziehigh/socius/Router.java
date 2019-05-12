@@ -2,7 +2,6 @@ package com.mackenziehigh.socius;
 
 import com.mackenziehigh.socius.Processor;
 import com.google.common.collect.ImmutableList;
-import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -226,41 +225,5 @@ public final class Router<T>
         {
             return connectorOut.dataOut();
         }
-    }
-
-    public static void main (String[] args)
-    {
-
-        final Stage stage = Cascade.newStage();
-
-        final Printer<String> a = Printer.newPrintln(stage, "A = %s");
-        final Printer<String> e = Printer.newPrintln(stage, "E = %s");
-
-        final Router<String> r = Router.newRouter(stage);
-        final EndPoint<String> r1 = r.newEndPoint();
-        r1.subscribe("a-girls");
-        r1.dataOut().connect(a.dataIn());
-
-        final EndPoint<String> r2 = r.newEndPoint();
-        r2.subscribe("e-girls");
-        r2.dataOut().connect(e.dataIn());
-
-        final EndPoint<String> r3 = r.newEndPoint();
-        r3.subscribe("a-girls");
-
-        final EndPoint<String> r4 = r.newEndPoint();
-        r4.subscribe("e-girls");
-
-        final EndPoint<String> r5 = r.newEndPoint();
-        r5.subscribe("a-girls");
-        r5.subscribe("e-girls");
-
-        r3.dataIn().send("Autumn");
-        r3.dataIn().send("Avril");
-
-        r4.dataIn().send("Emma");
-        r4.dataIn().send("Elle");
-
-        r5.dataIn().send("Are Pretty");
     }
 }

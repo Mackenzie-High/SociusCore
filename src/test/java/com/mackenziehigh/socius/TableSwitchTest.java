@@ -27,19 +27,23 @@ public final class TableSwitchTest
     public void test ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
+        final AsyncTestTool tester = new AsyncTestTool();
         final TableSwitch<Character, String> inserter = TableSwitch.newTableInserter(tester.stage(), x -> x.charAt(0));
         final Output<String> outputA = inserter.selectIf('A');
         final Output<String> outputE = inserter.selectIf('E');
         final Output<String> others = inserter.dataOut();
 
-        tester.send(inserter.dataIn(), "Autumn");
-        tester.send(inserter.dataIn(), "Emma");
-        tester.send(inserter.dataIn(), "Molly");
-        tester.send(inserter.dataIn(), "Avril");
-        tester.send(inserter.dataIn(), "Erin");
-        tester.send(inserter.dataIn(), "Olivia");
-        tester.send(inserter.dataIn(), "Ashley");
+        tester.connect(outputA);
+        tester.connect(outputE);
+        tester.connect(others);
+
+        inserter.dataIn().send("Autumn");
+        inserter.dataIn().send("Emma");
+        inserter.dataIn().send("Molly");
+        inserter.dataIn().send("Avril");
+        inserter.dataIn().send("Erin");
+        inserter.dataIn().send("Olivia");
+        inserter.dataIn().send("Ashley");
         tester.expect(outputA, "Autumn");
         tester.expect(outputA, "Avril");
         tester.expect(outputA, "Ashley");
@@ -47,7 +51,5 @@ public final class TableSwitchTest
         tester.expect(outputE, "Erin");
         tester.expect(others, "Molly");
         tester.expect(others, "Olivia");
-        tester.requireEmptyOutputs();
-        tester.run();
     }
 }

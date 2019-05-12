@@ -15,7 +15,8 @@
  */
 package com.mackenziehigh.socius;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
@@ -27,62 +28,56 @@ public final class UnbatcherTest
     public void test ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
+        final var tester = new AsyncTestTool();
         final Unbatcher<Character> unbatcher = Unbatcher.newUnbatcher(tester.stage(), 3);
+
+        assertEquals(3, unbatcher.arity());
 
         /**
          * Batch #1 - Normal.
          */
-        tester.send(unbatcher.dataIn(), Lists.newArrayList('A', 'B', 'C'));
+        unbatcher.dataIn().send(List.of('A', 'B', 'C'));
         tester.expect(unbatcher.dataOut(0), 'A');
         tester.expect(unbatcher.dataOut(1), 'B');
         tester.expect(unbatcher.dataOut(2), 'C');
-        tester.requireEmptyOutputs();
 
         /**
          * Batch #2 - Normal.
          */
-        tester.send(unbatcher.dataIn(), Lists.newArrayList('D', 'E', 'F'));
+        unbatcher.dataIn().send(List.of('D', 'E', 'F'));
         tester.expect(unbatcher.dataOut(0), 'D');
         tester.expect(unbatcher.dataOut(1), 'E');
         tester.expect(unbatcher.dataOut(2), 'F');
-        tester.requireEmptyOutputs();
 
         /**
          * Batch #3 - Too Small.
          */
-        tester.send(unbatcher.dataIn(), Lists.newArrayList('G', 'H'));
+        unbatcher.dataIn().send(List.of('G', 'H'));
         tester.expect(unbatcher.dataOut(0), 'G');
         tester.expect(unbatcher.dataOut(1), 'H');
-        tester.requireEmptyOutputs();
 
         /**
          * Batch #4 - Normal.
          */
-        tester.send(unbatcher.dataIn(), Lists.newArrayList('I', 'J', 'K'));
+        unbatcher.dataIn().send(List.of('I', 'J', 'K'));
         tester.expect(unbatcher.dataOut(0), 'I');
         tester.expect(unbatcher.dataOut(1), 'J');
         tester.expect(unbatcher.dataOut(2), 'K');
-        tester.requireEmptyOutputs();
 
         /**
          * Batch #6 - Too Large.
          */
-        tester.send(unbatcher.dataIn(), Lists.newArrayList('L', 'M', 'N', 'O', 'P'));
+        unbatcher.dataIn().send(List.of('L', 'M', 'N', 'O', 'P'));
         tester.expect(unbatcher.dataOut(0), 'L');
         tester.expect(unbatcher.dataOut(1), 'M');
         tester.expect(unbatcher.dataOut(2), 'N');
-        tester.requireEmptyOutputs();
 
         /**
          * Batch #7 - Normal.
          */
-        tester.send(unbatcher.dataIn(), Lists.newArrayList('Q', 'R', 'S'));
+        unbatcher.dataIn().send(List.of('Q', 'R', 'S'));
         tester.expect(unbatcher.dataOut(0), 'Q');
         tester.expect(unbatcher.dataOut(1), 'R');
         tester.expect(unbatcher.dataOut(2), 'S');
-        tester.requireEmptyOutputs();
-
-        tester.run();
     }
 }

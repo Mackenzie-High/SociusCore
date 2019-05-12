@@ -27,20 +27,25 @@ public final class RoundRobinTest
     public void test ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
+        final var tester = new AsyncTestTool();
         final RoundRobin<Character> balancer = RoundRobin.newRoundRobin(tester.stage(), 3);
 
         assertEquals(3, balancer.arity());
 
-        tester.send(balancer.dataIn(), 'A');
-        tester.send(balancer.dataIn(), 'B');
-        tester.send(balancer.dataIn(), 'C');
-        tester.send(balancer.dataIn(), 'D');
-        tester.send(balancer.dataIn(), 'E');
-        tester.send(balancer.dataIn(), 'F');
-        tester.send(balancer.dataIn(), 'G');
-        tester.send(balancer.dataIn(), 'H');
-        tester.send(balancer.dataIn(), 'I');
+        tester.connect(balancer.dataOut(0));
+        tester.connect(balancer.dataOut(1));
+        tester.connect(balancer.dataOut(2));
+
+        balancer.dataIn().send('A');
+        balancer.dataIn().send('B');
+        balancer.dataIn().send('C');
+        balancer.dataIn().send('D');
+        balancer.dataIn().send('E');
+        balancer.dataIn().send('F');
+        balancer.dataIn().send('G');
+        balancer.dataIn().send('H');
+        balancer.dataIn().send('I');
+
         tester.expect(balancer.dataOut(0), 'A');
         tester.expect(balancer.dataOut(1), 'B');
         tester.expect(balancer.dataOut(2), 'C');
@@ -50,8 +55,5 @@ public final class RoundRobinTest
         tester.expect(balancer.dataOut(0), 'G');
         tester.expect(balancer.dataOut(1), 'H');
         tester.expect(balancer.dataOut(2), 'I');
-        tester.requireEmptyOutputs();
-
-        tester.run();
     }
 }

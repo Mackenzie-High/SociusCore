@@ -115,7 +115,7 @@ public final class RequesterTest
 
     private static final long TIMEOUT_MILLIS = 200;
 
-    private final ActorTester tester = new ActorTester();
+    private final AsyncTestTool tester = new AsyncTestTool();
 
     private final Requester<TypeA, TypeB, TypeC, TypeD> requester = Requester
             .<TypeA, TypeB, TypeC, TypeD>newRequester(tester.stage())
@@ -144,15 +144,18 @@ public final class RequesterTest
         final TypeC reply = new TypeC(id, "Jovian");
         final TypeD result = new TypeD(request, reply);
 
-        tester.require(() -> requester.pendingRequestCount() == 0);
-        tester.send(requester.requestIn(), request);
-        tester.require(() -> requester.pendingRequestCount() == 1);
+        tester.connect(requester.droppedReplyOut());
+        tester.connect(requester.droppedRequestOut());
+        tester.connect(requester.requestOut());
+        tester.connect(requester.resultOut());
+
+        assertEquals(0, requester.pendingRequestCount());
+        requester.requestIn().send(request);
+        assertEquals(1, requester.pendingRequestCount());
         tester.expect(requester.requestOut(), request);
-        tester.send(requester.replyIn(), reply);
+        requester.replyIn().send(reply);
         tester.expect(requester.resultOut(), result);
-        tester.requireEmptyOutputs();
-        tester.require(() -> requester.pendingRequestCount() == 0);
-        tester.run();
+        assertEquals(0, requester.pendingRequestCount());
     }
 
     /**
@@ -173,17 +176,20 @@ public final class RequesterTest
         final TypeC reply = new TypeC(id, "Jovian");
         final TypeD result = new TypeD(request, reply);
 
-        tester.require(() -> requester.pendingRequestCount() == 0);
-        tester.send(requester.requestIn(), request);
-        tester.require(() -> requester.pendingRequestCount() == 1);
+        tester.connect(requester.droppedReplyOut());
+        tester.connect(requester.droppedRequestOut());
+        tester.connect(requester.requestOut());
+        tester.connect(requester.resultOut());
+
+        assertEquals(0, requester.pendingRequestCount());
+        requester.requestIn().send(request);
+        assertEquals(1, requester.pendingRequestCount());
         tester.expect(requester.requestOut(), request);
-        tester.execute(() -> Thread.sleep((long) (TIMEOUT_MILLIS * 1.5)));
+        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
         tester.expect(requester.requestOut(), request); // After the request timed out, it was sent again (retried).
-        tester.send(requester.replyIn(), reply);
+        requester.replyIn().send(reply);
         tester.expect(requester.resultOut(), result);
-        tester.requireEmptyOutputs();
-        tester.require(() -> requester.pendingRequestCount() == 0);
-        tester.run();
+        assertEquals(0, requester.pendingRequestCount());
     }
 
     /**
@@ -204,17 +210,20 @@ public final class RequesterTest
         final TypeC reply = new TypeC(id, "Jovian");
         final TypeD result = new TypeD(request, reply);
 
-        tester.require(() -> requester.pendingRequestCount() == 0);
-        tester.send(requester.requestIn(), request);
-        tester.send(requester.requestIn(), request); // Duplicate Request.
+        tester.connect(requester.droppedReplyOut());
+        tester.connect(requester.droppedRequestOut());
+        tester.connect(requester.requestOut());
+        tester.connect(requester.resultOut());
+
+        assertEquals(0, requester.pendingRequestCount());
+        requester.requestIn().send(request);
+        requester.requestIn().send(request); // Duplicate Request.
         tester.expect(requester.droppedRequestOut(), request); // The duplicate request was dropped.
-        tester.require(() -> requester.pendingRequestCount() == 1);
+        assertEquals(1, requester.pendingRequestCount());
         tester.expect(requester.requestOut(), request);
-        tester.send(requester.replyIn(), reply);
+        requester.replyIn().send(reply);
         tester.expect(requester.resultOut(), result);
-        tester.requireEmptyOutputs();
-        tester.require(() -> requester.pendingRequestCount() == 0);
-        tester.run();
+        assertEquals(0, requester.pendingRequestCount());
     }
 
     /**
@@ -234,17 +243,20 @@ public final class RequesterTest
         final TypeC reply = new TypeC(id, "Jovian");
         final TypeD result = new TypeD(request, reply);
 
-        tester.require(() -> requester.pendingRequestCount() == 0);
-        tester.send(requester.requestIn(), request);
-        tester.require(() -> requester.pendingRequestCount() == 1);
+        tester.connect(requester.droppedReplyOut());
+        tester.connect(requester.droppedRequestOut());
+        tester.connect(requester.requestOut());
+        tester.connect(requester.resultOut());
+
+        assertEquals(0, requester.pendingRequestCount());
+        requester.requestIn().send(request);
+        assertEquals(1, requester.pendingRequestCount());
         tester.expect(requester.requestOut(), request);
-        tester.send(requester.replyIn(), reply);
-        tester.send(requester.replyIn(), reply); // Duplicate Reply.
+        requester.replyIn().send(reply);
+        requester.replyIn().send(reply); // Duplicate Reply.
         tester.expect(requester.droppedReplyOut(), reply); // The duplicate was dropped.
         tester.expect(requester.resultOut(), result);
-        tester.requireEmptyOutputs();
-        tester.require(() -> requester.pendingRequestCount() == 0);
-        tester.run();
+        assertEquals(0, requester.pendingRequestCount());
     }
 
     /**
@@ -264,26 +276,29 @@ public final class RequesterTest
         final TypeB request = new TypeB(id, "Neptune");
         final TypeC reply = new TypeC(id, "Jovian");
 
-        tester.require(() -> requester.pendingRequestCount() == 0);
-        tester.send(requester.requestIn(), request);
-        tester.require(() -> requester.pendingRequestCount() == 1);
+        tester.connect(requester.droppedReplyOut());
+        tester.connect(requester.droppedRequestOut());
+        tester.connect(requester.requestOut());
+        tester.connect(requester.resultOut());
+
+        assertEquals(0, requester.pendingRequestCount());
+        requester.requestIn().send(request);
+        assertEquals(1, requester.pendingRequestCount());
         tester.expect(requester.requestOut(), request);
-        tester.execute(() -> Thread.sleep((long) (TIMEOUT_MILLIS * 1.5)));
+        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
         tester.expect(requester.requestOut(), request); // Retry #1.
-        tester.execute(() -> Thread.sleep((long) (TIMEOUT_MILLIS * 1.5)));
+        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
         tester.expect(requester.requestOut(), request); // Retry #2.
-        tester.execute(() -> Thread.sleep((long) (TIMEOUT_MILLIS * 1.5)));
+        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
         tester.expect(requester.requestOut(), request); // Retry #3.
-        tester.execute(() -> Thread.sleep((long) (TIMEOUT_MILLIS * 1.5)));
+        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
         tester.expect(requester.requestOut(), request); // Retry #4.
-        tester.execute(() -> Thread.sleep((long) (TIMEOUT_MILLIS * 1.5)));
+        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
         tester.expect(requester.requestOut(), request); // Retry #5.
-        tester.execute(() -> Thread.sleep((long) (TIMEOUT_MILLIS * 1.5))); // Retry Limit Exceeded.
-        tester.send(requester.replyIn(), reply);
+        tester.sleep((long) (TIMEOUT_MILLIS * 1.5)); // Retry Limit Exceeded.
+        requester.replyIn().send(reply);
         tester.expect(requester.droppedReplyOut(), reply);
-        tester.requireEmptyOutputs();
-        tester.require(() -> requester.pendingRequestCount() == 0);
-        tester.run();
+        assertEquals(0, requester.pendingRequestCount());
     }
 
     /**

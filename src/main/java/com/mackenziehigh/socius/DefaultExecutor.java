@@ -43,7 +43,7 @@ final class DefaultExecutor
         if (service == null)
         {
             final String propertyName = String.format("%s.threadCount", DefaultExecutor.class.getName());
-            final String threadCountText = System.getProperty(propertyName);
+            final String threadCountText = System.getProperty(propertyName, "");
             final int count = threadCountText.matches("[1-9][0-9]{0,5}") ? Integer.parseInt(threadCountText) : 1;
             final ScheduledExecutorService ses = Executors.newScheduledThreadPool(count);
             final Thread hook = new Thread(() -> ses.shutdown());

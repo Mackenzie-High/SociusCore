@@ -26,16 +26,18 @@ public final class BusTest
     public void test ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
-        final Bus<String> bus = Bus.newBus(tester.stage());
+        final var tester = new AsyncTestTool();
+        final var bus = Bus.newBus(tester.stage());
 
-        tester.send(bus.dataIn("A"), "Avril");
+        tester.connect(bus.dataOut("X"));
+        tester.connect(bus.dataOut("Y"));
+
+        bus.dataIn("A").send("Avril");
         tester.expect(bus.dataOut("X"), "Avril");
         tester.expect(bus.dataOut("Y"), "Avril");
-        tester.send(bus.dataIn("E"), "Emma");
+
+        bus.dataIn("E").send("Emma");
         tester.expect(bus.dataOut("X"), "Emma");
         tester.expect(bus.dataOut("Y"), "Emma");
-        tester.requireEmptyOutputs();
-        tester.run();
     }
 }

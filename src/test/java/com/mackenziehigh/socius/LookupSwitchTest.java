@@ -28,22 +28,27 @@ public final class LookupSwitchTest
     public void test ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
+        final var tester = new AsyncTestTool();
         final LookupSwitch<Integer> inserter = LookupSwitch.newLookupInserter(tester.stage());
         final Output<Integer> primes = inserter.selectIf(x -> BigInteger.valueOf(x).isProbablePrime(10));
         final Output<Integer> power2 = inserter.selectIf(x -> (x & (x - 1)) == 0);
         final Output<Integer> others = inserter.dataOut();
 
-        tester.send(inserter.dataIn(), 2);
-        tester.send(inserter.dataIn(), 3);
-        tester.send(inserter.dataIn(), 4);
-        tester.send(inserter.dataIn(), 5);
-        tester.send(inserter.dataIn(), 6);
-        tester.send(inserter.dataIn(), 7);
-        tester.send(inserter.dataIn(), 8);
-        tester.send(inserter.dataIn(), 9);
-        tester.send(inserter.dataIn(), 10);
-        tester.send(inserter.dataIn(), 11);
+        tester.connect(primes);
+        tester.connect(power2);
+        tester.connect(others);
+
+        inserter.dataIn().send(2);
+        inserter.dataIn().send(3);
+        inserter.dataIn().send(4);
+        inserter.dataIn().send(5);
+        inserter.dataIn().send(6);
+        inserter.dataIn().send(7);
+        inserter.dataIn().send(8);
+        inserter.dataIn().send(9);
+        inserter.dataIn().send(10);
+        inserter.dataIn().send(11);
+
         tester.expect(primes, 2); // primes has higher precedence than power2 (declared first).
         tester.expect(primes, 3);
         tester.expect(power2, 4);
@@ -54,7 +59,5 @@ public final class LookupSwitchTest
         tester.expect(others, 9);
         tester.expect(others, 10);
         tester.expect(primes, 11);
-        tester.requireEmptyOutputs();
-        tester.run();
     }
 }

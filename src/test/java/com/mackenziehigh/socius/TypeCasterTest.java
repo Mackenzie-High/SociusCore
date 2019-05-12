@@ -26,22 +26,22 @@ public final class TypeCasterTest
     public void test ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
+        final var tester = new AsyncTestTool();
         final TypeCaster<Number, Integer> caster = TypeCaster.newTypeCaster(tester.stage(), Integer.class);
+
+        tester.connect(caster.dataOut());
+        tester.connect(caster.errorOut());
 
         /**
          * Casting an integer should succeed.
          */
-        tester.send(caster.dataIn(), 3);
+        caster.accept(3);
         tester.expect(caster.dataOut(), 3);
 
         /**
          * Casting a double should fail.
          */
-        tester.send(caster.dataIn(), 3.0);
+        caster.accept(3.0);
         tester.expect(caster.errorOut(), 3.0);
-
-        tester.requireEmptyOutputs();
-        tester.run();
     }
 }

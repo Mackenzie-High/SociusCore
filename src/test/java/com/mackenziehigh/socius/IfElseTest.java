@@ -26,18 +26,20 @@ public final class IfElseTest
     public void test ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
-        final IfElse<String> actor = IfElse.newIfElse(tester.stage(), x -> x.contains("e"));
+        final var tester = new AsyncTestTool();
+        final var actor = IfElse.newIfElse(tester.stage(), (String x) -> x.contains("e"));
 
-        tester.send(actor.dataIn(), "avril");
-        tester.send(actor.dataIn(), "emma");
-        tester.send(actor.dataIn(), "erin");
-        tester.send(actor.dataIn(), "t'pol");
+        tester.connect(actor.trueOut());
+        tester.connect(actor.falseOut());
+
+        actor.dataIn().send("avril");
+        actor.dataIn().send("emma");
+        actor.dataIn().send("erin");
+        actor.dataIn().send("t;pol");
+
         tester.expect(actor.falseOut(), "avril");
         tester.expect(actor.trueOut(), "emma");
         tester.expect(actor.trueOut(), "erin");
         tester.expect(actor.falseOut(), "t'pol");
-        tester.requireEmptyOutputs();
-        tester.run();
     }
 }

@@ -35,7 +35,7 @@ public final class PrinterTest
 
     private final ByteArrayOutputStream arrayErr = new ByteArrayOutputStream();
 
-    private final ActorTester tester = new ActorTester();
+    private final AsyncTestTool tester = new AsyncTestTool();
 
     @Before
     public void setup ()
@@ -61,11 +61,10 @@ public final class PrinterTest
             throws Throwable
     {
         final Printer<Integer> printer = Printer.newPrint(tester.stage(), "X = %d");
+        tester.connect(printer.dataOut());
 
-        tester.send(printer.dataIn(), 100);
+        printer.accept(100);
         tester.expect(printer.dataOut(), 100);
-        tester.requireEmptyOutputs();
-        tester.run();
         assertEquals("X = 100", arrayOut.toString());
     }
 
@@ -79,11 +78,10 @@ public final class PrinterTest
             throws Throwable
     {
         final Printer<Integer> printer = Printer.newPrinterr(tester.stage(), "X = %d");
+        tester.connect(printer.dataOut());
 
-        tester.send(printer.dataIn(), 100);
+        printer.accept(100);
         tester.expect(printer.dataOut(), 100);
-        tester.requireEmptyOutputs();
-        tester.run();
         assertEquals("X = 100", arrayErr.toString());
     }
 
@@ -97,11 +95,10 @@ public final class PrinterTest
             throws Throwable
     {
         final Printer<Integer> printer = Printer.newPrinterrln(tester.stage(), "X = %d");
+        tester.connect(printer.dataOut());
 
-        tester.send(printer.dataIn(), 100);
+        printer.accept(100);
         tester.expect(printer.dataOut(), 100);
-        tester.requireEmptyOutputs();
-        tester.run();
         assertEquals("X = 100\n", arrayErr.toString());
     }
 
@@ -115,11 +112,10 @@ public final class PrinterTest
             throws Throwable
     {
         final Printer<Integer> printer = Printer.newPrintln(tester.stage(), "X = %d");
+        tester.connect(printer.dataOut());
 
-        tester.send(printer.dataIn(), 100);
+        printer.accept(100);
         tester.expect(printer.dataOut(), 100);
-        tester.requireEmptyOutputs();
-        tester.run();
         assertEquals("X = 100\n", arrayOut.toString());
     }
 
@@ -133,11 +129,10 @@ public final class PrinterTest
             throws Throwable
     {
         final Printer<Integer> printer = Printer.newPrint(tester.stage());
+        tester.connect(printer.dataOut());
 
-        tester.send(printer.dataIn(), 100);
+        printer.accept(100);
         tester.expect(printer.dataOut(), 100);
-        tester.requireEmptyOutputs();
-        tester.run();
         assertEquals("100", arrayOut.toString());
     }
 
@@ -151,11 +146,10 @@ public final class PrinterTest
             throws Throwable
     {
         final Printer<Integer> printer = Printer.newPrinterr(tester.stage());
+        tester.connect(printer.dataOut());
 
-        tester.send(printer.dataIn(), 100);
+        printer.accept(100);
         tester.expect(printer.dataOut(), 100);
-        tester.requireEmptyOutputs();
-        tester.run();
         assertEquals("100", arrayErr.toString());
     }
 
@@ -169,11 +163,10 @@ public final class PrinterTest
             throws Throwable
     {
         final Printer<Integer> printer = Printer.newPrinterrln(tester.stage());
+        tester.connect(printer.dataOut());
 
-        tester.send(printer.dataIn(), 100);
+        printer.accept(100);
         tester.expect(printer.dataOut(), 100);
-        tester.requireEmptyOutputs();
-        tester.run();
         assertEquals("100\n", arrayErr.toString());
     }
 
@@ -187,11 +180,10 @@ public final class PrinterTest
             throws Throwable
     {
         final Printer<Integer> printer = Printer.newPrintln(tester.stage());
+        tester.connect(printer.dataOut());
 
-        tester.send(printer.dataIn(), 100);
+        printer.accept(100);
         tester.expect(printer.dataOut(), 100);
-        tester.requireEmptyOutputs();
-        tester.run();
         assertEquals("100\n", arrayOut.toString());
     }
 }

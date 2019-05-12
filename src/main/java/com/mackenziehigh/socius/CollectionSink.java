@@ -17,6 +17,7 @@ package com.mackenziehigh.socius;
 
 import com.google.common.base.Preconditions;
 import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Collection;
@@ -71,7 +72,12 @@ public final class CollectionSink<T>
     {
         Preconditions.checkNotNull(stage, "stage");
         Preconditions.checkNotNull(collection, "collection");
-        final Processor<T> proc = Processor.fromConsumerScript(stage, (T x) -> collection.add(x));
+        final FunctionScript<T, T> script = (T x) ->
+        {
+            collection.add(x);
+            return x;
+        };
+        final Processor<T> proc = Processor.fromFunctionScript(stage, script);
         return new CollectionSink<>(proc);
     }
 }

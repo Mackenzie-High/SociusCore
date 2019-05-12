@@ -17,6 +17,7 @@ package com.mackenziehigh.socius;
 
 import com.google.common.collect.Lists;
 import java.util.List;
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
@@ -28,22 +29,29 @@ public final class CollectionSinkTest
     public void test ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
+        final var tester = new AsyncTestTool();
         final List<String> collection = Lists.newArrayList();
         final CollectionSink<String> actor = CollectionSink.newCollectionSink(tester.stage(), collection);
 
-        tester.send(actor.dataIn(), "autumn");
-        tester.send(actor.dataIn(), "emma");
-        tester.send(actor.dataIn(), "erin");
-        tester.send(actor.dataIn(), "molly");
-        tester.send(actor.dataIn(), "t'pol");
-        tester.requireEmptyOutputs();
-        tester.run();
-        tester.require(() -> collection.get(0).equals("autumn"));
-        tester.require(() -> collection.get(1).equals("emma"));
-        tester.require(() -> collection.get(2).equals("erin"));
-        tester.require(() -> collection.get(3).equals("molly"));
-        tester.require(() -> collection.get(4).equals("t'pol"));
-        tester.require(() -> collection.size() == 5);
+        tester.connect(actor.dataOut());
+
+        actor.dataIn().send("autumn");
+        actor.dataIn().send("emma");
+        actor.dataIn().send("erin");
+        actor.dataIn().send("molly");
+        actor.dataIn().send("t'pol");
+
+        tester.expect(actor.dataOut(), "autumn");
+        tester.expect(actor.dataOut(), "emma");
+        tester.expect(actor.dataOut(), "erin");
+        tester.expect(actor.dataOut(), "molly");
+        tester.expect(actor.dataOut(), "t'pol");
+
+        assertEquals(5, collection.size());
+        assertEquals("autumn", collection.get(0));
+        assertEquals("emma", collection.get(1));
+        assertEquals("erin", collection.get(2));
+        assertEquals("molly", collection.get(3));
+        assertEquals("t'pol", collection.get(4));
     }
 }

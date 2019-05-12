@@ -15,6 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
@@ -26,106 +27,96 @@ public final class ValveTest
     public void test1 ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
+        final var tester = new AsyncTestTool();
         final Valve<Character> valve = Valve.newOpenValve(tester.stage());
+
+        tester.connect(valve.dataOut());
+        tester.connect(valve.toggleOut());
 
         /**
          * The valve is initially open.
          */
-        tester.require(() -> valve.isOpen());
-        tester.require(() -> !valve.isClosed());
-        tester.send(valve.dataIn(), 'A');
+        assertTrue(valve.isOpen());
+        assertFalse(valve.isClosed());
+        valve.dataIn().send('A');
         tester.expect(valve.dataOut(), 'A');
-        tester.requireEmptyOutputs();
 
         /**
          * Close the valve via a message.
          */
-        tester.send(valve.toggleIn(), false);
+        valve.toggleIn().send(false);
         tester.expect(valve.toggleOut(), false);
-        tester.requireEmptyOutputs();
 
         /**
          * No data gets through a closed valve.
          */
-        tester.require(() -> !valve.isOpen());
-        tester.require(() -> valve.isClosed());
-        tester.send(valve.dataIn(), 'B');
-        tester.requireEmptyOutputs();
+        assertFalse(valve.isOpen());
+        assertTrue(valve.isClosed());
+        valve.dataIn().send('A');
 
         /**
          * Open the valve via a message.
          */
-        tester.send(valve.toggleIn(), true);
+        valve.toggleIn().send(true);
         tester.expect(valve.toggleOut(), true);
-        tester.requireEmptyOutputs();
 
         /**
          * Data can flow through a re-opened valve.
          */
-        tester.require(() -> valve.isOpen());
-        tester.require(() -> !valve.isClosed());
-        tester.send(valve.dataIn(), 'C');
+        assertTrue(valve.isOpen());
+        assertFalse(valve.isClosed());
+        valve.dataIn().send('C');
         tester.expect(valve.dataOut(), 'C');
-        tester.requireEmptyOutputs();
 
         /**
          * Close the valve via the toggle() method.
          * Verify that no data gets through subsequently.
          * Notice that a toggle message is sent out however.
          */
-        tester.execute(() -> valve.toggle(false));
+        valve.toggle(false);
         tester.expect(valve.toggleOut(), false);
-        tester.requireEmptyOutputs();
-        tester.send(valve.dataIn(), 'D');
-        tester.requireEmptyOutputs();
+        valve.dataIn().send('D');
 
         /**
          * Open the valve via the toggle() method.
          * Verify that data can get through subsequently.
          * Notice that a toggle message is sent out.
          */
-        tester.execute(() -> valve.toggle(true));
+        valve.toggle(true);
         tester.expect(valve.toggleOut(), true);
-        tester.requireEmptyOutputs();
-        tester.send(valve.dataIn(), 'E');
+        valve.dataIn().send('E');
         tester.expect(valve.dataOut(), 'E');
-        tester.requireEmptyOutputs();
-
-        tester.run();
     }
 
     @Test
     public void test2 ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
+        final var tester = new AsyncTestTool();
         final Valve<Character> valve = Valve.newClosedValve(tester.stage());
+
+        tester.connect(valve.dataOut());
+        tester.connect(valve.toggleOut());
 
         /**
          * The valve is initially closed.
          */
-        tester.require(() -> !valve.isOpen());
-        tester.require(() -> valve.isClosed());
-        tester.send(valve.dataIn(), 'A');
-        tester.requireEmptyOutputs();
+        assertFalse(valve.isOpen());
+        assertTrue(valve.isClosed());
+        valve.dataIn().send('A');
 
         /**
          * Open the valve via a message.
          */
-        tester.send(valve.toggleIn(), true);
+        valve.toggleIn().send(true);
         tester.expect(valve.toggleOut(), true);
-        tester.requireEmptyOutputs();
 
         /**
          * Data can flow through a re-opened valve.
          */
-        tester.require(() -> valve.isOpen());
-        tester.require(() -> !valve.isClosed());
-        tester.send(valve.dataIn(), 'C');
+        assertTrue(valve.isOpen());
+        assertFalse(valve.isClosed());
+        valve.dataIn().send('C');
         tester.expect(valve.dataOut(), 'C');
-        tester.requireEmptyOutputs();
-
-        tester.run();
     }
 }

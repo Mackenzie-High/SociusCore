@@ -26,18 +26,19 @@ public final class FunnelTest
     public void test ()
             throws Throwable
     {
-        final ActorTester tester = new ActorTester();
-        final Funnel<String> funnel = Funnel.newFunnel(tester.stage());
+        final var tester = new AsyncTestTool();
+        final var funnel = Funnel.newFunnel(tester.stage());
 
-        tester.send(funnel.dataIn("A"), "Mercury");
-        tester.send(funnel.dataIn("B"), "Venus");
+        tester.connect(funnel.dataOut());
+
+        funnel.dataIn("A").send("Mercury");
+        funnel.dataIn("B").send("Venus");
         tester.expect(funnel.dataOut(), "Mercury");
         tester.expect(funnel.dataOut(), "Venus");
-        tester.send(funnel.dataIn("A"), "Earth");
-        tester.send(funnel.dataIn("B"), "Mars");
+
+        funnel.dataIn("A").send("Earth");
+        funnel.dataIn("B").send("Mars");
         tester.expect(funnel.dataOut(), "Earth");
         tester.expect(funnel.dataOut(), "Mars");
-        tester.requireEmptyOutputs();
-        tester.run();
     }
 }
