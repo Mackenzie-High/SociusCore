@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A <code>DataTower</code> that routes incoming messages, in constant-time,
@@ -239,7 +240,8 @@ public final class TableTower<K, I, O>
             return this;
         }
 
-        public Builder<K, I, O> withAutoExpansion ()
+        public Builder<K, I, O> withAutoExpansion (final Function<I, K> keyFunction,
+                                                   final Supplier<? extends Pipeline<I, O>> floorFactory)
         {
             // TODO: Auto add floors when new keys arrive.
             return this;
