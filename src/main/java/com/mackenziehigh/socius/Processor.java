@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Pipeline;
-import com.google.common.base.Preconditions;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.ConsumerScript;
@@ -179,33 +177,5 @@ public interface Processor<T>
                 return output;
             }
         };
-    }
-
-    /**
-     * Create a processor composed of one-or-more other processors.
-     *
-     * <p>
-     * The members themselves will be connected together to form a pipeline.
-     * </p>
-     *
-     * @param <T> is the type of the incoming and outgoing messages.
-     * @param members are the processors that make up the new processor.
-     * @return a processor that is merely a wrapper around the members.
-     */
-    public static <T> Processor<T> compose (final Processor<T>... members)
-    {
-        Objects.requireNonNull(members, "members");
-        Preconditions.checkArgument(members.length >= 1, "Too Few Members");
-
-        Processor<T> p = members[0];
-
-        for (int i = 1; i < members.length; i++)
-        {
-            final Processor<T> q = members[i];
-            p.dataOut().connect(q.dataIn());
-            p = q;
-        }
-
-        return fromIO(members[0].dataIn(), p.dataOut());
     }
 }

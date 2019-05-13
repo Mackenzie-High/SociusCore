@@ -15,11 +15,9 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Clock;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.socius.CollectionSink;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;

@@ -29,7 +29,7 @@ public final class LookupSwitchTest
             throws Throwable
     {
         final var tester = new AsyncTestTool();
-        final LookupSwitch<Integer> inserter = LookupSwitch.newLookupInserter(tester.stage());
+        final LookupSwitch<Integer> inserter = LookupSwitch.newLookupSwitch(tester.stage());
         final Output<Integer> primes = inserter.selectIf(x -> BigInteger.valueOf(x).isProbablePrime(10));
         final Output<Integer> power2 = inserter.selectIf(x -> (x & (x - 1)) == 0);
         final Output<Integer> others = inserter.dataOut();

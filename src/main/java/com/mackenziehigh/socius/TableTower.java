@@ -1,3 +1,18 @@
+/*
+ * Copyright 2019 Michael Mackenzie High
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.mackenziehigh.socius;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
@@ -11,8 +26,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * A <code>DataTower</code> that routes incoming messages, in constant-time,
@@ -31,6 +46,12 @@ public final class TableTower<K, I, O>
      * which will be used to route the message to the corresponding floor.
      */
     private final Function<I, K> keyFunction;
+
+    /**
+     * If this tower is capable of automatically adding floors,
+     * then this factory will be used to create those floors.
+     */
+    private final BiFunction<K, I, ? extends Pipeline<I, O>> floorFactory;
 
     /**
      * This actor routes incoming messages to the appropriate floor.
@@ -58,12 +79,19 @@ public final class TableTower<K, I, O>
      */
     private final Map<K, Pipeline<I, O>> floorMap = Collections.unmodifiableMap(floors);
 
+    /**
+     * This lock prevents duplicate floors from being added or removed.
+     * This lock is almost always non-contended, so the performance impact is minimal.
+     */
+    private final Object lock = new Object();
+
     private TableTower (final Builder<K, I, O> builder)
     {
         this.inputConnector = Processor.fromConsumerScript(builder.stage, this::onInput);
         this.outputConnector = Processor.fromIdentityScript(builder.stage);
         this.dropsConnector = Processor.fromIdentityScript(builder.stage);
         this.keyFunction = builder.keyFunction;
+        this.floorFactory = builder.floorFactory;
 
         for (Entry<K, Pipeline<I, O>> floor : builder.floors.entrySet())
         {
@@ -73,28 +101,41 @@ public final class TableTower<K, I, O>
 
     private void onInput (final I message)
     {
-        /**
-         * Given the incoming message, obtain the key,
-         * which identifies the corresponding floor.
-         */
-        final K key = keyFunction.apply(message);
-
-        /**
-         * Obtain that floor, if any.
-         */
-        final Pipeline<I, O> floor = floors.get(key);
-
-        /**
-         * If the floor does not exist, then drop the message;
-         * otherwise, send the message to the floor for processing.
-         */
-        if (floor == null)
+        synchronized (lock)
         {
-            dropsConnector.accept(message);
-        }
-        else
-        {
-            floor.accept(message);
+            /**
+             * Given the incoming message, obtain the key,
+             * which identifies the corresponding floor.
+             */
+            final K key = keyFunction.apply(message);
+
+            /**
+             * If the floor does not exist, but this tower is capable
+             * of creating new floors on-demand, then create the floor.
+             */
+            if (floorFactory != null && floors.containsKey(key) == false)
+            {
+                final Pipeline<I, O> newFloor = floorFactory.apply(key, message);
+                addFloor(key, newFloor);
+            }
+
+            /**
+             * Obtain that floor, if any.
+             */
+            final Pipeline<I, O> floor = floors.get(key);
+
+            /**
+             * If the floor does not exist, then drop the message;
+             * otherwise, send the message to the floor for processing.
+             */
+            if (floor == null)
+            {
+                dropsConnector.accept(message);
+            }
+            else
+            {
+                floor.accept(message);
+            }
         }
     }
 
@@ -124,8 +165,13 @@ public final class TableTower<K, I, O>
     {
         Objects.requireNonNull(key, "key");
         Objects.requireNonNull(floor, "floor");
-        floor.dataOut().connect(outputConnector.dataIn());
-        floors.put(key, floor);
+
+        synchronized (lock)
+        {
+            floor.dataOut().connect(outputConnector.dataIn());
+            floors.put(key, floor);
+        }
+
         return this;
     }
 
@@ -139,11 +185,14 @@ public final class TableTower<K, I, O>
     {
         Objects.requireNonNull(key, "key");
 
-        final Pipeline<I, O> floor = floors.remove(key);
-
-        if (floor != null)
+        synchronized (lock)
         {
-            floor.dataOut().disconnect(outputConnector.dataIn());
+            final Pipeline<I, O> floor = floors.remove(key);
+
+            if (floor != null)
+            {
+                floor.dataOut().disconnect(outputConnector.dataIn());
+            }
         }
 
         return this;
@@ -204,6 +253,8 @@ public final class TableTower<K, I, O>
 
         private Function<I, K> keyFunction;
 
+        private BiFunction<K, I, ? extends Pipeline<I, O>> floorFactory;
+
         private final Map<K, Pipeline<I, O>> floors = new HashMap<>();
 
         private Builder (final Stage stage)
@@ -240,10 +291,16 @@ public final class TableTower<K, I, O>
             return this;
         }
 
-        public Builder<K, I, O> withAutoExpansion (final Function<I, K> keyFunction,
-                                                   final Supplier<? extends Pipeline<I, O>> floorFactory)
+        /**
+         * Cause the tower to automatically add new floors, rather than dropping messages,
+         * when new keys are encountered for which no corresponding floor exists.
+         *
+         * @param floorFactory will be used to create new floors as needed.
+         * @return this.
+         */
+        public Builder<K, I, O> withAutoExpansion (final BiFunction<K, I, ? extends Pipeline<I, O>> floorFactory)
         {
-            // TODO: Auto add floors when new keys arrive.
+            this.floorFactory = Objects.requireNonNull(floorFactory, "floorFactory");
             return this;
         }
 

@@ -18,6 +18,7 @@ package com.mackenziehigh.socius;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -53,17 +54,17 @@ public final class Valve<T>
      * True means that the valve is open.
      * False means that the valve is closed.
      */
-    private final AtomicBoolean flag = new AtomicBoolean();
+    private final AtomicBoolean flag;
 
     private Valve (final ActorFactory stage,
-                   final boolean open)
+                   final AtomicBoolean flag)
     {
         this.procDataIn = Processor.fromFunctionScript(stage, this::onDataIn);
         this.procDataOut = Processor.fromIdentityScript(stage);
         this.procToggleIn = Processor.fromConsumerScript(stage, this::onToggleIn);
         this.procToggleOut = Processor.fromFunctionScript(stage, this::onToggleOut);
         this.procDataIn.dataOut().connect(this.procDataOut.dataIn());
-        this.flag.set(open);
+        this.flag = flag;
     }
 
     private T onDataIn (final T message)
@@ -173,6 +174,22 @@ public final class Valve<T>
     }
 
     /**
+     * Factory Method.
+     *
+     * @param <T> is the type of messages that will flow through the valve.
+     * @param stage will be used to create private actors.
+     * @param flag stores the state of the value.
+     * @return the new valve.
+     */
+    public static <T> Valve<T> newValve (final ActorFactory stage,
+                                         final AtomicBoolean flag)
+    {
+        Objects.requireNonNull(stage, "stage");
+        Objects.requireNonNull(flag, "flag");
+        return new Valve<>(stage, flag);
+    }
+
+    /**
      * Factory Method (Initially Open).
      *
      * @param <T> is the type of messages that will flow through the valve.
@@ -181,7 +198,7 @@ public final class Valve<T>
      */
     public static <T> Valve<T> newOpenValve (final ActorFactory stage)
     {
-        return new Valve<>(stage, true);
+        return newValve(stage, new AtomicBoolean(true));
     }
 
     /**
@@ -193,6 +210,6 @@ public final class Valve<T>
      */
     public static <T> Valve<T> newClosedValve (final ActorFactory stage)
     {
-        return new Valve<>(stage, false);
+        return newValve(stage, new AtomicBoolean(false));
     }
 }

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2019 Michael Mackenzie High
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.mackenziehigh.socius;
 
 import com.mackenziehigh.cascade.Cascade;
@@ -29,6 +44,8 @@ public final class AsyncTestTool
 
     private final ConcurrentMap<Output<?>, BlockingQueue<Object>> connections = new ConcurrentHashMap<>();
 
+    private volatile long timeoutMillis = TimeUnit.SECONDS.toMillis(1);
+
     public AsyncTestTool ()
     {
         final ThreadFactory factory = (Runnable task) ->
@@ -53,6 +70,18 @@ public final class AsyncTestTool
     }
 
     /**
+     * Set the maximum amount of time that <code>await()</code> will wait.
+     *
+     * @param timeoutMillis is the maximum wait time.
+     * @return this.
+     */
+    public AsyncTestTool setTimeout (final long timeoutMillis)
+    {
+        this.timeoutMillis = timeoutMillis;
+        return this;
+    }
+
+    /**
      * Connect an output to the tester.
      *
      * @param <T> is the type of messages provided by the output.
@@ -73,9 +102,9 @@ public final class AsyncTestTool
 
     public <T> void await (final BooleanSupplier condition)
     {
-        for (int i = 0; i < 500 && condition.getAsBoolean(); i++)
+        for (int i = 0; i < timeoutMillis && condition.getAsBoolean(); i++)
         {
-            sleep(10);
+            sleep(1);
         }
 
         throw new IllegalStateException("The condition never became true.");
@@ -97,7 +126,7 @@ public final class AsyncTestTool
             {
                 final BlockingQueue<Object> queue = connections.get(output);
 
-                final Object result = queue.poll(1, TimeUnit.SECONDS);
+                final Object result = queue.poll(timeoutMillis, TimeUnit.MILLISECONDS);
 
                 if (result == null)
                 {

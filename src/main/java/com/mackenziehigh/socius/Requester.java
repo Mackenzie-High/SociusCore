@@ -15,7 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Processor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;

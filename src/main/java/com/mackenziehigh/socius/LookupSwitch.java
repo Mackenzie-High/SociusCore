@@ -130,9 +130,9 @@ public final class LookupSwitch<T>
      *
      * @param <T> is the type of the incoming and outgoing messages.
      * @param stage will be used to create private actors.
-     * @return the new inserter.
+     * @return the new switch.
      */
-    public static <T> LookupSwitch<T> newLookupInserter (final ActorFactory stage)
+    public static <T> LookupSwitch<T> newLookupSwitch (final ActorFactory stage)
     {
         return new LookupSwitch(stage);
     }

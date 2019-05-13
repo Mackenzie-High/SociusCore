@@ -18,11 +18,9 @@ package com.mackenziehigh.socius;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.Processor;
 import java.io.PrintStream;
 import java.util.Objects;
 import java.util.function.Consumer;
-import com.mackenziehigh.socius.Pipeline;
 
 /**
  * Prints the <code>String</code> representations

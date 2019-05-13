@@ -15,10 +15,8 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.DelayedSender;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
-import com.mackenziehigh.socius.CollectionSink;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Executors;

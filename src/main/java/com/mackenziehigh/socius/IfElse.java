@@ -27,7 +27,7 @@ import java.util.function.Predicate;
  * @param <T> is the type of messages that flow through the if-else router.
  */
 public final class IfElse<T>
-        implements Sink<T>
+        implements Processor<T>
 {
     /**
      * This is the user-defined condition that determines
@@ -82,6 +82,17 @@ public final class IfElse<T>
     public Input<T> dataIn ()
     {
         return checker.dataIn();
+    }
+
+    /**
+     * Equivalent: <code>trueOut()</code>.
+     *
+     * @return the equivalent output.
+     */
+    @Override
+    public Output<T> dataOut ()
+    {
+        return trueOut();
     }
 
     /**

@@ -46,8 +46,8 @@ public final class Markov<T>
     private final Random random;
 
     private Markov (final ActorFactory stage,
-                            final byte[] seed,
-                            final int... weights)
+                    final byte[] seed,
+                    final int... weights)
     {
         Preconditions.checkNotNull(stage, "stage");
 
@@ -116,9 +116,9 @@ public final class Markov<T>
      * @param weights are the probabilities of a message being sent to the given output.
      * @return the new balancer.
      */
-    public static <T> Markov<T> newRoundRobin (final ActorFactory stage,
-                                                       final byte[] seed,
-                                                       final int... weights)
+    public static <T> Markov<T> newMarkov (final ActorFactory stage,
+                                           final byte[] seed,
+                                           final int... weights)
     {
         return new Markov<>(stage, seed, weights);
     }

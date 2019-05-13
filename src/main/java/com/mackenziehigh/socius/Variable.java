@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Processor;
-import com.mackenziehigh.socius.Pipeline;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -50,15 +48,15 @@ public final class Variable<T>
     /**
      * Provides the actual storage.
      */
-    private final AtomicReference<T> variable = new AtomicReference<>();
+    private final AtomicReference<T> variable;
 
     private Variable (final ActorFactory stage,
-                      final T initial)
+                      final AtomicReference<T> variable)
     {
         this.procClock = Processor.fromFunctionScript(stage, this::onGet);
         this.procDataIn = Processor.fromConsumerScript(stage, this::onSet);
         this.procDataOut = Pipeline.fromFunctionScript(stage, this::onSend);
-        this.variable.set(initial);
+        this.variable = variable;
     }
 
     private void onSet (final T message)
@@ -165,6 +163,22 @@ public final class Variable<T>
     {
         Objects.requireNonNull(stage, "stage");
         Objects.requireNonNull(initial, "initial");
-        return new Variable<>(stage, initial);
+        return new Variable<>(stage, new AtomicReference<>(initial));
+    }
+
+    /**
+     * Factory Method.
+     *
+     * @param <T> is the type of the value stored in the variable.
+     * @param stage will be used to create private actors.
+     * @param variable stores the value of the variable and may be shared.
+     * @return the new variable.
+     */
+    public static <T> Variable<T> newSharedVariable (final ActorFactory stage,
+                                                     final AtomicReference<T> variable)
+    {
+        Objects.requireNonNull(stage, "stage");
+        Objects.requireNonNull(variable, "variable");
+        return new Variable<>(stage, variable);
     }
 }

@@ -146,7 +146,7 @@ public final class TableSwitch<K, T>
      * @param extractor knows how to extract routing-keys from messages.
      * @return the new inserter.
      */
-    public static <K, T> TableSwitch<K, T> newTableInserter (final ActorFactory stage,
+    public static <K, T> TableSwitch<K, T> newTableSwitch (final ActorFactory stage,
                                                              final Function<T, K> extractor)
     {
         return new TableSwitch(stage, extractor);

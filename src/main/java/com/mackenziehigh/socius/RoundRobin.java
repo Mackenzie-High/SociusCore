@@ -15,13 +15,9 @@
  */
 package com.mackenziehigh.socius;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import java.util.Iterator;
 
 /**
  * A load balancer that uses a round-robin algorithm.
@@ -35,38 +31,12 @@ public final class RoundRobin<T>
     /**
      * Provides the data-input connector.
      */
-    private final Processor<T> input;
-
-    /**
-     * Provides the data-output connectors.
-     */
-    private final ImmutableList<Processor<T>> outputs;
-
-    /**
-     * This is a circular iterator over the outputs.
-     */
-    private final Iterator<Processor<T>> iter;
+    private final WeightBalancer<T> delegate;
 
     private RoundRobin (final ActorFactory stage,
                         final int arity)
     {
-        Preconditions.checkNotNull(stage, "stage");
-        Preconditions.checkArgument(arity > 0, "arity <= 0");
-        this.input = Processor.fromConsumerScript(stage, this::forwardFromHub);
-
-        final ImmutableList.Builder<Processor<T>> builderOutputs = ImmutableList.builder();
-        for (int i = 0; i < arity; i++)
-        {
-            builderOutputs.add(Processor.fromIdentityScript(stage));
-        }
-        this.outputs = builderOutputs.build();
-
-        this.iter = Iterables.cycle(outputs).iterator();
-    }
-
-    private void forwardFromHub (final T message)
-    {
-        iter.next().accept(message);
+        this.delegate = WeightBalancer.newWeightBalancer(stage, arity, x -> 1);
     }
 
     /**
@@ -77,7 +47,7 @@ public final class RoundRobin<T>
     @Override
     public Input<T> dataIn ()
     {
-        return input.dataIn();
+        return delegate.dataIn();
     }
 
     /**
@@ -88,7 +58,7 @@ public final class RoundRobin<T>
      */
     public Output<T> dataOut (final int index)
     {
-        return outputs.get(index).dataOut();
+        return delegate.dataOut(index);
     }
 
     /**
@@ -98,7 +68,7 @@ public final class RoundRobin<T>
      */
     public int arity ()
     {
-        return outputs.size();
+        return delegate.arity();
     }
 
     /**

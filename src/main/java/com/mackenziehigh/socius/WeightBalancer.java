@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Sink;
-import com.mackenziehigh.socius.Processor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
@@ -79,14 +77,29 @@ public final class WeightBalancer<T>
 
         int index = 0;
 
-        long best = Long.MAX_VALUE;
+        long best = weight + weights.get(0).get();
 
         for (int i = 0; i < outputs.size(); i++)
         {
             final long current = weights.get(i).get();
             final long proposed = current + weight;
             index = (proposed < best) ? i : index;
+            best = (proposed < best) ? proposed : best;
         }
+
+        weights.get(index).addAndGet(weight);
+        outputs.get(index).dataIn().send(message);
+    }
+
+    /**
+     * Get how much weight has been sent to the indexed output.
+     *
+     * @param index identifies an output connection.
+     * @return the sum of the weights sent to the output.
+     */
+    public long sumOf (final int index)
+    {
+        return weights.get(index).get();
     }
 
     /**
@@ -130,9 +143,9 @@ public final class WeightBalancer<T>
      * @param scale assigns weights to each of the incoming messages.
      * @return the new balancer.
      */
-    public static <T> WeightBalancer<T> newRoundRobin (final ActorFactory stage,
-                                                       final int arity,
-                                                       final ToIntFunction<T> scale)
+    public static <T> WeightBalancer<T> newWeightBalancer (final ActorFactory stage,
+                                                           final int arity,
+                                                           final ToIntFunction<T> scale)
     {
         return new WeightBalancer<>(stage, arity, scale);
     }

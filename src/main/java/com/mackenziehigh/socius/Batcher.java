@@ -21,6 +21,7 @@ import com.google.common.collect.Queues;
 import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
@@ -69,27 +70,32 @@ public final class Batcher<T>
      * Whenever a message is received from data-input (N),
      * then the message will be added to the (Nth) queue.
      */
-    private final ImmutableList<Queue<T>> queues;
+    private final ImmutableList<Deque<T>> queues;
 
     /**
      * This is the maximum number of messages in a single queue at any one time.
      */
     private final int capacity;
 
-    private Batcher (final ActorFactory stage,
-                     final int arity,
-                     final int capacity)
+    /**
+     * This flag is true, if the oldest message should be dropped when a queue overflows.
+     * Thus flag is false, if the newest message should be dropped when a queue overflows.
+     */
+    private final boolean dropOldest;
+
+    private Batcher (final Builder<T> builder)
     {
-        this.dataOut = Processor.fromIdentityScript(stage);
-        this.capacity = capacity;
+        this.dataOut = Processor.fromIdentityScript(builder.stage);
+        this.capacity = builder.capacity;
+        this.dropOldest = builder.dropOldest;
 
         final ImmutableList.Builder<Processor<T>> builderDataIn = ImmutableList.builder();
-        final ImmutableList.Builder<Queue<T>> builderQueues = ImmutableList.builder();
+        final ImmutableList.Builder<Deque<T>> builderQueues = ImmutableList.builder();
 
-        for (int i = 0; i < arity; i++)
+        for (int i = 0; i < builder.arity; i++)
         {
             final int idx = i;
-            builderDataIn.add(Processor.fromConsumerScript(stage, (T msg) -> onMessage(idx, msg)));
+            builderDataIn.add(Processor.fromConsumerScript(builder.stage, (T msg) -> onMessage(idx, msg)));
             builderQueues.add(Queues.newArrayDeque());
         }
 
@@ -109,7 +115,7 @@ public final class Batcher<T>
         /**
          * Find the queue corresponding to the indexed data-input.
          */
-        final Queue<T> queue = queues.get(index);
+        final Deque<T> queue = queues.get(index);
 
         /**
          * If the queue is already full, then drop the incoming message.
@@ -118,6 +124,14 @@ public final class Batcher<T>
         if (queue.size() < capacity)
         {
             queue.add(message);
+        }
+        else if (dropOldest)
+        {
+            queue.peekFirst();
+        }
+        else // drop newest
+        {
+            queue.peekLast();
         }
 
         /**
@@ -213,6 +227,8 @@ public final class Batcher<T>
 
         private int capacity = Integer.MAX_VALUE;
 
+        private boolean dropOldest = true;
+
         private Builder (final ActorFactory stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
@@ -245,13 +261,37 @@ public final class Batcher<T>
         }
 
         /**
+         * Specify that the oldest message should be dropped,
+         * whenever an internal queue overflows the capacity.
+         *
+         * @return this.
+         */
+        public Builder<T> withDropOldest ()
+        {
+            dropOldest = true;
+            return this;
+        }
+
+        /**
+         * Specify that the oldest message should be dropped,
+         * whenever an internal queue overflows the capacity.
+         *
+         * @return this.
+         */
+        public Builder<T> withDropNewest ()
+        {
+            dropOldest = false;
+            return this;
+        }
+
+        /**
          * construct the new object.
          *
          * @return the new object.
          */
         public Batcher<T> build ()
         {
-            return new Batcher<>(stage, arity, capacity);
+            return new Batcher<>(this);
         }
     }
 }

@@ -28,7 +28,7 @@ public final class TableSwitchTest
             throws Throwable
     {
         final AsyncTestTool tester = new AsyncTestTool();
-        final TableSwitch<Character, String> inserter = TableSwitch.newTableInserter(tester.stage(), x -> x.charAt(0));
+        final TableSwitch<Character, String> inserter = TableSwitch.newTableSwitch(tester.stage(), x -> x.charAt(0));
         final Output<String> outputA = inserter.selectIf('A');
         final Output<String> outputE = inserter.selectIf('E');
         final Output<String> others = inserter.dataOut();
