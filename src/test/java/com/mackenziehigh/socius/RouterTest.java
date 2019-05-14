@@ -29,18 +29,6 @@ public final class RouterTest
 
     private final Router<Integer> router = Router.newRouter(tester.stage());
 
-    private final Processor<Integer> actor1 = Processor.fromIdentityScript(tester.stage());
-
-    private final Processor<Integer> actor2 = Processor.fromIdentityScript(tester.stage());
-
-    private final Processor<Integer> actor3 = Processor.fromIdentityScript(tester.stage());
-
-    private final Processor<Integer> actor4 = Processor.fromIdentityScript(tester.stage());
-
-    private final Processor<Integer> actor5 = Processor.fromIdentityScript(tester.stage());
-
-    private final Processor<Integer> actor6 = Processor.fromIdentityScript(tester.stage());
-
     private final Publisher<Integer> P1 = router.newPublisher("A");
 
     private final Publisher<Integer> P2 = router.newPublisher("A");

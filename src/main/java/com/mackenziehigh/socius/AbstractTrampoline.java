@@ -35,57 +35,19 @@ public abstract class AbstractTrampoline<I, O>
     @FunctionalInterface
     public interface State<I>
     {
-        public State<I> onMessage (I message);
+        public State<I> onMessage (I message)
+                throws Throwable;
     }
 
     /**
      * Specifies the initial state of the state-machine.
      *
+     * @param message is the first message received.
      * @return the initial state.
+     * @throws java.lang.Throwable if something goes wrong.
      */
-    protected abstract State<I> initial ();
-
-    /**
-     * This is the initial state that the state-machine is in.
-     */
-    private volatile State<I> initial;
-
-    /**
-     * This is the current state that the state-machine is in.
-     */
-    private volatile State<I> current;
-
-    protected AbstractTrampoline (Stage stage)
-    {
-        super(stage);
-    }
-
-    @Override
-    protected final void onMessage (I message)
-            throws Throwable
-    {
-        if (initial == null)
-        {
-            initial = initial();
-            current = initial;
-        }
-
-        try
-        {
-            current = current.onMessage(message);
-        }
-        catch (Throwable ex1)
-        {
-            try
-            {
-                current = onError(current, ex1);
-            }
-            catch (Throwable ex2)
-            {
-                current = initial;
-            }
-        }
-    }
+    protected abstract State<I> onInitial (I message)
+            throws Throwable;
 
     /**
      * Specifies the state to goto, given the current state,
@@ -100,11 +62,71 @@ public abstract class AbstractTrampoline<I, O>
      * @param state is the current state.
      * @param cause is the unhandled exception.
      * @return the next state.
+     * @throws java.lang.Throwable if something goes wrong.
      */
-    protected State<I> onError (final State<I> state,
-                                final Throwable cause)
+    protected abstract State<I> onError (State<I> state,
+                                         Throwable cause)
+            throws Throwable;
+
+    /**
+     * This state responds to messages by doing nothing.
+     */
+    private final State<I> nop = message -> this.nop;
+
+    /**
+     * This is the initial state that the state-machine is in.
+     */
+    private final State<I> initial = this::onInitial;
+
+    /**
+     * This is the current state that the state-machine is in.
+     */
+    private volatile State<I> current = initial;
+
+    protected AbstractTrampoline (Stage stage)
     {
-        return initial;
+        super(stage);
+    }
+
+    @Override
+    protected final void onMessage (I message)
+            throws Throwable
+    {
+        try
+        {
+            current = current.onMessage(message);
+        }
+        catch (Throwable ex1)
+        {
+            try
+            {
+                current = onError(current, ex1);
+            }
+            catch (Throwable ex2)
+            {
+                current = nop;
+            }
+        }
+    }
+
+    /**
+     * Get the default no-op state.
+     *
+     * @return the no-op state.
+     */
+    public State<I> nop ()
+    {
+        return nop;
+    }
+
+    /**
+     * Determine whether this state-machine is in the no-op state.
+     *
+     * @return true, if this state-machine is in the no-op state.
+     */
+    public boolean isNop ()
+    {
+        return nop.equals(current);
     }
 
     /**

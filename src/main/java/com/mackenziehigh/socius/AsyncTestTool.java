@@ -102,12 +102,15 @@ public final class AsyncTestTool
 
     public <T> void await (final BooleanSupplier condition)
     {
-        for (int i = 0; i < timeoutMillis && condition.getAsBoolean(); i++)
+        for (int i = 0; i < timeoutMillis && !condition.getAsBoolean(); i++)
         {
             sleep(1);
         }
 
-        throw new IllegalStateException("The condition never became true.");
+        if (condition.getAsBoolean() == false)
+        {
+            throw new IllegalStateException("The condition never became true.");
+        }
     }
 
     /**

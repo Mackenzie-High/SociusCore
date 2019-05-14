@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Objects;
@@ -37,7 +37,8 @@ public abstract class AbstractPushdownAutomaton<I, O>
     @FunctionalInterface
     public interface State<I>
     {
-        public void onMessage (I message);
+        public void onMessage (I message)
+                throws Throwable;
     }
 
     /**
@@ -46,29 +47,48 @@ public abstract class AbstractPushdownAutomaton<I, O>
     @FunctionalInterface
     public interface SideEffect
     {
-        public void onExecute ();
+        public void onExecute ()
+                throws Throwable;
     }
 
     /**
      * Specifies the initial state of the state-machine.
      *
-     * @return the initial state.
+     * @param message is the first message received.
+     * @throws java.lang.Throwable if something goes wrong.
      */
-    protected abstract State<I> initial ();
+    protected abstract void onInitial (I message)
+            throws Throwable;
+
+    /**
+     * Specifies the state to goto when an unhandled exception occurs.
+     *
+     * <p>
+     * Case should be taken to ensure that this method never
+     * throws an exception itself; otherwise, the state-machine
+     * will suppress the exception and return to the initial state.
+     * </p>
+     *
+     * @param cause is the unhandled exception.
+     * @throws java.lang.Throwable if something goes wrong.
+     */
+    protected abstract void onError (final Throwable cause)
+            throws Throwable;
 
     /**
      * This is the initial state that the state-machine is in.
      */
-    private volatile State<I> initial;
+    private final State<I> initial = this::onInitial;
 
     /**
      * These are the states and side-effects to execute next.
      */
     private final Deque<Object> pushdownStack = new ArrayDeque<>();
 
-    protected AbstractPushdownAutomaton (Cascade.Stage stage)
+    protected AbstractPushdownAutomaton (Stage stage)
     {
         super(stage);
+        pushdownStack.push(initial);
     }
 
     /**
@@ -127,16 +147,6 @@ public abstract class AbstractPushdownAutomaton<I, O>
     protected final void onMessage (I message)
             throws Throwable
     {
-        if (initial == null)
-        {
-            initial = initial();
-        }
-
-        if (pushdownStack.isEmpty())
-        {
-            pushdownStack.push(initial);
-        }
-
         try
         {
             boolean executedState = false;
@@ -172,26 +182,8 @@ public abstract class AbstractPushdownAutomaton<I, O>
             }
             catch (Throwable ex2)
             {
-                clear();
-                push(initial);
+                pushdownStack.clear();
             }
         }
-    }
-
-    /**
-     * Specifies the state to goto when an unhandled exception occurs.
-     *
-     * <p>
-     * Case should be taken to ensure that this method never
-     * throws an exception itself; otherwise, the state-machine
-     * will suppress the exception and return to the initial state.
-     * </p>
-     *
-     * @param cause is the unhandled exception.
-     */
-    protected void onError (final Throwable cause)
-    {
-        clear();
-        push(initial);
     }
 }

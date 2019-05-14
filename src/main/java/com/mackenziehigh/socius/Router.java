@@ -204,15 +204,16 @@ public final class Router<T>
      * Send a single message to all interested subscribers.
      *
      * <p>
-     * Warning: This method may be invoked by multiple actors at once.
+     * Warning: This method may be invoked by multiple threads at once.
      * This method is *not* an actor itself!
      * </p>
      *
      * @param key is a routing-key that identifies the channel to send-to.
      * @param message will be sent to the identified channel.
+     * @return this.
      */
-    private void send (final Object key,
-                       final T message)
+    public Router<T> send (final Object key,
+                           final T message)
     {
         if (sync)
         {
@@ -236,6 +237,8 @@ public final class Router<T>
              */
             sendImp(key, message);
         }
+
+        return this;
     }
 
     private void sendImp (final Object key,
