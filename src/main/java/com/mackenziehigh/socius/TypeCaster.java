@@ -36,7 +36,7 @@ public final class TypeCaster<I, O>
     private final Processor<I> actorFail;
 
     private TypeCaster (final ActorFactory stage,
-                    final Class<O> type)
+                        final Class<O> type)
     {
         Objects.requireNonNull(stage, "stage");
         this.type = Objects.requireNonNull(type, "type");
@@ -100,7 +100,7 @@ public final class TypeCaster<I, O>
      * @return the new converter.
      */
     public static <I, O> TypeCaster<I, O> newTypeCaster (final ActorFactory stage,
-                                                 final Class<O> type)
+                                                         final Class<O> type)
     {
         return new TypeCaster<>(stage, type);
     }

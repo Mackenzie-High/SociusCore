@@ -41,7 +41,7 @@ public final class OscillatorTest
     {
         final Stage stage = Cascade.newStage();
         final List<Instant> ticks = Lists.newCopyOnWriteArrayList();
-        final CollectionSink<Instant> sink = CollectionSink.newCollectionSink(stage, ticks);
+        final Processor<Instant> sink = Processor.fromConsumerScript(stage, (Instant x) -> ticks.add(x));
 
         final Oscillator clock = Oscillator
                 .newOscillator()

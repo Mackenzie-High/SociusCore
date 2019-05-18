@@ -23,10 +23,12 @@ import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -46,6 +48,8 @@ public final class AsyncTestTool
 
     private volatile long timeoutMillis = TimeUnit.SECONDS.toMillis(1);
 
+    private final AtomicLong pending = new AtomicLong();
+
     public AsyncTestTool ()
     {
         final ThreadFactory factory = (Runnable task) ->
@@ -56,7 +60,35 @@ public final class AsyncTestTool
             return thread;
         };
 
-        this.stage = Cascade.newStage(Executors.newCachedThreadPool(factory));
+        final ExecutorService service = new ThreadPoolExecutor(0, 16, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory);
+
+        this.stage = new Cascade.AbstractStage()
+        {
+            @Override
+            protected void onSubmit (final ActorTask delegate)
+            {
+                final Runnable task = () ->
+                {
+                    try
+                    {
+                        delegate.run();
+                    }
+                    finally
+                    {
+                        pending.decrementAndGet();
+                    }
+                };
+
+                pending.incrementAndGet();
+                service.execute(task);
+            }
+
+            @Override
+            protected void onStageClose ()
+            {
+                // Pass.
+            }
+        };
     }
 
     /**
@@ -111,6 +143,11 @@ public final class AsyncTestTool
         {
             throw new IllegalStateException("The condition never became true.");
         }
+    }
+
+    public void awaitEquilibrium ()
+    {
+        await(() -> pending.get() > 0);
     }
 
     /**

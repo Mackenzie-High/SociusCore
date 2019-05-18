@@ -96,7 +96,7 @@ public final class DelayedSender
      * @param service will provide the clock.
      * @return the new object.
      */
-    public static DelayedSender newDelayedSender (final ScheduledExecutorService service)
+    public static synchronized DelayedSender newDelayedSender (final ScheduledExecutorService service)
     {
         return new DelayedSender(service);
     }

@@ -39,7 +39,7 @@ public final class DelayedSenderTest
     {
         final Cascade.Stage stage = Cascade.newStage();
         final List<String> ticks = Lists.newCopyOnWriteArrayList();
-        final CollectionSink<String> sink = CollectionSink.newCollectionSink(stage, ticks);
+        final Processor<String> sink = Processor.fromConsumerScript(stage, (String x) -> ticks.add(x));
 
         final DelayedSender clock = DelayedSender.newDelayedSender();
 

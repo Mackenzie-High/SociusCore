@@ -27,25 +27,25 @@ public final class RouterTest
 {
     private final AsyncTestTool tester = new AsyncTestTool();
 
-    private final Router<Integer> router = Router.newRouter(tester.stage());
+    private final Router<String, Integer> router = Router.newRouter(tester.stage());
 
-    private final Publisher<Integer> P1 = router.newPublisher("A");
+    private final Publisher<String, Integer> P1 = router.newPublisher("A");
 
-    private final Publisher<Integer> P2 = router.newPublisher("A");
+    private final Publisher<String, Integer> P2 = router.newPublisher("A");
 
-    private final Publisher<Integer> P3 = router.newPublisher("B");
+    private final Publisher<String, Integer> P3 = router.newPublisher("B");
 
-    private final Publisher<Integer> P4 = router.newPublisher("B");
+    private final Publisher<String, Integer> P4 = router.newPublisher("B");
 
-    private final Publisher<Integer> P5 = router.newPublisher("C");
+    private final Publisher<String, Integer> P5 = router.newPublisher("C");
 
-    private final Subscriber<Integer> S1 = router.newSubscriber("A");
+    private final Subscriber<String, Integer> S1 = router.newSubscriber("A");
 
-    private final Subscriber<Integer> S2 = router.newSubscriber("A");
+    private final Subscriber<String, Integer> S2 = router.newSubscriber("A");
 
-    private final Subscriber<Integer> S3 = router.newSubscriber("B");
+    private final Subscriber<String, Integer> S3 = router.newSubscriber("B");
 
-    private final Subscriber<Integer> S4 = router.newSubscriber("B");
+    private final Subscriber<String, Integer> S4 = router.newSubscriber("B");
 
 
     {
@@ -80,15 +80,15 @@ public final class RouterTest
         assertTrue(S3.isActive());
         assertTrue(S4.isActive());
 
-        assertEquals("A", P1.routingKey());
-        assertEquals("A", P2.routingKey());
-        assertEquals("A", S1.routingKey());
-        assertEquals("A", S2.routingKey());
+        assertEquals(1, S1.routingKeys().size());
+        assertEquals(1, S2.routingKeys().size());
+        assertEquals(1, S3.routingKeys().size());
+        assertEquals(1, S4.routingKeys().size());
 
-        assertEquals("B", P3.routingKey());
-        assertEquals("B", P4.routingKey());
-        assertEquals("B", S3.routingKey());
-        assertEquals("B", S4.routingKey());
+        assertTrue(S1.routingKeys().contains("A"));
+        assertTrue(S2.routingKeys().contains("A"));
+        assertTrue(S3.routingKeys().contains("B"));
+        assertTrue(S4.routingKeys().contains("B"));
     }
 
     /**

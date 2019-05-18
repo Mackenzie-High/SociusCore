@@ -41,7 +41,7 @@ public final class ClockTest
     {
         final Stage stage = Cascade.newStage();
         final List<Instant> ticks = Lists.newCopyOnWriteArrayList();
-        final CollectionSink<Instant> sink = CollectionSink.newCollectionSink(stage, ticks);
+        final Processor<Instant> sink = Processor.fromConsumerScript(stage, (Instant x) -> ticks.add(x));
 
         final Clock clock = Clock
                 .newClock()

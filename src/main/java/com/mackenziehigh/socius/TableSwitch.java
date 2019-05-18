@@ -144,10 +144,10 @@ public final class TableSwitch<K, T>
      * @param <T> is the type of the incoming and outgoing messages.
      * @param stage will be used to create private actors.
      * @param extractor knows how to extract routing-keys from messages.
-     * @return the new inserter.
+     * @return the new switch.
      */
     public static <K, T> TableSwitch<K, T> newTableSwitch (final ActorFactory stage,
-                                                             final Function<T, K> extractor)
+                                                           final Function<T, K> extractor)
     {
         return new TableSwitch(stage, extractor);
     }

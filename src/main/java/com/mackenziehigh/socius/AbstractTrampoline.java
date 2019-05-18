@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import java.util.Objects;
 
 /**
@@ -83,7 +83,7 @@ public abstract class AbstractTrampoline<I, O>
      */
     private volatile State<I> current = initial;
 
-    protected AbstractTrampoline (Stage stage)
+    protected AbstractTrampoline (final ActorFactory stage)
     {
         super(stage);
     }
@@ -114,7 +114,7 @@ public abstract class AbstractTrampoline<I, O>
      *
      * @return the no-op state.
      */
-    public State<I> nop ()
+    public final State<I> nop ()
     {
         return nop;
     }
@@ -124,7 +124,7 @@ public abstract class AbstractTrampoline<I, O>
      *
      * @return true, if this state-machine is in the no-op state.
      */
-    public boolean isNop ()
+    public final boolean isNop ()
     {
         return nop.equals(current);
     }

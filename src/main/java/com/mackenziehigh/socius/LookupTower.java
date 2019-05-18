@@ -15,20 +15,16 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Predicate;
 
 /**
- * A <code>DataTower</code> that routes incoming messages, in linear-time,
+ * A stack of floors (pipelines) that routes incoming messages, in linear-time,
  * to the appropriate floors based on predicates defined for each floor.
  *
  * @param <I> is the type of the incoming messages.
@@ -56,14 +52,14 @@ public final class LookupTower<I, O>
     /**
      * These are the floors that this tower consists of.
      */
-    private final Deque<PredicatedFloor<I, O>> floors = new ConcurrentLinkedDeque<>();
+    private final List<PredicatedFloor<I, O>> floors;
 
     private LookupTower (final Builder<I, O> builder)
     {
         this.inputConnector = Processor.fromConsumerScript(builder.stage, this::onInput);
         this.outputConnector = Processor.fromIdentityScript(builder.stage);
         this.dropsConnector = Processor.fromIdentityScript(builder.stage);
-        this.floors.addAll(builder.floors);
+        this.floors = List.copyOf(builder.floors);
     }
 
     private void onInput (final I message)
@@ -73,8 +69,10 @@ public final class LookupTower<I, O>
          * Iterate through each of the floors until either one is found that
          * is willing to accept the message or the last floor is reached.
          */
-        for (PredicatedFloor<I, O> floor : floors)
+        for (int i = 0; i < floors.size(); i++)
         {
+            var floor = floors.get(i);
+
             if (floor.test(message))
             {
                 floor.accept(message);
@@ -96,46 +94,17 @@ public final class LookupTower<I, O>
      * @param stage will be used to create private actors.
      * @return a new builder.
      */
-    public static <I, O> Builder<I, O> newTableTower (final Stage stage)
+    public static <I, O> Builder<I, O> newLookupTower (final ActorFactory stage)
     {
         return new Builder<>(stage);
     }
 
     /**
-     * Add a floor to the tower.
-     *
-     * @param condition will determine whether the floor should handle given messages.
-     * @param floor will only receive the messages that the condition approves of.
-     * @return this.
-     */
-    public LookupTower<I, O> pushFloor (final Predicate<I> condition,
-                                        final Pipeline<I, O> floor)
-    {
-        Objects.requireNonNull(condition, "condition");
-        Objects.requireNonNull(floor, "floor");
-        floor.dataOut().connect(outputConnector.dataIn());
-        floors.push(newPredicatedFloor(condition, floor));
-        return this;
-    }
-
-    /**
-     * Remove a floor from the tower.
-     *
-     * @return this.
-     */
-    public LookupTower<I, O> popFloor ()
-    {
-        final Pipeline<I, O> floor = floors.pop();
-        floor.dataOut().disconnect(outputConnector.dataIn());
-        return this;
-    }
-
-    /**
      * {@inheritDoc}
      */
-    public Collection<Pipeline<I, O>> floors ()
+    public List<PredicatedFloor<I, O>> floors ()
     {
-        return Collections.unmodifiableList(new ArrayList<>(floors));
+        return floors;
     }
 
     /**
@@ -157,7 +126,9 @@ public final class LookupTower<I, O>
     }
 
     /**
-     * {@inheritDoc}
+     * Output Connection.
+     *
+     * @return the output that receives the dropped input messages.
      */
     public Output<I> dropsOut ()
     {
@@ -220,11 +191,11 @@ public final class LookupTower<I, O>
      */
     public static final class Builder<I, O>
     {
-        private final Stage stage;
+        private final ActorFactory stage;
 
-        private final Deque<PredicatedFloor<I, O>> floors = new ArrayDeque<>();
+        private final List<PredicatedFloor<I, O>> floors = new LinkedList<>();
 
-        private Builder (final Stage stage)
+        private Builder (final ActorFactory stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
         }

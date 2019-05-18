@@ -61,8 +61,7 @@ public final class TableTowerTest
         tester.connect(expandoTower.dataOut());
     }
 
-    private Pipeline<Integer, String> floorFactory (Character key,
-                                                    Integer message)
+    private Pipeline<Integer, String> floorFactory (Integer message)
     {
         return Pipeline.fromFunctionScript(stage, x -> "AUTO" + x + "AUTO");
     }

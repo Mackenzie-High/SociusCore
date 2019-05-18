@@ -16,15 +16,19 @@
 package com.mackenziehigh.socius;
 
 import com.google.common.collect.ImmutableList;
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 /**
  * Provides an in-process publish/subscribe mechanism.
@@ -73,20 +77,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Thus, subscribing large numbers (1000s) of subscribers to a single key can become inefficient.
  * </p>
  *
+ * @param <K> is the type of the routing-keys.
  * @param <T> is the type of the incoming and outgoing messages.
  */
-public final class Router<T>
+public final class Router<K, T>
 {
     /**
-     * This stage
+     * This stage will be used to create private actors.
      */
-    private final Stage stage;
+    private final ActorFactory stage;
 
     /**
      * This map maps a routing-key to a list of subscribers that
      * are interested in messages with that routing-key.
      */
-    private final ConcurrentMap<Object, ImmutableList<Subscriber<T>>> routeMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<K, ImmutableList<Subscriber<K, T>>> routeMap = new ConcurrentHashMap<>();
 
     /**
      * Provides the sink-all output connector.
@@ -104,7 +109,7 @@ public final class Router<T>
      */
     private volatile boolean sync = false;
 
-    private Router (final Stage stage)
+    private Router (final ActorFactory stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.sinkAll = Processor.fromIdentityScript(stage);
@@ -114,11 +119,12 @@ public final class Router<T>
     /**
      * Factory Method.
      *
+     * @param <K> is the type of the routing-keys.
      * @param <T> is the type of the incoming and outgoing messages.
      * @param stage will be used to create private actors.
      * @return the new router.
      */
-    public static <T> Router<T> newRouter (final Stage stage)
+    public static <K, T> Router<K, T> newRouter (final ActorFactory stage)
     {
         return new Router<>(stage);
     }
@@ -129,7 +135,7 @@ public final class Router<T>
      *
      * @return this.
      */
-    public Router<T> synchronize ()
+    public Router<K, T> synchronize ()
     {
         sync = true;
         return this;
@@ -148,26 +154,58 @@ public final class Router<T>
 
     /**
      * Create a new activated publisher that can send messages
+     * to communication channels identified on-demand by
+     * extracting the routing-key from the messages themselves
+     * using the given function.
+     *
+     * @param keyFunction will be used to obtain routing-keys from messages.
+     * @return the newly created publisher.
+     */
+    public Publisher<K, T> newPublisher (final Function<T, K> keyFunction)
+    {
+        Objects.requireNonNull(keyFunction, "keyFunction");
+        return new Publisher(this, keyFunction).activate();
+    }
+
+    /**
+     * Create a new activated publisher that can send messages
      * to the communication channel identified by the given key.
      *
      * @param key is the routing-key that identifies the channel.
      * @return the newly created publisher.
      */
-    public Publisher<T> newPublisher (final String key)
+    public Publisher<K, T> newPublisher (final K key)
     {
-        return new Publisher(this, key).activate();
+        Objects.requireNonNull(key, "key");
+        return new Publisher(this, msg -> key).activate();
     }
 
     /**
      * Create a new activated subscriber that can receive messages
-     * from the communication channel identified by the given key.
+     * from the communication channels identified by the given keys.
      *
-     * @param key is the routing-key that identifies the channel.
+     * @param keys are the routing-keys that identify the channels.
      * @return the newly created subscriber.
      */
-    public Subscriber<T> newSubscriber (final String key)
+    public Subscriber<K, T> newSubscriber (final K... keys)
     {
-        return new Subscriber(this, key).activate();
+        Objects.requireNonNull(keys, "keys");
+        final var keyList = Arrays.asList(keys);
+        return newSubscriber(keyList);
+    }
+
+    /**
+     * Create a new activated subscriber that can receive messages
+     * from the communication channels identified by the given keys.
+     *
+     * @param keys are the routing-keys that identify the channels.
+     * @return the newly created subscriber.
+     */
+    public Subscriber<K, T> newSubscriber (final Collection<K> keys)
+    {
+        Objects.requireNonNull(keys, "keys");
+        final var keySet = new HashSet<>(keys);
+        return new Subscriber(this, keySet).activate();
     }
 
     /**
@@ -212,8 +250,8 @@ public final class Router<T>
      * @param message will be sent to the identified channel.
      * @return this.
      */
-    public Router<T> send (final Object key,
-                           final T message)
+    public Router<K, T> send (final K key,
+                              final T message)
     {
         if (sync)
         {
@@ -241,7 +279,7 @@ public final class Router<T>
         return this;
     }
 
-    private void sendImp (final Object key,
+    private void sendImp (final K key,
                           final T message)
     {
         boolean none = true;
@@ -260,7 +298,7 @@ public final class Router<T>
          * uses a for-loop, instead of a for-each-loop, which can avoid an unnecessary
          * object allocation (Iterator).
          */
-        final ImmutableList<Subscriber<T>> routeList = routeMap.getOrDefault(key, ImmutableList.of());
+        final ImmutableList<Subscriber<K, T>> routeList = routeMap.getOrDefault(key, ImmutableList.of());
 
         /**
          * Send the message to all of the subscribers, if any.
@@ -281,8 +319,8 @@ public final class Router<T>
         }
     }
 
-    private void subscribe (final Object key,
-                            final Subscriber<T> subscriber)
+    private void subscribe (final K key,
+                            final Subscriber<K, T> subscriber)
     {
         /**
          * The copy is inefficient here, but makes the message-sending more efficient.
@@ -291,23 +329,26 @@ public final class Router<T>
         synchronized (this)
         {
             routeMap.putIfAbsent(key, ImmutableList.of());
-            final Set<Subscriber<T>> copy = new HashSet<>(routeMap.get(key));
+            final Set<Subscriber<K, T>> copy = new HashSet<>(routeMap.get(key));
             copy.add(subscriber);
             routeMap.put(key, ImmutableList.copyOf(copy));
         }
     }
 
-    private synchronized void unsubscribe (final Object key,
-                                           final Subscriber<T> subscriber)
+    private void unsubscribe (final K key,
+                              final Subscriber<K, T> subscriber)
     {
         /**
          * The copy is inefficient here, but makes the message-sending more efficient.
-         * The synchronization prevents duplicate (concurrent) un-subscriptions.
+         * The synchronization prevents duplicate (concurrent) unsubscriptions.
          */
-        routeMap.putIfAbsent(key, ImmutableList.of());
-        final Set<Subscriber<T>> copy = new HashSet<>(routeMap.get(key));
-        copy.add(subscriber);
-        routeMap.put(key, ImmutableList.copyOf(copy));
+        synchronized (this)
+        {
+            routeMap.putIfAbsent(key, ImmutableList.of());
+            final Set<Subscriber<K, T>> copy = new HashSet<>(routeMap.get(key));
+            copy.add(subscriber);
+            routeMap.put(key, ImmutableList.copyOf(copy));
+        }
     }
 
     /**
@@ -319,20 +360,22 @@ public final class Router<T>
      * if it is disconnected from all strongly-referenced external actors.
      * </p>
      *
+     * @param <K> is the type of the routing-keys.
      * @param <T> is the type of the incoming messages.
      */
-    public static final class Publisher<T>
+    public static final class Publisher<K, T>
             implements Sink<T>
     {
         /**
          * This is the router that maintains the list of subscribers.
          */
-        private final Router<T> router;
+        private final Router<K, T> router;
 
         /**
-         * This routing-key identifies the communication channel.
+         * This function extracts the routing-key tat identifies
+         * the communication channel to use for a given message.
          */
-        private final String routingKey;
+        private final Function<T, K> keyFunction;
 
         /**
          * This processor will receive the incoming messages
@@ -345,11 +388,11 @@ public final class Router<T>
          */
         private final AtomicBoolean active = new AtomicBoolean();
 
-        private Publisher (final Router<T> router,
-                           final String key)
+        private Publisher (final Router<K, T> router,
+                           final Function<T, K> keyFunction)
         {
             this.router = router;
-            this.routingKey = Objects.requireNonNull(key, "key");
+            this.keyFunction = Objects.requireNonNull(keyFunction, "keyFunction");
             this.connector = Processor.fromConsumerScript(router.stage, this::onMessage);
         }
 
@@ -363,19 +406,9 @@ public final class Router<T>
         {
             if (active.get())
             {
+                final K routingKey = keyFunction.apply(message);
                 router.send(routingKey, message);
             }
-        }
-
-        /**
-         * Get the routing-key that identifies the communication channel
-         * that this publisher sends messages to.
-         *
-         * @return the associated routing-key.
-         */
-        public Object routingKey ()
-        {
-            return routingKey;
         }
 
         /**
@@ -383,7 +416,7 @@ public final class Router<T>
          *
          * @return this.
          */
-        public Publisher<T> activate ()
+        public Publisher<K, T> activate ()
         {
             active.set(true);
             return this;
@@ -394,7 +427,7 @@ public final class Router<T>
          *
          * @return this.
          */
-        public Publisher<T> deactivate ()
+        public Publisher<K, T> deactivate ()
         {
             active.set(false);
             return this;
@@ -430,20 +463,21 @@ public final class Router<T>
      * external actors <b>and</b> deactivated.
      * </p>
      *
+     * @param <K> is the type of the routing-keys.
      * @param <T> is the type of the incoming messages.
      */
-    public static final class Subscriber<T>
+    public static final class Subscriber<K, T>
             implements Source<T>
     {
         /**
          * This is the router that maintains the list of subscribers.
          */
-        private final Router<T> router;
+        private final Router<K, T> router;
 
         /**
          * This routing-key identifies the communication channel.
          */
-        private final String routingKey;
+        private final List<K> routingKeys;
 
         /**
          * This processor will receive the incoming messages from
@@ -456,11 +490,11 @@ public final class Router<T>
          */
         private final AtomicBoolean active = new AtomicBoolean();
 
-        private Subscriber (final Router<T> router,
-                            final String key)
+        private Subscriber (final Router<K, T> router,
+                            final Set<K> keys)
         {
             this.router = router;
-            this.routingKey = Objects.requireNonNull(key, "key");
+            this.routingKeys = List.copyOf(Objects.requireNonNull(keys, "key"));
             this.connector = Processor.fromFunctionScript(router.stage, this::onMessage);
         }
 
@@ -476,14 +510,14 @@ public final class Router<T>
         }
 
         /**
-         * Get the routing-key that identifies the communication channel
+         * Get the routing-keys that identify the communication channels
          * that this subscriber receives messages from.
          *
-         * @return the associated routing-key.
+         * @return the associated routing-keys.
          */
-        public Object routingKey ()
+        public Collection<K> routingKeys ()
         {
-            return routingKey;
+            return routingKeys;
         }
 
         /**
@@ -491,11 +525,14 @@ public final class Router<T>
          *
          * @return this.
          */
-        public Subscriber<T> activate ()
+        public Subscriber<K, T> activate ()
         {
             if (active.compareAndSet(false, true))
             {
-                router.subscribe(routingKey, this);
+                for (K key : routingKeys)
+                {
+                    router.subscribe(key, this);
+                }
             }
 
             return this;
@@ -506,11 +543,14 @@ public final class Router<T>
          *
          * @return this.
          */
-        public Subscriber<T> deactivate ()
+        public Subscriber<K, T> deactivate ()
         {
             if (active.compareAndSet(true, false))
             {
-                router.unsubscribe(routingKey, this);
+                for (K key : routingKeys)
+                {
+                    router.unsubscribe(key, this);
+                }
             }
 
             return this;

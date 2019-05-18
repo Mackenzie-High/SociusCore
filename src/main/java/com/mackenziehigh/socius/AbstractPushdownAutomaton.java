@@ -15,10 +15,10 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
-import java.util.ArrayDeque;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import java.util.Deque;
 import java.util.Objects;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * A stack-machine implementation based on trampolining.
@@ -30,7 +30,7 @@ public abstract class AbstractPushdownAutomaton<I, O>
         extends AbstractPipeline<I, O>
 {
     /**
-     * Signature of a state transition function.
+     * Signature of a state-transition function.
      *
      * @param <I> is the type of the incoming messages.
      */
@@ -42,7 +42,7 @@ public abstract class AbstractPushdownAutomaton<I, O>
     }
 
     /**
-     * Signature of a side effect function.
+     * Signature of a side-effect function.
      */
     @FunctionalInterface
     public interface SideEffect
@@ -83,9 +83,9 @@ public abstract class AbstractPushdownAutomaton<I, O>
     /**
      * These are the states and side-effects to execute next.
      */
-    private final Deque<Object> pushdownStack = new ArrayDeque<>();
+    private final Deque<Object> pushdownStack = new LinkedBlockingDeque<>();
 
-    protected AbstractPushdownAutomaton (Stage stage)
+    protected AbstractPushdownAutomaton (final ActorFactory stage)
     {
         super(stage);
         pushdownStack.push(initial);

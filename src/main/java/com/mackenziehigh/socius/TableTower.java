@@ -15,22 +15,21 @@
  */
 package com.mackenziehigh.socius;
 
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
- * A <code>DataTower</code> that routes incoming messages, in constant-time,
+ * A stack of floors (pipelines) that routes incoming messages, in constant-time,
  * to the appropriate floors based on keys obtained from the messages.
  *
  * @param <K> is the type of the keys, which identify the floors.
@@ -51,7 +50,24 @@ public final class TableTower<K, I, O>
      * If this tower is capable of automatically adding floors,
      * then this factory will be used to create those floors.
      */
-    private final BiFunction<K, I, ? extends Pipeline<I, O>> floorFactory;
+    private final Function<I, ? extends Pipeline<I, O>> autoAdder;
+
+    /**
+     * If this tower is capable of automatically removing floors,
+     * then this function will be used to identify messages
+     * that are intended to trigger such removals.
+     */
+    private final Predicate<I> autoRemover;
+
+    /**
+     * This is the maximum number of floors that can be in the tower at once.
+     */
+    private final int maximumFloorCount;
+
+    /**
+     * This key, if any, identifies messages destined for all the floors.
+     */
+    private final K broadcastKey;
 
     /**
      * This actor routes incoming messages to the appropriate floor.
@@ -91,11 +107,14 @@ public final class TableTower<K, I, O>
         this.outputConnector = Processor.fromIdentityScript(builder.stage);
         this.dropsConnector = Processor.fromIdentityScript(builder.stage);
         this.keyFunction = builder.keyFunction;
-        this.floorFactory = builder.floorFactory;
+        this.autoAdder = builder.autoAdder;
+        this.autoRemover = builder.autoRemover;
+        this.maximumFloorCount = builder.maximumFloorCount;
+        this.broadcastKey = builder.broadcastKey;
 
-        for (Entry<K, Pipeline<I, O>> floor : builder.floors.entrySet())
+        for (var floor : builder.floors.entrySet())
         {
-            addFloor(floor.getKey(), floor.getValue());
+            add(floor.getKey(), floor.getValue());
         }
     }
 
@@ -110,32 +129,75 @@ public final class TableTower<K, I, O>
             final K key = keyFunction.apply(message);
 
             /**
-             * If the floor does not exist, but this tower is capable
-             * of creating new floors on-demand, then create the floor.
+             * Is this message destined for deliver to all of the floors?
              */
-            if (floorFactory != null && floors.containsKey(key) == false)
-            {
-                final Pipeline<I, O> newFloor = floorFactory.apply(key, message);
-                addFloor(key, newFloor);
-            }
+            final boolean broadcast = Objects.equals(broadcastKey, key);
 
-            /**
-             * Obtain that floor, if any.
-             */
-            final Pipeline<I, O> floor = floors.get(key);
-
-            /**
-             * If the floor does not exist, then drop the message;
-             * otherwise, send the message to the floor for processing.
-             */
-            if (floor == null)
+            if (broadcast)
             {
-                dropsConnector.accept(message);
+                sendToAllFloors(message);
             }
             else
             {
-                floor.accept(message);
+                sendToOneFloorOnly(key, message);
             }
+        }
+    }
+
+    private void sendToAllFloors (final I message)
+    {
+        for (var floor : floors().values())
+        {
+            floor.accept(message);
+        }
+    }
+
+    private void sendToOneFloorOnly (final K key,
+                                     final I message)
+    {
+        /**
+         * If the floor does not exist, but this tower is capable
+         * of creating new floors on-demand, then create the floor.
+         */
+        final boolean canAutoAddFloor = autoAdder != null;
+        final boolean floorDoesNotExist = !floors.containsKey(key);
+        final boolean autoAddFloor = canAutoAddFloor & floorDoesNotExist;
+
+        if (autoAddFloor)
+        {
+            final Pipeline<I, O> newFloor = autoAdder.apply(message);
+            add(key, newFloor);
+        }
+
+        /**
+         * If this tower is capable of automatically removing floors,
+         * then determine whether the message indicates that a floor
+         * with the given key needs to be removed.
+         */
+        final boolean canAutoRemoveFloor = autoRemover != null;
+        final boolean removalNeeded = canAutoRemoveFloor && autoRemover.test(message);
+
+        if (removalNeeded)
+        {
+            remove(key);
+        }
+
+        /**
+         * Obtain that floor, if any.
+         */
+        final Pipeline<I, O> floor = floors.get(key);
+
+        /**
+         * If the floor does not exist, then drop the message;
+         * otherwise, send the message to the floor for processing.
+         */
+        if (floor == null)
+        {
+            dropsConnector.accept(message);
+        }
+        else
+        {
+            floor.accept(message);
         }
     }
 
@@ -160,16 +222,23 @@ public final class TableTower<K, I, O>
      * @param floor is the floor itself.
      * @return this.
      */
-    public TableTower<K, I, O> addFloor (final K key,
-                                         final Pipeline<I, O> floor)
+    public TableTower<K, I, O> add (final K key,
+                                    final Pipeline<I, O> floor)
     {
         Objects.requireNonNull(key, "key");
         Objects.requireNonNull(floor, "floor");
 
         synchronized (lock)
         {
-            floor.dataOut().connect(outputConnector.dataIn());
-            floors.put(key, floor);
+            if (Objects.equals(broadcastKey, key))
+            {
+                throw new IllegalArgumentException("A floor cannot be identified by the broadcast-key.");
+            }
+            else if (floors.size() < maximumFloorCount)
+            {
+                floor.dataOut().connect(outputConnector.dataIn());
+                floors.put(key, floor);
+            }
         }
 
         return this;
@@ -181,7 +250,7 @@ public final class TableTower<K, I, O>
      * @param key identifies the floor.
      * @return this.
      */
-    public TableTower<K, I, O> removeFloor (final K key)
+    public TableTower<K, I, O> remove (final K key)
     {
         Objects.requireNonNull(key, "key");
 
@@ -199,17 +268,11 @@ public final class TableTower<K, I, O>
     }
 
     /**
-     * {@inheritDoc}
+     * Get the floors contains in this tower.
+     *
+     * @return an unmodifiable map that maps keys to floors.
      */
-    public Collection<Pipeline<I, O>> floors ()
-    {
-        return floorMap().values();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Map<K, Pipeline<I, O>> floorMap ()
+    public Map<K, Pipeline<I, O>> floors ()
     {
         return floorMap;
     }
@@ -233,7 +296,9 @@ public final class TableTower<K, I, O>
     }
 
     /**
-     * {@inheritDoc}
+     * Output Connection.
+     *
+     * @return the output that receives the dropped input messages.
      */
     public Output<I> dropsOut ()
     {
@@ -249,15 +314,21 @@ public final class TableTower<K, I, O>
      */
     public static final class Builder<K, I, O>
     {
-        private final Stage stage;
+        private final ActorFactory stage;
 
         private Function<I, K> keyFunction;
 
-        private BiFunction<K, I, ? extends Pipeline<I, O>> floorFactory;
+        private Function<I, ? extends Pipeline<I, O>> autoAdder;
+
+        private Predicate<I> autoRemover;
+
+        private int maximumFloorCount = Integer.MAX_VALUE;
+
+        private K broadcastKey = null;
 
         private final Map<K, Pipeline<I, O>> floors = new HashMap<>();
 
-        private Builder (final Stage stage)
+        private Builder (final ActorFactory stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
         }
@@ -295,12 +366,55 @@ public final class TableTower<K, I, O>
          * Cause the tower to automatically add new floors, rather than dropping messages,
          * when new keys are encountered for which no corresponding floor exists.
          *
-         * @param floorFactory will be used to create new floors as needed.
+         * <p>
+         * This function will not be used to create a floor corresponding to the <i>broadcast key</i>,
+         * if any, since broadcasting routes messages to all floors, rather than a single floor.
+         * </p>
+         *
+         * @param functor will be used to create new floors as needed.
          * @return this.
          */
-        public Builder<K, I, O> withAutoExpansion (final BiFunction<K, I, ? extends Pipeline<I, O>> floorFactory)
+        public Builder<K, I, O> withAutoExpansion (final Function<I, ? extends Pipeline<I, O>> functor)
         {
-            this.floorFactory = Objects.requireNonNull(floorFactory, "floorFactory");
+            this.autoAdder = Objects.requireNonNull(functor, "functor");
+            return this;
+        }
+
+        /**
+         * Cause the tower to automatically remove floors whenever
+         * input messages arrive that match this predicate.
+         *
+         * @param condition will be used to trigger the removal of floors.
+         * @return this.
+         */
+        public Builder<K, I, O> withAutoRemoval (final Predicate<I> condition)
+        {
+            this.autoRemover = Objects.requireNonNull(condition, "condition");
+            return this;
+        }
+
+        /**
+         * Specify the maximum number of floors that the tower is allowed to have.
+         *
+         * @param count is the maximum floor capacity of a tower.
+         * @return this.
+         */
+        public Builder<K, I, O> withMaximumFloors (final int count)
+        {
+            this.maximumFloorCount = count;
+            return this;
+        }
+
+        /**
+         * Specify a key that will identify messages that need to
+         * be routed to all of the floors of the tower concurrently.
+         *
+         * @param key identifies messages destined for all the floors.
+         * @return
+         */
+        public Builder<K, I, O> withBroadcastKey (final K key)
+        {
+            this.broadcastKey = Objects.requireNonNull(key, "key");
             return this;
         }
 

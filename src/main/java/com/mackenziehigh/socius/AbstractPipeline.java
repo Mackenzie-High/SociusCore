@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.Stage;
+import com.mackenziehigh.cascade.Cascade.ActorFactory;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Context;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
@@ -43,7 +43,7 @@ public abstract class AbstractPipeline<I, O>
 
     private final Actor<I, O> actor;
 
-    protected AbstractPipeline (final Stage stage)
+    protected AbstractPipeline (final ActorFactory stage)
     {
         Objects.requireNonNull(stage, "stage");
         this.actor = stage.newActor().withContextScript(this::script).create();
@@ -121,7 +121,7 @@ public abstract class AbstractPipeline<I, O>
      * {@inheritDoc}
      */
     @Override
-    public Output<O> dataOut ()
+    public final Output<O> dataOut ()
     {
         return actor.output();
     }
