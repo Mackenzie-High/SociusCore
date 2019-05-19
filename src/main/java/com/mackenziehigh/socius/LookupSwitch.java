@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius;
 
 import com.google.common.collect.Lists;
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.AbstractMap;
@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 public final class LookupSwitch<T>
         implements Pipeline<T, T>
 {
-    private final ActorFactory stage;
+    private final Stage stage;
 
     /**
      * Provides the data-input connector.
@@ -50,7 +50,7 @@ public final class LookupSwitch<T>
      */
     private final List<Entry<Predicate<T>, Input<T>>> routes = Lists.newCopyOnWriteArrayList();
 
-    private LookupSwitch (final ActorFactory stage)
+    private LookupSwitch (final Stage stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.procDataIn = Processor.fromConsumerScript(stage, this::onMessage);
@@ -132,7 +132,7 @@ public final class LookupSwitch<T>
      * @param stage will be used to create private actors.
      * @return the new switch.
      */
-    public static <T> LookupSwitch<T> newLookupSwitch (final ActorFactory stage)
+    public static <T> LookupSwitch<T> newLookupSwitch (final Stage stage)
     {
         return new LookupSwitch(stage);
     }

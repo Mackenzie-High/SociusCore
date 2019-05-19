@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import java.util.Objects;
 
 /**
@@ -83,7 +83,7 @@ public abstract class AbstractTrampoline<I, O>
      */
     private volatile State<I> current = initial;
 
-    protected AbstractTrampoline (final ActorFactory stage)
+    protected AbstractTrampoline (final Stage stage)
     {
         super(stage);
     }

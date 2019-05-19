@@ -17,7 +17,7 @@ package com.mackenziehigh.socius;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Objects;
@@ -50,7 +50,7 @@ public final class WeightBalancer<T>
      */
     private final ToIntFunction<T> scale;
 
-    private WeightBalancer (final ActorFactory stage,
+    private WeightBalancer (final Stage stage,
                             final int arity,
                             final ToIntFunction<T> scale)
     {
@@ -143,7 +143,7 @@ public final class WeightBalancer<T>
      * @param scale assigns weights to each of the incoming messages.
      * @return the new balancer.
      */
-    public static <T> WeightBalancer<T> newWeightBalancer (final ActorFactory stage,
+    public static <T> WeightBalancer<T> newWeightBalancer (final Stage stage,
                                                            final int arity,
                                                            final ToIntFunction<T> scale)
     {

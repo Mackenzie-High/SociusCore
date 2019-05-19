@@ -17,7 +17,7 @@ package com.mackenziehigh.socius;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.time.Duration;
@@ -39,7 +39,7 @@ public final class Requester<K, I, R, O>
     /**
      * All of the actors contained herein are on this stage.
      */
-    private final ActorFactory stage;
+    private final Stage stage;
 
     /**
      * This actor handles incoming requests.
@@ -272,7 +272,7 @@ public final class Requester<K, I, R, O>
      * @param <R> is the type of the reply messages.
      * @param <O> is the type of message created by combining a request and a reply.
      */
-    public static <K, I, R, O> Builder<K, I, R, O> newRequester (final ActorFactory stage)
+    public static <K, I, R, O> Builder<K, I, R, O> newRequester (final Stage stage)
     {
         return new Builder(stage);
     }
@@ -413,7 +413,7 @@ public final class Requester<K, I, R, O>
      */
     public static final class Builder<K, I, R, O>
     {
-        private final ActorFactory stage;
+        private final Stage stage;
 
         private Function<I, K> keyFuncI;
 
@@ -427,7 +427,7 @@ public final class Requester<K, I, R, O>
 
         private DelayedSender delayedSender;
 
-        private Builder (final ActorFactory stage)
+        private Builder (final Stage stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
         }

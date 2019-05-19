@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius;
 
 import com.google.common.collect.Maps;
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Objects;
@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class Funnel<T>
         implements Source<T>
 {
-    private final ActorFactory stage;
+    private final Stage stage;
 
     private final Processor<T> output;
 
@@ -38,7 +38,7 @@ public final class Funnel<T>
 
     private final Object lock = new Object();
 
-    private Funnel (final ActorFactory stage)
+    private Funnel (final Stage stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.output = Processor.fromIdentityScript(stage);
@@ -87,7 +87,7 @@ public final class Funnel<T>
      * @param stage will be used to create private actors.
      * @return the new funnel.
      */
-    public static <T> Funnel<T> newFunnel (final ActorFactory stage)
+    public static <T> Funnel<T> newFunnel (final Stage stage)
     {
         return new Funnel<>(stage);
     }

@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius;
 
 import com.mackenziehigh.cascade.Cascade;
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import com.mackenziehigh.socius.Processor;
 import java.time.Duration;
@@ -88,7 +88,7 @@ public final class Clock
         this.delay = builder.delay;
         this.period = builder.period;
         this.service = builder.service != null ? builder.service : DefaultExecutor.get();
-        final ActorFactory stage = Cascade.newStage(service);
+        final Stage stage = Cascade.newStage(service);
         this.procClockOut = Processor.fromIdentityScript(stage);
     }
 

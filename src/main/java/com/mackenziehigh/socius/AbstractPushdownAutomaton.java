@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import java.util.Deque;
 import java.util.Objects;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -85,7 +85,7 @@ public abstract class AbstractPushdownAutomaton<I, O>
      */
     private final Deque<Object> pushdownStack = new LinkedBlockingDeque<>();
 
-    protected AbstractPushdownAutomaton (final ActorFactory stage)
+    protected AbstractPushdownAutomaton (final Stage stage)
     {
         super(stage);
         pushdownStack.push(initial);

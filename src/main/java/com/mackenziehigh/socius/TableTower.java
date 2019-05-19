@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -314,7 +314,7 @@ public final class TableTower<K, I, O>
      */
     public static final class Builder<K, I, O>
     {
-        private final ActorFactory stage;
+        private final Stage stage;
 
         private Function<I, K> keyFunction;
 
@@ -328,7 +328,7 @@ public final class TableTower<K, I, O>
 
         private final Map<K, Pipeline<I, O>> floors = new HashMap<>();
 
-        private Builder (final ActorFactory stage)
+        private Builder (final Stage stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
         }

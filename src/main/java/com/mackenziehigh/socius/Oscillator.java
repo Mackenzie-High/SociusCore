@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius;
 
 import com.mackenziehigh.cascade.Cascade;
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.time.Duration;
 import java.time.Instant;
@@ -67,7 +67,7 @@ public final class Oscillator
     {
         this.waveform = builder.waveform;
         this.service = builder.service != null ? builder.service : DefaultExecutor.get();
-        final ActorFactory stage = Cascade.newStage(service);
+        final Stage stage = Cascade.newStage(service);
         this.procClockOut = Processor.fromIdentityScript(stage);
     }
 

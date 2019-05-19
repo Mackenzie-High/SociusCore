@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.ConsumerScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.ContextScript;
@@ -80,7 +80,7 @@ public interface Pipeline<I, O>
      * @param script defines the processing to perform.
      * @return the new pipeline.
      */
-    public static <I, O> Pipeline<I, O> fromContextScript (final ActorFactory stage,
+    public static <I, O> Pipeline<I, O> fromContextScript (final Stage stage,
                                                            final ContextScript<I, O> script)
     {
         Objects.requireNonNull(stage, "stage");
@@ -97,7 +97,7 @@ public interface Pipeline<I, O>
      * @param script defines the processing to perform.
      * @return the new pipeline.
      */
-    public static <I, O> Pipeline<I, O> fromFunctionScript (final ActorFactory stage,
+    public static <I, O> Pipeline<I, O> fromFunctionScript (final Stage stage,
                                                             final FunctionScript<I, O> script)
     {
         Objects.requireNonNull(stage, "stage");
@@ -113,7 +113,7 @@ public interface Pipeline<I, O>
      * @param script defines the processing to perform.
      * @return the new pipeline.
      */
-    public static <I> Pipeline<I, I> fromConsumerScript (final ActorFactory stage,
+    public static <I> Pipeline<I, I> fromConsumerScript (final Stage stage,
                                                          final ConsumerScript<I> script)
     {
         Objects.requireNonNull(stage, "stage");
@@ -133,7 +133,7 @@ public interface Pipeline<I, O>
      * @param stage will be used to create private actors.
      * @return the new pipeline.
      */
-    public static <I> Pipeline<I, I> fromIdentityScript (final ActorFactory stage)
+    public static <I> Pipeline<I, I> fromIdentityScript (final Stage stage)
     {
         Objects.requireNonNull(stage, "stage");
         return fromFunctionScript(stage, (I x) -> x);
@@ -180,7 +180,7 @@ public interface Pipeline<I, O>
      * @param defaultValue is the default output, if the input is not in the mappings map.
      * @return the new processor.
      */
-    public static <I, O> Pipeline<I, O> fromMap (final ActorFactory stage,
+    public static <I, O> Pipeline<I, O> fromMap (final Stage stage,
                                                  final Map<I, O> mappings,
                                                  final O defaultValue)
     {

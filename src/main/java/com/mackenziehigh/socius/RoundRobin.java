@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 
@@ -33,7 +33,7 @@ public final class RoundRobin<T>
      */
     private final WeightBalancer<T> delegate;
 
-    private RoundRobin (final ActorFactory stage,
+    private RoundRobin (final Stage stage,
                         final int arity)
     {
         this.delegate = WeightBalancer.newWeightBalancer(stage, arity, x -> 1);
@@ -79,7 +79,7 @@ public final class RoundRobin<T>
      * @param arity will be the number of output connections.
      * @return the new balancer.
      */
-    public static <T> RoundRobin<T> newRoundRobin (final ActorFactory stage,
+    public static <T> RoundRobin<T> newRoundRobin (final Stage stage,
                                                    final int arity)
     {
         return new RoundRobin<>(stage, arity);

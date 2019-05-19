@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.LinkedList;
@@ -94,7 +94,7 @@ public final class LookupTower<I, O>
      * @param stage will be used to create private actors.
      * @return a new builder.
      */
-    public static <I, O> Builder<I, O> newLookupTower (final ActorFactory stage)
+    public static <I, O> Builder<I, O> newLookupTower (final Stage stage)
     {
         return new Builder<>(stage);
     }
@@ -191,11 +191,11 @@ public final class LookupTower<I, O>
      */
     public static final class Builder<I, O>
     {
-        private final ActorFactory stage;
+        private final Stage stage;
 
         private final List<PredicatedFloor<I, O>> floors = new LinkedList<>();
 
-        private Builder (final ActorFactory stage)
+        private Builder (final Stage stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
         }

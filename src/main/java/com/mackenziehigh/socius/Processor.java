@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.ConsumerScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.ContextScript;
@@ -75,7 +75,7 @@ public interface Processor<T>
      * @param script defines the processing to perform.
      * @return the new processor.
      */
-    public static <T> Processor<T> fromContextScript (final ActorFactory stage,
+    public static <T> Processor<T> fromContextScript (final Stage stage,
                                                       final ContextScript<T, T> script)
     {
         Objects.requireNonNull(stage, "stage");
@@ -91,7 +91,7 @@ public interface Processor<T>
      * @param script defines the processing to perform.
      * @return the new processor.
      */
-    public static <T> Processor<T> fromFunctionScript (final ActorFactory stage,
+    public static <T> Processor<T> fromFunctionScript (final Stage stage,
                                                        final FunctionScript<T, T> script)
     {
         Objects.requireNonNull(stage, "stage");
@@ -107,7 +107,7 @@ public interface Processor<T>
      * @param script defines the processing to perform.
      * @return the new processor.
      */
-    public static <T> Processor<T> fromConsumerScript (final ActorFactory stage,
+    public static <T> Processor<T> fromConsumerScript (final Stage stage,
                                                        final ConsumerScript<T> script)
     {
         Objects.requireNonNull(stage, "stage");
@@ -127,7 +127,7 @@ public interface Processor<T>
      * @param stage will be used to create private actors.
      * @return the new processor.
      */
-    public static <T> Processor<T> fromIdentityScript (final ActorFactory stage)
+    public static <T> Processor<T> fromIdentityScript (final Stage stage)
     {
         Objects.requireNonNull(stage, "stage");
         return fromFunctionScript(stage, (T x) -> x);
@@ -141,7 +141,7 @@ public interface Processor<T>
      * @param condition determines whether a message should be allowed through the filter.
      * @return this.
      */
-    public static <T> Processor<T> fromFilter (final ActorFactory stage,
+    public static <T> Processor<T> fromFilter (final Stage stage,
                                                final Predicate<T> condition)
     {
         Objects.requireNonNull(stage, "stage");

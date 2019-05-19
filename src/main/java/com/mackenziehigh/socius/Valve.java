@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Objects;
@@ -56,7 +56,7 @@ public final class Valve<T>
      */
     private final AtomicBoolean flag;
 
-    private Valve (final ActorFactory stage,
+    private Valve (final Stage stage,
                    final AtomicBoolean flag)
     {
         this.procDataIn = Processor.fromFunctionScript(stage, this::onDataIn);
@@ -181,7 +181,7 @@ public final class Valve<T>
      * @param flag stores the state of the value.
      * @return the new valve.
      */
-    public static <T> Valve<T> newValve (final ActorFactory stage,
+    public static <T> Valve<T> newValve (final Stage stage,
                                          final AtomicBoolean flag)
     {
         Objects.requireNonNull(stage, "stage");
@@ -196,7 +196,7 @@ public final class Valve<T>
      * @param stage will be used to create private actors.
      * @return the new valve.
      */
-    public static <T> Valve<T> newOpenValve (final ActorFactory stage)
+    public static <T> Valve<T> newOpenValve (final Stage stage)
     {
         return newValve(stage, new AtomicBoolean(true));
     }
@@ -208,7 +208,7 @@ public final class Valve<T>
      * @param stage will be used to create private actors.
      * @return the new valve.
      */
-    public static <T> Valve<T> newClosedValve (final ActorFactory stage)
+    public static <T> Valve<T> newClosedValve (final Stage stage)
     {
         return newValve(stage, new AtomicBoolean(false));
     }

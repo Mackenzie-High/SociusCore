@@ -65,7 +65,7 @@ public final class AsyncTestTool
         this.stage = new Cascade.AbstractStage()
         {
             @Override
-            protected void onSubmit (final ActorTask delegate)
+            protected void onSubmit (final DefaultActor<?, ?> delegate)
             {
                 final Runnable task = () ->
                 {
@@ -84,7 +84,7 @@ public final class AsyncTestTool
             }
 
             @Override
-            protected void onStageClose ()
+            protected void onClose ()
             {
                 // Pass.
             }

@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius;
 
 import com.google.common.collect.Maps;
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Map;
@@ -32,7 +32,7 @@ import java.util.function.Function;
 public final class TableSwitch<K, T>
         implements Pipeline<T, T>
 {
-    private final ActorFactory stage;
+    private final Stage stage;
 
     /**
      * Provides the data-input connector.
@@ -59,7 +59,7 @@ public final class TableSwitch<K, T>
      */
     private final Object lock = new Object();
 
-    private TableSwitch (final ActorFactory stage,
+    private TableSwitch (final Stage stage,
                          final Function<T, K> extractor)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
@@ -146,7 +146,7 @@ public final class TableSwitch<K, T>
      * @param extractor knows how to extract routing-keys from messages.
      * @return the new switch.
      */
-    public static <K, T> TableSwitch<K, T> newTableSwitch (final ActorFactory stage,
+    public static <K, T> TableSwitch<K, T> newTableSwitch (final Stage stage,
                                                            final Function<T, K> extractor)
     {
         return new TableSwitch(stage, extractor);

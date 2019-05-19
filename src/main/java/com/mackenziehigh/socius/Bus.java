@@ -15,7 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 
@@ -30,7 +30,7 @@ public final class Bus<T>
 
     private final Fanout<T> fanout;
 
-    private Bus (final ActorFactory stage)
+    private Bus (final Stage stage)
     {
         fanout = Fanout.newFanout(stage);
         funnel = Funnel.newFunnel(stage);
@@ -66,7 +66,7 @@ public final class Bus<T>
      * @param stage will be used to create private actors.
      * @return the new message-bus.
      */
-    public static <M> Bus<M> newBus (final ActorFactory stage)
+    public static <M> Bus<M> newBus (final Stage stage)
     {
         return new Bus<>(stage);
     }

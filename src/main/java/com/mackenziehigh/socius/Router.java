@@ -16,7 +16,7 @@
 package com.mackenziehigh.socius;
 
 import com.google.common.collect.ImmutableList;
-import com.mackenziehigh.cascade.Cascade.ActorFactory;
+import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Arrays;
@@ -85,7 +85,7 @@ public final class Router<K, T>
     /**
      * This stage will be used to create private actors.
      */
-    private final ActorFactory stage;
+    private final Stage stage;
 
     /**
      * This map maps a routing-key to a list of subscribers that
@@ -109,7 +109,7 @@ public final class Router<K, T>
      */
     private volatile boolean sync = false;
 
-    private Router (final ActorFactory stage)
+    private Router (final Stage stage)
     {
         this.stage = Objects.requireNonNull(stage, "stage");
         this.sinkAll = Processor.fromIdentityScript(stage);
@@ -124,7 +124,7 @@ public final class Router<K, T>
      * @param stage will be used to create private actors.
      * @return the new router.
      */
-    public static <K, T> Router<K, T> newRouter (final ActorFactory stage)
+    public static <K, T> Router<K, T> newRouter (final Stage stage)
     {
         return new Router<>(stage);
     }
