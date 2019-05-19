@@ -1,6 +1,6 @@
 # Socius 
 
-Note: This project is still awaiting its first formal release.
+Note: This project is still in alpha phase development.
 
 Socius provides commonly used actor types based on the minimalist [Cascade](https://github.com/Mackenzie-High/Cascade) framework. 
 
@@ -16,10 +16,8 @@ Socius provides commonly used actor types based on the minimalist [Cascade](http
 * [AbstractPushdownAutomaton](/documentation/AbstractPushdownAutomaton.xml)
 * [AbstractTrampoline](/documentation/AbstractTrampoline.xml)
 * [AsyncTestTool](/documentation/AsyncTestTool.xml)
-* [Batcher](/documentation/Batcher.xml)
 * [Bus](/documentation/Bus.xml)
 * [Clock](/documentation/Clock.xml)
-* [CollectionSink](/documentation/CollectionSink.xml)
 * [DefaultExecutor](/documentation/DefaultExecutor.xml)
 * [DelayedSender](/documentation/DelayedSender.xml)
 * [Duplicator](/documentation/Duplicator.xml)
@@ -28,7 +26,6 @@ Socius provides commonly used actor types based on the minimalist [Cascade](http
 * [IfElse](/documentation/IfElse.xml)
 * [LookupSwitch](/documentation/LookupSwitch.xml)
 * [LookupTower](/documentation/LookupTower.xml)
-* [Markov](/documentation/Markov.xml)
 * [Minuteman](/documentation/Minuteman.xml)
 * [Oscillator](/documentation/Oscillator.xml)
 * [Pipeline](/documentation/Pipeline.xml)
@@ -43,7 +40,6 @@ Socius provides commonly used actor types based on the minimalist [Cascade](http
 * [TableSwitch](/documentation/TableSwitch.xml)
 * [TableTower](/documentation/TableTower.xml)
 * [TypeCaster](/documentation/TypeCaster.xml)
-* [Unbatcher](/documentation/Unbatcher.xml)
 * [Valve](/documentation/Valve.xml)
 * [Variable](/documentation/Variable.xml)
 * [WeightBalancer](/documentation/WeightBalancer.xml)
