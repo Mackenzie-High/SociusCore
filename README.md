@@ -6,9 +6,23 @@ Socius provides commonly used actor types based on the minimalist [Cascade](http
 
 ## Related Projects:
 
-* [Socius - Core](#Socius): Base Components. 
+* [Socius - Core](https://github.com/Mackenzie-High/SociusCore): Base Components. 
 * [Socius - Nats](https://github.com/Mackenzie-High/SociusNats): Provides the ability to connect to [NATS-based](https://nats.io/) message-oriented-middleware.
 * [Socius - Web](https://github.com/Mackenzie-High/SociusWeb): Provides a server for creating HTTP-based RESTful micro-services. 
+
+## Compilation and Installation
+
+**Step #1: Install Cascade**
+
+See instructions at [Cascade - Compilation and Installation](https://github.com/Mackenzie-High/Cascade#compilation-and-installation).
+
+**Step #2: Install Socius Core Itself**
+```bash
+git clone 'https://github.com/Mackenzie-High/SociusCore.git'
+cd SociusCore/
+git checkout REL_SOCIUS_CORE_1_0_1_ALPHA
+mvn clean install
+```
 
 ## Core Classes:
 * [AbstractPipeline](/documentation/AbstractPipeline.md)
