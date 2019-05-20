@@ -14,7 +14,12 @@ Socius provides commonly used actor types based on the minimalist [Cascade](http
 
 **Step #1: Install Cascade**
 
-See instructions at [Cascade - Compilation and Installation](https://github.com/Mackenzie-High/Cascade#compilation-and-installation).
+```bash
+git clone 'https://github.com/Mackenzie-High/Cascade.git'
+cd Cascade/
+git checkout REL_CASCADE_2_0_1_BETA
+mvn clean install
+```
 
 **Step #2: Install Socius Core Itself**
 ```bash
