@@ -37,7 +37,7 @@ public final class PrimeSummationFloor
             throws Throwable
     {
         sum += message;
-        sendFrom("Current Sum of Primes = " + sum);
+        sendFrom(String.format("Add (%d) to Sum of Prime Numbers. Sum = (%d).", message, sum));
     }
 }
 ```
@@ -91,15 +91,15 @@ import com.mackenziehigh.socius.core.AbstractPipeline;
 import com.mackenziehigh.socius.core.LookupTower;
 
 /**
- * A floor that sums non-negative odd numbers.
+ * A floor that sums non-negative even numbers.
  */
-public final class OddSummationFloor
+public final class EvenSummationFloor
         extends AbstractPipeline<Integer, String>
         implements LookupTower.PredicatedFloor<Integer, String>
 {
     private long sum = 0;
 
-    public OddSummationFloor (final Stage stage)
+    public EvenSummationFloor (final Stage stage)
     {
         super(stage);
     }
@@ -107,7 +107,7 @@ public final class OddSummationFloor
     @Override
     public boolean test (final Integer message)
     {
-        return message > 0 && message % 2 != 0;
+        return message > 0 && message % 2 == 0;
     }
 
     @Override
@@ -115,7 +115,7 @@ public final class OddSummationFloor
             throws Throwable
     {
         sum += message;
-        sendFrom("Current Sum of Odd Numbers = " + sum);
+        sendFrom(String.format("Add (%d) to Sum of Even Numbers. Sum = (%d).", message, sum));
     }
 }
 ```
@@ -161,7 +161,7 @@ public final class Example
         /**
          * This actor will print the results to standard-output.
          */
-        final Printer<String> printer = Printer.newPrintln(stage, "State: %s");
+        final Printer<String> printer = Printer.newPrintln(stage, "Announcement: %s");
 
         /**
          * Connect the actors to form a network.
@@ -193,18 +193,18 @@ public final class Example
 **Output:**
 
 ```
-State: Current Sum of Primes = 2
-State: Current Sum of Primes = 5
-State: Current Sum of Even Numbers = 4
-State: Current Sum of Primes = 10
-State: Current Sum of Even Numbers = 10
-State: Current Sum of Primes = 17
-State: Current Sum of Even Numbers = 18
-State: Current Sum of Odd Numbers = 9
-State: Current Sum of Even Numbers = 28
-State: Current Sum of Primes = 28
-State: Current Sum of Even Numbers = 40
-State: Current Sum of Primes = 41
-State: Current Sum of Even Numbers = 54
-State: Current Sum of Odd Numbers = 24
+Announcement: Add (2) to Sum of Prime Numbers. Sum = (2).
+Announcement: Add (3) to Sum of Prime Numbers. Sum = (5).
+Announcement: Add (4) to Sum of Even Numbers. Sum = (4).
+Announcement: Add (5) to Sum of Prime Numbers. Sum = (10).
+Announcement: Add (6) to Sum of Even Numbers. Sum = (10).
+Announcement: Add (7) to Sum of Prime Numbers. Sum = (17).
+Announcement: Add (8) to Sum of Even Numbers. Sum = (18).
+Announcement: Add (9) to Sum of Odd Numbers. Sum = (9).
+Announcement: Add (10) to Sum of Even Numbers. Sum = (28).
+Announcement: Add (11) to Sum of Prime Numbers. Sum = (28).
+Announcement: Add (12) to Sum of Even Numbers. Sum = (40).
+Announcement: Add (13) to Sum of Prime Numbers. Sum = (41).
+Announcement: Add (14) to Sum of Even Numbers. Sum = (54).
+Announcement: Add (15) to Sum of Odd Numbers. Sum = (24).
 ```
