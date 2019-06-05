@@ -91,15 +91,15 @@ import com.mackenziehigh.socius.core.AbstractPipeline;
 import com.mackenziehigh.socius.core.LookupTower;
 
 /**
- * A floor that sums non-negative even numbers.
+ * A floor that sums non-negative odd numbers.
  */
-public final class EvenSummationFloor
+public final class OddSummationFloor
         extends AbstractPipeline<Integer, String>
         implements LookupTower.PredicatedFloor<Integer, String>
 {
     private long sum = 0;
 
-    public EvenSummationFloor (final Stage stage)
+    public OddSummationFloor (final Stage stage)
     {
         super(stage);
     }
@@ -107,7 +107,7 @@ public final class EvenSummationFloor
     @Override
     public boolean test (final Integer message)
     {
-        return message > 0 && message % 2 == 0;
+        return message > 0 && message % 2 != 0;
     }
 
     @Override
@@ -115,7 +115,7 @@ public final class EvenSummationFloor
             throws Throwable
     {
         sum += message;
-        sendFrom(String.format("Add (%d) to Sum of Even Numbers. Sum = (%d).", message, sum));
+        sendFrom(String.format("Add (%d) to Sum of Odd Numbers. Sum = (%d).", message, sum));
     }
 }
 ```
