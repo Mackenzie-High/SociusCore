@@ -50,7 +50,6 @@ mvn clean install
 * [Printer](/documentation/Printer.md)
 * [Processor](/documentation/Processor.md)
 * [Requester](/documentation/Requester.md)
-* [RequestTower](/documentation/RequestTower.md)
 * [RoundRobin](/documentation/RoundRobin.md)
 * [Router](/documentation/Router.md)
 * [Sink](/documentation/Sink.md)
