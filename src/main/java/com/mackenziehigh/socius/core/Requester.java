@@ -125,7 +125,7 @@ public final class Requester<K, I, R, O>
         this.droppedReplyOut = Processor.fromIdentityScript(stage);
         this.keyFuncI = builder.keyFuncI;
         this.keyFuncR = builder.keyFuncR;
-        this.composer = builder.composer;
+        this.composer = builder.combiner;
         this.timeout = builder.timeout;
         this.tries = builder.tries;
         this.delayedSender = builder.delayedSender != null ? builder.delayedSender : DelayedSender.newDelayedSender();
@@ -419,7 +419,7 @@ public final class Requester<K, I, R, O>
 
         private Function<R, K> keyFuncR;
 
-        private BiFunction<I, R, O> composer;
+        private BiFunction<I, R, O> combiner;
 
         private Integer tries;
 
@@ -462,9 +462,9 @@ public final class Requester<K, I, R, O>
          * @param functor will be used to combine requests and replies.
          * @return this.
          */
-        public Builder<K, I, R, O> withComposer (final BiFunction<I, R, O> functor)
+        public Builder<K, I, R, O> withCombiner (final BiFunction<I, R, O> functor)
         {
-            this.composer = Objects.requireNonNull(functor, "functor");
+            this.combiner = Objects.requireNonNull(functor, "functor");
             return this;
         }
 

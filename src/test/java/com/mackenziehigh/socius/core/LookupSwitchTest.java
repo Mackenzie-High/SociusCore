@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius.core;
 
-import com.mackenziehigh.socius.core.LookupSwitch;
-import com.mackenziehigh.socius.core.AsyncTestTool;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.math.BigInteger;
 import org.junit.Test;
@@ -51,15 +49,15 @@ public final class LookupSwitchTest
         inserter.dataIn().send(10);
         inserter.dataIn().send(11);
 
-        tester.expect(primes, 2); // primes has higher precedence than power2 (declared first).
-        tester.expect(primes, 3);
-        tester.expect(power2, 4);
-        tester.expect(primes, 5);
-        tester.expect(others, 6);
-        tester.expect(primes, 7);
-        tester.expect(power2, 8);
-        tester.expect(others, 9);
-        tester.expect(others, 10);
-        tester.expect(primes, 11);
+        tester.awaitEquals(primes, 2); // primes has higher precedence than power2 (declared first).
+        tester.awaitEquals(primes, 3);
+        tester.awaitEquals(power2, 4);
+        tester.awaitEquals(primes, 5);
+        tester.awaitEquals(others, 6);
+        tester.awaitEquals(primes, 7);
+        tester.awaitEquals(power2, 8);
+        tester.awaitEquals(others, 9);
+        tester.awaitEquals(others, 10);
+        tester.awaitEquals(primes, 11);
     }
 }

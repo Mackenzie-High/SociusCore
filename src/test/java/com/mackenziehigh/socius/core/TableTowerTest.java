@@ -87,15 +87,15 @@ public final class TableTowerTest
         fixedTower.dataIn().send(202);
         fixedTower.dataIn().send(302);
 
-        tester.expect(fixedTower.dataOut(), "A101A");
-        tester.expect(fixedTower.dataOut(), "B201B");
-        tester.expect(fixedTower.dataOut(), "C301C");
+        tester.awaitEquals(fixedTower.dataOut(), "A101A");
+        tester.awaitEquals(fixedTower.dataOut(), "B201B");
+        tester.awaitEquals(fixedTower.dataOut(), "C301C");
 
-        tester.expect(fixedTower.dropsOut(), 401);
+        tester.awaitEquals(fixedTower.dropsOut(), 401);
 
-        tester.expect(fixedTower.dataOut(), "A102A");
-        tester.expect(fixedTower.dataOut(), "B202B");
-        tester.expect(fixedTower.dataOut(), "C302C");
+        tester.awaitEquals(fixedTower.dataOut(), "A102A");
+        tester.awaitEquals(fixedTower.dataOut(), "B202B");
+        tester.awaitEquals(fixedTower.dataOut(), "C302C");
 
     }
 
@@ -117,14 +117,14 @@ public final class TableTowerTest
         expandoTower.dataIn().send(202);
         expandoTower.dataIn().send(302);
 
-        tester.expect(expandoTower.dataOut(), "A101A");
-        tester.expect(expandoTower.dataOut(), "B201B");
-        tester.expect(expandoTower.dataOut(), "C301C");
+        tester.awaitEquals(expandoTower.dataOut(), "A101A");
+        tester.awaitEquals(expandoTower.dataOut(), "B201B");
+        tester.awaitEquals(expandoTower.dataOut(), "C301C");
 
-        tester.expect(expandoTower.dataOut(), "AUTO401AUTO");
+        tester.awaitEquals(expandoTower.dataOut(), "AUTO401AUTO");
 
-        tester.expect(expandoTower.dataOut(), "A102A");
-        tester.expect(expandoTower.dataOut(), "B202B");
-        tester.expect(expandoTower.dataOut(), "C302C");
+        tester.awaitEquals(expandoTower.dataOut(), "A102A");
+        tester.awaitEquals(expandoTower.dataOut(), "B202B");
+        tester.awaitEquals(expandoTower.dataOut(), "C302C");
     }
 }

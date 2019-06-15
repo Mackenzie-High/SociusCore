@@ -16,7 +16,6 @@
 package com.mackenziehigh.socius.core;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Collections;

@@ -39,11 +39,11 @@ public final class ProcessorTest
         actor.accept(5);
         actor.accept(6);
 
-        tester.expect(actor.dataOut(), 4);
-        tester.expect(actor.dataOut(), 9);
-        tester.expect(actor.dataOut(), 16);
-        tester.expect(actor.dataOut(), 25);
-        tester.expect(actor.dataOut(), 36);
+        tester.awaitEquals(actor.dataOut(), 4);
+        tester.awaitEquals(actor.dataOut(), 9);
+        tester.awaitEquals(actor.dataOut(), 16);
+        tester.awaitEquals(actor.dataOut(), 25);
+        tester.awaitEquals(actor.dataOut(), 36);
     }
 
     @Test
@@ -62,8 +62,8 @@ public final class ProcessorTest
         actor.accept("elle");
         actor.accept("olivia");
 
-        tester.expect(actor.dataOut(), "avril");
-        tester.expect(actor.dataOut(), "t'pol");
-        tester.expect(actor.dataOut(), "olivia");
+        tester.awaitEquals(actor.dataOut(), "avril");
+        tester.awaitEquals(actor.dataOut(), "t'pol");
+        tester.awaitEquals(actor.dataOut(), "olivia");
     }
 }

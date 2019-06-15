@@ -42,7 +42,7 @@ public final class LookupTower<I, O>
     /**
      * This actor provides the data-out connector.
      */
-    private final Processor<O> outputConnector;
+    private final Funnel<O> outputConnector;
 
     /**
      * This actor provides the drops-out connector.
@@ -57,9 +57,14 @@ public final class LookupTower<I, O>
     private LookupTower (final Builder<I, O> builder)
     {
         this.inputConnector = Processor.fromConsumerScript(builder.stage, this::onInput);
-        this.outputConnector = Processor.fromIdentityScript(builder.stage);
+        this.outputConnector = Funnel.newFunnel(builder.stage);
         this.dropsConnector = Processor.fromIdentityScript(builder.stage);
         this.floors = List.copyOf(builder.floors);
+
+        for (PredicatedFloor<I, O> floor : floors)
+        {
+            floor.dataOut().connect(outputConnector.dataIn(new Object()));
+        }
     }
 
     private void onInput (final I message)

@@ -39,9 +39,9 @@ public final class IfElseTest
         actor.dataIn().send("erin");
         actor.dataIn().send("t;pol");
 
-        tester.expect(actor.falseOut(), "avril");
-        tester.expect(actor.trueOut(), "emma");
-        tester.expect(actor.trueOut(), "erin");
-        tester.expect(actor.falseOut(), "t'pol");
+        tester.awaitEquals(actor.falseOut(), "avril");
+        tester.awaitEquals(actor.trueOut(), "emma");
+        tester.awaitEquals(actor.trueOut(), "erin");
+        tester.awaitEquals(actor.falseOut(), "t'pol");
     }
 }

@@ -38,12 +38,12 @@ public final class TypeCasterTest
          * Casting an integer should succeed.
          */
         caster.accept(3);
-        tester.expect(caster.dataOut(), 3);
+        tester.awaitEquals(caster.dataOut(), 3);
 
         /**
          * Casting a double should fail.
          */
         caster.accept(3.0);
-        tester.expect(caster.errorOut(), 3.0);
+        tester.awaitEquals(caster.errorOut(), 3.0);
     }
 }

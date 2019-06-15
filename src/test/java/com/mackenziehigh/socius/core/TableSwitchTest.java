@@ -46,12 +46,12 @@ public final class TableSwitchTest
         inserter.dataIn().send("Erin");
         inserter.dataIn().send("Olivia");
         inserter.dataIn().send("Ashley");
-        tester.expect(outputA, "Autumn");
-        tester.expect(outputA, "Avril");
-        tester.expect(outputA, "Ashley");
-        tester.expect(outputE, "Emma");
-        tester.expect(outputE, "Erin");
-        tester.expect(others, "Molly");
-        tester.expect(others, "Olivia");
+        tester.awaitEquals(outputA, "Autumn");
+        tester.awaitEquals(outputA, "Avril");
+        tester.awaitEquals(outputA, "Ashley");
+        tester.awaitEquals(outputE, "Emma");
+        tester.awaitEquals(outputE, "Erin");
+        tester.awaitEquals(others, "Molly");
+        tester.awaitEquals(others, "Olivia");
     }
 }

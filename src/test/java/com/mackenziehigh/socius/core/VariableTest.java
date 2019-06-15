@@ -49,42 +49,42 @@ public final class VariableTest
          * Sending a clock-pulse retrieves the value in the variable.
          */
         var.clockIn().send(now1);
-        tester.expect(var.dataOut(), 'A');
-        tester.expect(var.clockOut(), now1);
+        tester.awaitEquals(var.dataOut(), 'A');
+        tester.awaitEquals(var.clockOut(), now1);
 
         /**
          * The value may be retrieved multiple times.
          */
         var.clockIn().send(now2);
-        tester.expect(var.dataOut(), 'A');
-        tester.expect(var.clockOut(), now2);
+        tester.awaitEquals(var.dataOut(), 'A');
+        tester.awaitEquals(var.clockOut(), now2);
 
         /**
          * Change the value stored in the variable via a message.
          */
         var.dataIn().send('B');
-        tester.expect(var.dataOut(), 'B');
+        tester.awaitEquals(var.dataOut(), 'B');
         assertEquals('B', (char) var.get());
 
         /**
          * The new value may be retrieved by sending a clock-pulse.
          */
         var.clockIn().send(now3);
-        tester.expect(var.dataOut(), 'B');
-        tester.expect(var.clockOut(), now3);
+        tester.awaitEquals(var.dataOut(), 'B');
+        tester.awaitEquals(var.clockOut(), now3);
 
         /**
          * Change the value via the set() method.
          */
         var.set('C');
-        tester.expect(var.dataOut(), 'C');
+        tester.awaitEquals(var.dataOut(), 'C');
         assertEquals('C', (char) var.get());
 
         /**
          * The new value may be retrieved by sending a clock-pulse.
          */
         var.clockIn().send(now4);
-        tester.expect(var.dataOut(), 'C');
-        tester.expect(var.clockOut(), now4);
+        tester.awaitEquals(var.dataOut(), 'C');
+        tester.awaitEquals(var.clockOut(), now4);
     }
 }

@@ -39,10 +39,10 @@ public final class PipelineTest
         actor.dataIn().send(5);
         actor.dataIn().send(6);
 
-        tester.expect(actor.dataOut(), "2 ** 2 = 4");
-        tester.expect(actor.dataOut(), "3 ** 2 = 9");
-        tester.expect(actor.dataOut(), "4 ** 2 = 16");
-        tester.expect(actor.dataOut(), "5 ** 2 = 25");
-        tester.expect(actor.dataOut(), "6 ** 2 = 36");
+        tester.awaitEquals(actor.dataOut(), "2 ** 2 = 4");
+        tester.awaitEquals(actor.dataOut(), "3 ** 2 = 9");
+        tester.awaitEquals(actor.dataOut(), "4 ** 2 = 16");
+        tester.awaitEquals(actor.dataOut(), "5 ** 2 = 25");
+        tester.awaitEquals(actor.dataOut(), "6 ** 2 = 36");
     }
 }

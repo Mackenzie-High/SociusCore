@@ -15,10 +15,11 @@
  */
 package com.mackenziehigh.socius.core;
 
-import com.mackenziehigh.cascade.Cascade;
+import com.mackenziehigh.cascade.Cascade.AbstractStage;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.io.Closeable;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,61 +36,154 @@ import java.util.function.BooleanSupplier;
  * (Experimental API) Provides a mechanism for testing actors in unit-tests.
  *
  * <p>
- * This API is still semi-unstable and may change without notice.
- * Refactoring, etc, may be needed in the future, if you use this API.
+ * This method throws unchecked <code>AwaitInterruptedException</code>s,
+ * rather than propagating checked <code>InterruptedException</code>.
+ * In general, interruption
  * </p>
  */
 public final class AsyncTestTool
         implements Closeable
 {
-    private final Stage stage;
 
-    private final ConcurrentMap<Output<?>, BlockingQueue<Object>> connections = new ConcurrentHashMap<>();
+    /**
+     * Indicates that an <code>await</code> method timed out.
+     */
+    public final class AwaitTimeoutException
+            extends RuntimeException
+    {
+        // Pass.
+    }
 
-    private volatile long timeoutMillis = TimeUnit.SECONDS.toMillis(1);
+    /**
+     * Indicates that an <code>await</code> method was interrupted.
+     */
+    public final class AwaitInterruptedException
+            extends RuntimeException
+    {
+        // Pass.
+    }
 
+    /**
+     * Indicates that this test tool is not connected to a necessary <code>Output</code>.
+     */
+    public final class NoConnectionException
+            extends RuntimeException
+    {
+        // Pass.
+    }
+
+    /**
+     * Indicates that an expected result was not produced during a test.
+     */
+    public final class ExpectationFailedException
+            extends RuntimeException
+    {
+        private final Object expected;
+
+        private final Object actual;
+
+        public ExpectationFailedException (final Object expected,
+                                           final Object actual)
+        {
+            this.expected = expected;
+            this.actual = actual;
+        }
+
+        public Object expected ()
+        {
+            return expected;
+        }
+
+        public Object actual ()
+        {
+            return actual;
+        }
+
+        @Override
+        public String toString ()
+        {
+            return String.format("Expected: %s, Actual: %s", expected(), actual());
+        }
+    }
+
+    /**
+     * The stage used herein will use daemon threads that are named after this class.
+     */
+    private final ThreadFactory factory = (Runnable task) ->
+    {
+        final Thread thread = new Thread(task);
+        thread.setName(AsyncTestTool.class.getSimpleName());
+        thread.setDaemon(true);
+        return thread;
+    };
+
+    /**
+     * This service provides the threads that power the stage.
+     * The stage will use up to sixteen threads at a time.
+     * The threads will be allowed to age off automatically;
+     * therefore, we will not leak threads, if someone fails
+     * to close this tester when they are done using it.
+     */
+    private final ExecutorService service = new ThreadPoolExecutor(0, 16, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory);
+
+    /**
+     * This is the number of actors that are currently scheduled to execute.
+     * This is *not* the number of messages remaining to be processed.
+     * When this count is zero, the stage is in a steady state
+     * with no actors executing at that moment in time.
+     */
     private final AtomicLong pending = new AtomicLong();
 
-    public AsyncTestTool ()
+    /**
+     * This stage can be used to power actors under test.
+     */
+    private final Stage stage = new AbstractStage()
     {
-        final ThreadFactory factory = (Runnable task) ->
+        @Override
+        protected void onRunnable (final DefaultActor<?, ?> delegate)
         {
-            final Thread thread = new Thread(task);
-            thread.setName(AsyncTestTool.class.getName());
-            thread.setDaemon(true);
-            return thread;
-        };
-
-        final ExecutorService service = new ThreadPoolExecutor(0, 16, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory);
-
-        this.stage = new Cascade.AbstractStage()
-        {
-            @Override
-            protected void onSubmit (final DefaultActor<?, ?> delegate)
+            final Runnable task = () ->
             {
-                final Runnable task = () ->
+                try
                 {
-                    try
-                    {
-                        delegate.run();
-                    }
-                    finally
-                    {
-                        pending.decrementAndGet();
-                    }
-                };
+                    delegate.run();
+                }
+                finally
+                {
+                    pending.decrementAndGet();
+                }
+            };
 
-                pending.incrementAndGet();
-                service.execute(task);
-            }
+            /**
+             * The actor is being scheduled for execution,
+             * so keep a count of it, so that we can detect
+             * when the stage is in a state of equilibrium.
+             */
+            pending.incrementAndGet();
 
-            @Override
-            protected void onClose ()
-            {
-                // Pass.
-            }
-        };
-    }
+            /**
+             * Schedule the actor to execute.
+             */
+            service.execute(task);
+        }
+
+        @Override
+        protected void onClose ()
+        {
+            service.shutdown();
+        }
+    };
+
+    /**
+     * This map maps outputs that are being monitored to the queues that
+     * will be asynchronously filled with the messages from those outputs.
+     */
+    private final ConcurrentMap<Output<?>, BlockingQueue<Object>> connections = new ConcurrentHashMap<>();
+
+    /**
+     * This is the approximate maximum amount of time that an <code>await</code> method will wait.
+     */
+    private volatile Duration timeout = Duration.ofSeconds(1);
 
     /**
      * Get the stage that powers this tester.
@@ -102,14 +196,14 @@ public final class AsyncTestTool
     }
 
     /**
-     * Set the maximum amount of time that <code>await()</code> will wait.
+     * Set the maximum amount of time that the <code>await</code> methods will wait.
      *
-     * @param timeoutMillis is the maximum wait time.
+     * @param timeout is the maximum wait time.
      * @return this.
      */
-    public AsyncTestTool setTimeout (final long timeoutMillis)
+    public AsyncTestTool setAwaitTimeout (final Duration timeout)
     {
-        this.timeoutMillis = timeoutMillis;
+        this.timeout = Objects.requireNonNull(timeout, "timeout");
         return this;
     }
 
@@ -119,35 +213,71 @@ public final class AsyncTestTool
      * @param <T> is the type of messages provided by the output.
      * @param output will be connected hereto.
      */
-    public synchronized <T> void connect (final Output<T> output)
+    public <T> void connect (final Output<T> output)
     {
         Objects.requireNonNull(output, "output");
 
-        if (connections.containsKey(output) == false)
+        final BlockingQueue<Object> queue = new LinkedBlockingQueue<>();
+
+        if (connections.putIfAbsent(output, queue) == null)
         {
-            final BlockingQueue<Object> queue = new LinkedBlockingQueue<>();
             final Processor<T> proc = Processor.fromConsumerScript(stage, x -> queue.add(x));
             output.connect(proc.dataIn());
-            connections.put(output, queue);
         }
     }
 
-    public <T> void await (final BooleanSupplier condition)
+    /**
+     * Wait for the given boolean condition to become true,
+     * or for the await-timeout to expire.
+     *
+     * @param condition will become true at some point.
+     */
+    public void awaitTrue (final BooleanSupplier condition)
     {
-        for (int i = 0; i < timeoutMillis && !condition.getAsBoolean(); i++)
+        Objects.requireNonNull(condition, "condition");
+
+        final Duration millis = Duration.ofMillis(1);
+
+        /**
+         * Wait for the timeout to expire or the condition to become true.
+         */
+        final long start = System.nanoTime();
+        long elapsed = 0;
+        while (elapsed < timeout.toNanos() && !condition.getAsBoolean())
         {
-            sleep(1);
+            sleep(millis);
+            elapsed = System.nanoTime() - start;
         }
 
+        /**
+         * If the condition did not become true,
+         * then throw an indicative exception.
+         */
         if (condition.getAsBoolean() == false)
         {
-            throw new IllegalStateException("The condition never became true.");
+            throw new AwaitTimeoutException();
         }
     }
 
-    public void awaitEquilibrium ()
+    /**
+     * Wait for the given boolean condition to become false,
+     * or for the await-timeout to expire.
+     *
+     * @param condition will become false at some point.
+     */
+    public void awaitFalse (final BooleanSupplier condition)
     {
-        await(() -> pending.get() > 0);
+        Objects.requireNonNull(condition, "condition");
+        awaitTrue(() -> !condition.getAsBoolean());
+    }
+
+    /**
+     * Wait for the stage to reach a point in which no actors are
+     * being executed thereon, or for the await-timeout to expire.
+     */
+    public void awaitSteadyState ()
+    {
+        awaitTrue(() -> pending.get() == 0);
     }
 
     /**
@@ -156,7 +286,7 @@ public final class AsyncTestTool
      * @param output will produce a message at some point soon.
      * @return the message that was produced.
      */
-    public Object await (final Output<?> output)
+    public Object awaitMessage (final Output<?> output)
     {
         Objects.requireNonNull(output, "output");
 
@@ -164,13 +294,23 @@ public final class AsyncTestTool
         {
             try
             {
+                /**
+                 * Find the queue that receives messages from the given output.
+                 */
                 final BlockingQueue<Object> queue = connections.get(output);
 
-                final Object result = queue.poll(timeoutMillis, TimeUnit.MILLISECONDS);
+                /**
+                 * Wait for a message to become available, if any.
+                 */
+                final Object result = queue.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
 
                 if (result == null)
                 {
-                    throw new IllegalStateException("Timeout Expired");
+                    /**
+                     * The timeout expired before a message became available;
+                     * therefore, throw an indicative exception.
+                     */
+                    throw new AwaitTimeoutException();
                 }
                 else
                 {
@@ -179,12 +319,16 @@ public final class AsyncTestTool
             }
             catch (InterruptedException ex)
             {
-                throw new RuntimeException("Interrupted", ex);
+                throw new AwaitInterruptedException();
             }
         }
         else
         {
-            throw new IllegalStateException("Not Connected to Output");
+            /**
+             * We cannot wait for messages from outputs that are not connected;
+             * therefore, throw an indicative exception.
+             */
+            throw new NoConnectionException();
         }
     }
 
@@ -196,34 +340,36 @@ public final class AsyncTestTool
      * @param expected is the message that the output will produce.
      * @throws IllegalStateException if an unexpected message is produced.
      */
-    public <T> void expect (final Output<T> output,
-                            final T expected)
+    public <T> void awaitEquals (final Output<T> output,
+                                 final T expected)
     {
         Objects.requireNonNull(output, "output");
         Objects.requireNonNull(expected, "expected");
 
-        final Object actual = await(output);
+        final Object actual = awaitMessage(output);
 
         if (Objects.equals(expected, actual) == false)
         {
-            throw new IllegalStateException(String.format("Expect: %s, Actual: %s", expected, actual));
+            throw new ExpectationFailedException(expected, actual);
         }
     }
 
     /**
      * Cause the current thread to sleep for the given number of milliseconds.
      *
-     * @param millis is how long to sleep.
+     * @param period is how long to sleep.
      */
-    public void sleep (final long millis)
+    public void sleep (final Duration period)
     {
+        Objects.requireNonNull(period, "period");
+
         try
         {
-            Thread.sleep(millis);
+            Thread.sleep(period.toMillis());
         }
         catch (InterruptedException ex)
         {
-            throw new RuntimeException(ex);
+            throw new AwaitInterruptedException();
         }
     }
 

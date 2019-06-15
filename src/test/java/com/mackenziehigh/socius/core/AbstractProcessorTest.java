@@ -60,9 +60,9 @@ public final class AbstractProcessorTest
         actor.accept("200");
         actor.accept("300");
 
-        tester.expect(actor.dataOut(), "X100X");
-        tester.expect(actor.dataOut(), "X200X");
-        tester.expect(actor.dataOut(), "X300X");
+        tester.awaitEquals(actor.dataOut(), "X100X");
+        tester.awaitEquals(actor.dataOut(), "X200X");
+        tester.awaitEquals(actor.dataOut(), "X300X");
     }
 
     /**
@@ -90,7 +90,7 @@ public final class AbstractProcessorTest
     public void test20190513225814516373 ()
     {
         actor.sendTo("17");
-        tester.expect(actor.dataOut(), "X17X");
+        tester.awaitEquals(actor.dataOut(), "X17X");
     }
 
     /**
@@ -104,7 +104,7 @@ public final class AbstractProcessorTest
     public void test20190513225814516391 ()
     {
         actor.sendFrom("Y23Y");
-        tester.expect(actor.dataOut(), "Y23Y");
+        tester.awaitEquals(actor.dataOut(), "Y23Y");
     }
 
     /**
@@ -118,7 +118,7 @@ public final class AbstractProcessorTest
     public void test20190513225814516409 ()
     {
         assertTrue(actor.offerTo("27"));
-        tester.expect(actor.dataOut(), "X27X");
+        tester.awaitEquals(actor.dataOut(), "X27X");
     }
 
     /**
@@ -132,6 +132,6 @@ public final class AbstractProcessorTest
     public void test20190513225814516428 ()
     {
         assertTrue(actor.offerFrom("Y31Y"));
-        tester.expect(actor.dataOut(), "Y31Y");
+        tester.awaitEquals(actor.dataOut(), "Y31Y");
     }
 }

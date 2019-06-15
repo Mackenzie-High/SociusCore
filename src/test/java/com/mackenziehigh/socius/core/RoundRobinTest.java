@@ -48,14 +48,14 @@ public final class RoundRobinTest
         balancer.dataIn().send('H');
         balancer.dataIn().send('I');
 
-        tester.expect(balancer.dataOut(0), 'A');
-        tester.expect(balancer.dataOut(1), 'B');
-        tester.expect(balancer.dataOut(2), 'C');
-        tester.expect(balancer.dataOut(0), 'D');
-        tester.expect(balancer.dataOut(1), 'E');
-        tester.expect(balancer.dataOut(2), 'F');
-        tester.expect(balancer.dataOut(0), 'G');
-        tester.expect(balancer.dataOut(1), 'H');
-        tester.expect(balancer.dataOut(2), 'I');
+        tester.awaitEquals(balancer.dataOut(0), 'A');
+        tester.awaitEquals(balancer.dataOut(1), 'B');
+        tester.awaitEquals(balancer.dataOut(2), 'C');
+        tester.awaitEquals(balancer.dataOut(0), 'D');
+        tester.awaitEquals(balancer.dataOut(1), 'E');
+        tester.awaitEquals(balancer.dataOut(2), 'F');
+        tester.awaitEquals(balancer.dataOut(0), 'G');
+        tester.awaitEquals(balancer.dataOut(1), 'H');
+        tester.awaitEquals(balancer.dataOut(2), 'I');
     }
 }

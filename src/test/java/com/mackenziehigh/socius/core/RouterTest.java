@@ -106,29 +106,29 @@ public final class RouterTest
         assertFalse(router.isSynchronous());
 
         P5.dataIn().send(500);
-        tester.expect(router.sinkDead(), 500);
+        tester.awaitEquals(router.sinkDead(), 500);
 
         P4.dataIn().send(400);
-        tester.expect(S3.dataOut(), 400);
-        tester.expect(S4.dataOut(), 400);
+        tester.awaitEquals(S3.dataOut(), 400);
+        tester.awaitEquals(S4.dataOut(), 400);
 
         P3.dataIn().send(300);
-        tester.expect(S3.dataOut(), 300);
-        tester.expect(S4.dataOut(), 300);
+        tester.awaitEquals(S3.dataOut(), 300);
+        tester.awaitEquals(S4.dataOut(), 300);
 
         P2.dataIn().send(200);
-        tester.expect(S1.dataOut(), 200);
-        tester.expect(S2.dataOut(), 200);
+        tester.awaitEquals(S1.dataOut(), 200);
+        tester.awaitEquals(S2.dataOut(), 200);
 
         P1.dataIn().send(100);
-        tester.expect(S1.dataOut(), 100);
-        tester.expect(S2.dataOut(), 100);
+        tester.awaitEquals(S1.dataOut(), 100);
+        tester.awaitEquals(S2.dataOut(), 100);
 
-        tester.expect(router.sinkAll(), 500);
-        tester.expect(router.sinkAll(), 400);
-        tester.expect(router.sinkAll(), 300);
-        tester.expect(router.sinkAll(), 200);
-        tester.expect(router.sinkAll(), 100);
+        tester.awaitEquals(router.sinkAll(), 500);
+        tester.awaitEquals(router.sinkAll(), 400);
+        tester.awaitEquals(router.sinkAll(), 300);
+        tester.awaitEquals(router.sinkAll(), 200);
+        tester.awaitEquals(router.sinkAll(), 100);
     }
 
     /**
@@ -145,29 +145,29 @@ public final class RouterTest
         assertTrue(router.isSynchronous());
 
         P5.dataIn().send(500);
-        tester.expect(router.sinkDead(), 500);
+        tester.awaitEquals(router.sinkDead(), 500);
 
         P4.dataIn().send(400);
-        tester.expect(S3.dataOut(), 400);
-        tester.expect(S4.dataOut(), 400);
+        tester.awaitEquals(S3.dataOut(), 400);
+        tester.awaitEquals(S4.dataOut(), 400);
 
         P3.dataIn().send(300);
-        tester.expect(S3.dataOut(), 300);
-        tester.expect(S4.dataOut(), 300);
+        tester.awaitEquals(S3.dataOut(), 300);
+        tester.awaitEquals(S4.dataOut(), 300);
 
         P2.dataIn().send(200);
-        tester.expect(S1.dataOut(), 200);
-        tester.expect(S2.dataOut(), 200);
+        tester.awaitEquals(S1.dataOut(), 200);
+        tester.awaitEquals(S2.dataOut(), 200);
 
         P1.dataIn().send(100);
-        tester.expect(S1.dataOut(), 100);
-        tester.expect(S2.dataOut(), 100);
+        tester.awaitEquals(S1.dataOut(), 100);
+        tester.awaitEquals(S2.dataOut(), 100);
 
-        tester.expect(router.sinkAll(), 500);
-        tester.expect(router.sinkAll(), 400);
-        tester.expect(router.sinkAll(), 300);
-        tester.expect(router.sinkAll(), 200);
-        tester.expect(router.sinkAll(), 100);
+        tester.awaitEquals(router.sinkAll(), 500);
+        tester.awaitEquals(router.sinkAll(), 400);
+        tester.awaitEquals(router.sinkAll(), 300);
+        tester.awaitEquals(router.sinkAll(), 200);
+        tester.awaitEquals(router.sinkAll(), 100);
     }
 
     /**
@@ -186,16 +186,16 @@ public final class RouterTest
         assertTrue(P5.isActive());
 
         P5.dataIn().send(500);
-        tester.expect(router.sinkDead(), 500);
+        tester.awaitEquals(router.sinkDead(), 500);
 
         P1.dataIn().send(100); // silently dropped.
 
         P2.dataIn().send(200);
-        tester.expect(S1.dataOut(), 200);
-        tester.expect(S2.dataOut(), 200);
+        tester.awaitEquals(S1.dataOut(), 200);
+        tester.awaitEquals(S2.dataOut(), 200);
 
-        tester.expect(router.sinkAll(), 500);
-        tester.expect(router.sinkAll(), 200);
+        tester.awaitEquals(router.sinkAll(), 500);
+        tester.awaitEquals(router.sinkAll(), 200);
     }
 
     /**

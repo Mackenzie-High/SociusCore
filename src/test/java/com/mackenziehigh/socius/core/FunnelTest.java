@@ -35,12 +35,12 @@ public final class FunnelTest
 
         funnel.dataIn("A").send("Mercury");
         funnel.dataIn("B").send("Venus");
-        tester.expect(funnel.dataOut(), "Mercury");
-        tester.expect(funnel.dataOut(), "Venus");
+        tester.awaitEquals(funnel.dataOut(), "Mercury");
+        tester.awaitEquals(funnel.dataOut(), "Venus");
 
         funnel.dataIn("A").send("Earth");
         funnel.dataIn("B").send("Mars");
-        tester.expect(funnel.dataOut(), "Earth");
-        tester.expect(funnel.dataOut(), "Mars");
+        tester.awaitEquals(funnel.dataOut(), "Earth");
+        tester.awaitEquals(funnel.dataOut(), "Mars");
     }
 }

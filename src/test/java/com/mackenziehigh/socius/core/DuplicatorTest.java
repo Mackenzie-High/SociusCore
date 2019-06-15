@@ -39,20 +39,20 @@ public final class DuplicatorTest
         dup.dataIn().send('B');
         dup.dataIn().send('C');
 
-        tester.expect(dup.dataOut(), 'A');
-        tester.expect(dup.dataOut(), 'A');
-        tester.expect(dup.dataOut(), 'A');
-        tester.expect(dup.dataOut(), 'A');
+        tester.awaitEquals(dup.dataOut(), 'A');
+        tester.awaitEquals(dup.dataOut(), 'A');
+        tester.awaitEquals(dup.dataOut(), 'A');
+        tester.awaitEquals(dup.dataOut(), 'A');
 
-        tester.expect(dup.dataOut(), 'B');
-        tester.expect(dup.dataOut(), 'B');
-        tester.expect(dup.dataOut(), 'B');
-        tester.expect(dup.dataOut(), 'B');
+        tester.awaitEquals(dup.dataOut(), 'B');
+        tester.awaitEquals(dup.dataOut(), 'B');
+        tester.awaitEquals(dup.dataOut(), 'B');
+        tester.awaitEquals(dup.dataOut(), 'B');
 
-        tester.expect(dup.dataOut(), 'C');
-        tester.expect(dup.dataOut(), 'C');
-        tester.expect(dup.dataOut(), 'C');
-        tester.expect(dup.dataOut(), 'C');
+        tester.awaitEquals(dup.dataOut(), 'C');
+        tester.awaitEquals(dup.dataOut(), 'C');
+        tester.awaitEquals(dup.dataOut(), 'C');
+        tester.awaitEquals(dup.dataOut(), 'C');
     }
 
     @Test
@@ -74,17 +74,17 @@ public final class DuplicatorTest
         dup.dataIn().send('Y');
         dup.dataIn().send('Z');
 
-        tester.expect(dup.dataOut(), 'A');
-        tester.expect(dup.dataOut(), 'B');
-        tester.expect(dup.dataOut(), 'C');
-        tester.expect(dup.dataOut(), 'A');
-        tester.expect(dup.dataOut(), 'B');
-        tester.expect(dup.dataOut(), 'C');
-        tester.expect(dup.dataOut(), 'X');
-        tester.expect(dup.dataOut(), 'Y');
-        tester.expect(dup.dataOut(), 'Z');
-        tester.expect(dup.dataOut(), 'X');
-        tester.expect(dup.dataOut(), 'Y');
-        tester.expect(dup.dataOut(), 'Z');
+        tester.awaitEquals(dup.dataOut(), 'A');
+        tester.awaitEquals(dup.dataOut(), 'B');
+        tester.awaitEquals(dup.dataOut(), 'C');
+        tester.awaitEquals(dup.dataOut(), 'A');
+        tester.awaitEquals(dup.dataOut(), 'B');
+        tester.awaitEquals(dup.dataOut(), 'C');
+        tester.awaitEquals(dup.dataOut(), 'X');
+        tester.awaitEquals(dup.dataOut(), 'Y');
+        tester.awaitEquals(dup.dataOut(), 'Z');
+        tester.awaitEquals(dup.dataOut(), 'X');
+        tester.awaitEquals(dup.dataOut(), 'Y');
+        tester.awaitEquals(dup.dataOut(), 'Z');
     }
 }

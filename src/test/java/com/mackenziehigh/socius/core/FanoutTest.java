@@ -35,11 +35,11 @@ public final class FanoutTest
         tester.connect(fanout.dataOut("B"));
 
         fanout.dataIn().send("Mercury");
-        tester.expect(fanout.dataOut("A"), "Mercury");
-        tester.expect(fanout.dataOut("B"), "Mercury");
+        tester.awaitEquals(fanout.dataOut("A"), "Mercury");
+        tester.awaitEquals(fanout.dataOut("B"), "Mercury");
 
         fanout.dataIn().send("Venus");
-        tester.expect(fanout.dataOut("A"), "Venus");
-        tester.expect(fanout.dataOut("B"), "Venus");
+        tester.awaitEquals(fanout.dataOut("A"), "Venus");
+        tester.awaitEquals(fanout.dataOut("B"), "Venus");
     }
 }

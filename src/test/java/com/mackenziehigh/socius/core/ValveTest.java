@@ -41,13 +41,13 @@ public final class ValveTest
         assertTrue(valve.isOpen());
         assertFalse(valve.isClosed());
         valve.dataIn().send('A');
-        tester.expect(valve.dataOut(), 'A');
+        tester.awaitEquals(valve.dataOut(), 'A');
 
         /**
          * Close the valve via a message.
          */
         valve.toggleIn().send(false);
-        tester.expect(valve.toggleOut(), false);
+        tester.awaitEquals(valve.toggleOut(), false);
 
         /**
          * No data gets through a closed valve.
@@ -60,7 +60,7 @@ public final class ValveTest
          * Open the valve via a message.
          */
         valve.toggleIn().send(true);
-        tester.expect(valve.toggleOut(), true);
+        tester.awaitEquals(valve.toggleOut(), true);
 
         /**
          * Data can flow through a re-opened valve.
@@ -68,7 +68,7 @@ public final class ValveTest
         assertTrue(valve.isOpen());
         assertFalse(valve.isClosed());
         valve.dataIn().send('C');
-        tester.expect(valve.dataOut(), 'C');
+        tester.awaitEquals(valve.dataOut(), 'C');
 
         /**
          * Close the valve via the toggle() method.
@@ -76,7 +76,7 @@ public final class ValveTest
          * Notice that a toggle message is sent out however.
          */
         valve.toggle(false);
-        tester.expect(valve.toggleOut(), false);
+        tester.awaitEquals(valve.toggleOut(), false);
         valve.dataIn().send('D');
 
         /**
@@ -85,9 +85,9 @@ public final class ValveTest
          * Notice that a toggle message is sent out.
          */
         valve.toggle(true);
-        tester.expect(valve.toggleOut(), true);
+        tester.awaitEquals(valve.toggleOut(), true);
         valve.dataIn().send('E');
-        tester.expect(valve.dataOut(), 'E');
+        tester.awaitEquals(valve.dataOut(), 'E');
     }
 
     @Test
@@ -111,7 +111,7 @@ public final class ValveTest
          * Open the valve via a message.
          */
         valve.toggleIn().send(true);
-        tester.expect(valve.toggleOut(), true);
+        tester.awaitEquals(valve.toggleOut(), true);
 
         /**
          * Data can flow through a re-opened valve.
@@ -119,6 +119,6 @@ public final class ValveTest
         assertTrue(valve.isOpen());
         assertFalse(valve.isClosed());
         valve.dataIn().send('C');
-        tester.expect(valve.dataOut(), 'C');
+        tester.awaitEquals(valve.dataOut(), 'C');
     }
 }

@@ -66,7 +66,7 @@ public final class PrinterTest
         tester.connect(printer.dataOut());
 
         printer.accept(100);
-        tester.expect(printer.dataOut(), 100);
+        tester.awaitEquals(printer.dataOut(), 100);
         assertEquals("X = 100", arrayOut.toString());
     }
 
@@ -83,7 +83,7 @@ public final class PrinterTest
         tester.connect(printer.dataOut());
 
         printer.accept(100);
-        tester.expect(printer.dataOut(), 100);
+        tester.awaitEquals(printer.dataOut(), 100);
         assertEquals("X = 100", arrayErr.toString());
     }
 
@@ -100,7 +100,7 @@ public final class PrinterTest
         tester.connect(printer.dataOut());
 
         printer.accept(100);
-        tester.expect(printer.dataOut(), 100);
+        tester.awaitEquals(printer.dataOut(), 100);
         assertEquals("X = 100\n", arrayErr.toString());
     }
 
@@ -117,7 +117,7 @@ public final class PrinterTest
         tester.connect(printer.dataOut());
 
         printer.accept(100);
-        tester.expect(printer.dataOut(), 100);
+        tester.awaitEquals(printer.dataOut(), 100);
         assertEquals("X = 100\n", arrayOut.toString());
     }
 
@@ -134,7 +134,7 @@ public final class PrinterTest
         tester.connect(printer.dataOut());
 
         printer.accept(100);
-        tester.expect(printer.dataOut(), 100);
+        tester.awaitEquals(printer.dataOut(), 100);
         assertEquals("100", arrayOut.toString());
     }
 
@@ -151,7 +151,7 @@ public final class PrinterTest
         tester.connect(printer.dataOut());
 
         printer.accept(100);
-        tester.expect(printer.dataOut(), 100);
+        tester.awaitEquals(printer.dataOut(), 100);
         assertEquals("100", arrayErr.toString());
     }
 
@@ -168,7 +168,7 @@ public final class PrinterTest
         tester.connect(printer.dataOut());
 
         printer.accept(100);
-        tester.expect(printer.dataOut(), 100);
+        tester.awaitEquals(printer.dataOut(), 100);
         assertEquals("100\n", arrayErr.toString());
     }
 
@@ -185,7 +185,7 @@ public final class PrinterTest
         tester.connect(printer.dataOut());
 
         printer.accept(100);
-        tester.expect(printer.dataOut(), 100);
+        tester.awaitEquals(printer.dataOut(), 100);
         assertEquals("100\n", arrayOut.toString());
     }
 }

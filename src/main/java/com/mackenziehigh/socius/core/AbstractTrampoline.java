@@ -50,25 +50,6 @@ public abstract class AbstractTrampoline<I, O>
             throws Throwable;
 
     /**
-     * Specifies the state to goto, given the current state,
-     * when an unhandled exception occurs in the current state.
-     *
-     * <p>
-     * Case should be taken to ensure that this method never
-     * throws an exception itself; otherwise, the state-machine
-     * will suppress the exception and return to the initial state.
-     * </p>
-     *
-     * @param state is the current state.
-     * @param cause is the unhandled exception.
-     * @return the next state.
-     * @throws java.lang.Throwable if something goes wrong.
-     */
-    protected abstract State<I> onError (State<I> state,
-                                         Throwable cause)
-            throws Throwable;
-
-    /**
      * This state responds to messages by doing nothing.
      */
     private final State<I> nop = message -> this.nop;
@@ -89,7 +70,7 @@ public abstract class AbstractTrampoline<I, O>
     }
 
     @Override
-    protected final void onMessage (I message)
+    protected final void onMessage (final I message)
             throws Throwable
     {
         try
@@ -100,13 +81,45 @@ public abstract class AbstractTrampoline<I, O>
         {
             try
             {
-                current = onError(current, ex1);
+                current = onError(current, message, ex1);
             }
             catch (Throwable ex2)
             {
                 current = nop;
             }
         }
+    }
+
+    /**
+     * Specifies the state to goto, given the current state,
+     * when an unhandled exception occurs in the current state.
+     *
+     * <p>
+     * This method is intended to be overridden when desired.
+     * </p>
+     *
+     * <p>
+     * By default, this method merely returns the initial state.
+     * </p>
+     *
+     * <p>
+     * Care should be taken to ensure that this method never
+     * throws an exception itself; otherwise, the state-machine
+     * will suppress the exception and return to the initial state.
+     * </p>
+     *
+     * @param state is the current state.
+     * @param message was being processed when the exception occurred.
+     * @param cause is the unhandled exception.
+     * @return the next state.
+     * @throws java.lang.Throwable if something goes wrong.
+     */
+    protected State<I> onError (final State<I> state,
+                                final I message,
+                                final Throwable cause)
+            throws Throwable
+    {
+        return initial;
     }
 
     /**

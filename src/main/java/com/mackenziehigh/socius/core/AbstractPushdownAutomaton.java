@@ -61,21 +61,6 @@ public abstract class AbstractPushdownAutomaton<I, O>
             throws Throwable;
 
     /**
-     * Specifies the state to goto when an unhandled exception occurs.
-     *
-     * <p>
-     * Case should be taken to ensure that this method never
-     * throws an exception itself; otherwise, the state-machine
-     * will suppress the exception and return to the initial state.
-     * </p>
-     *
-     * @param cause is the unhandled exception.
-     * @throws java.lang.Throwable if something goes wrong.
-     */
-    protected abstract void onError (final Throwable cause)
-            throws Throwable;
-
-    /**
      * This is the initial state that the state-machine is in.
      */
     private final State<I> initial = this::onInitial;
@@ -88,7 +73,35 @@ public abstract class AbstractPushdownAutomaton<I, O>
     protected AbstractPushdownAutomaton (final Stage stage)
     {
         super(stage);
-        pushdownStack.push(initial);
+        reset();
+    }
+
+    /**
+     * Specifies the state to goto when an unhandled exception occurs.
+     *
+     * <p>
+     * This method is intended to be overridden when desired.
+     * </p>
+     *
+     * <p>
+     * By default, this method merely returns the initial state.
+     * </p>
+     *
+     * <p>
+     * Care should be taken to ensure that this method never
+     * throws an exception itself; otherwise, the state-machine
+     * will suppress the exception and return to the initial state.
+     * </p>
+     *
+     * @param message was being processed when the exception occurred.
+     * @param cause is the unhandled exception.
+     * @throws java.lang.Throwable if something goes wrong.
+     */
+    protected void onError (final I message,
+                            final Throwable cause)
+            throws Throwable
+    {
+        reset();
     }
 
     /**
@@ -96,7 +109,7 @@ public abstract class AbstractPushdownAutomaton<I, O>
      *
      * @param state will be pushed onto the <code>Deque</code>.
      */
-    protected void push (final State<I> state)
+    protected final void push (final State<I> state)
     {
         Objects.requireNonNull(state, "state");
         pushdownStack.push(state);
@@ -107,7 +120,7 @@ public abstract class AbstractPushdownAutomaton<I, O>
      *
      * @param effect will be pushed onto the <code>Deque</code>.
      */
-    protected void push (final SideEffect effect)
+    protected final void push (final SideEffect effect)
     {
         Objects.requireNonNull(effect, "effect");
         pushdownStack.push(effect);
@@ -118,7 +131,7 @@ public abstract class AbstractPushdownAutomaton<I, O>
      *
      * @param state will be appended onto the <code>Deque</code>.
      */
-    protected void then (final State<I> state)
+    protected final void then (final State<I> state)
     {
         Objects.requireNonNull(state, "state");
         pushdownStack.add(state);
@@ -129,7 +142,7 @@ public abstract class AbstractPushdownAutomaton<I, O>
      *
      * @param effect will be appended onto the <code>Deque</code>.
      */
-    protected void then (final SideEffect effect)
+    protected final void then (final SideEffect effect)
     {
         Objects.requireNonNull(effect, "effect");
         pushdownStack.add(effect);
@@ -138,13 +151,23 @@ public abstract class AbstractPushdownAutomaton<I, O>
     /**
      * Remove all states and side-effects from the execution <code>Deque</code>.
      */
-    protected void clear ()
+    protected final void clear ()
     {
         pushdownStack.clear();
     }
 
+    /**
+     * Remove all states and side-effects from the execution <code>Deque</code>
+     * and then return to the initial state.
+     */
+    protected final void reset ()
+    {
+        pushdownStack.clear();
+        pushdownStack.push(initial);
+    }
+
     @Override
-    protected final void onMessage (I message)
+    protected final void onMessage (final I message)
             throws Throwable
     {
         try
@@ -178,11 +201,11 @@ public abstract class AbstractPushdownAutomaton<I, O>
         {
             try
             {
-                onError(ex1);
+                onError(message, ex1);
             }
             catch (Throwable ex2)
             {
-                pushdownStack.clear();
+                reset();
             }
         }
     }

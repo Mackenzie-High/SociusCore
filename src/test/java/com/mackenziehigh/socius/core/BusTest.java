@@ -35,11 +35,11 @@ public final class BusTest
         tester.connect(bus.dataOut("Y"));
 
         bus.dataIn("A").send("Avril");
-        tester.expect(bus.dataOut("X"), "Avril");
-        tester.expect(bus.dataOut("Y"), "Avril");
+        tester.awaitEquals(bus.dataOut("X"), "Avril");
+        tester.awaitEquals(bus.dataOut("Y"), "Avril");
 
         bus.dataIn("E").send("Emma");
-        tester.expect(bus.dataOut("X"), "Emma");
-        tester.expect(bus.dataOut("Y"), "Emma");
+        tester.awaitEquals(bus.dataOut("X"), "Emma");
+        tester.awaitEquals(bus.dataOut("Y"), "Emma");
     }
 }

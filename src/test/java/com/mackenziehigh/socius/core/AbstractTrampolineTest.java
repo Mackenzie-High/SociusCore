@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius.core;
 
-import com.mackenziehigh.socius.core.AsyncTestTool;
-import com.mackenziehigh.socius.core.AbstractTrampoline;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -31,6 +29,7 @@ public final class AbstractTrampolineTest
     {
         @Override
         protected State<Integer> onError (final State<Integer> state,
+                                          final Integer message,
                                           final Throwable cause)
                 throws Throwable
         {
@@ -112,8 +111,8 @@ public final class AbstractTrampolineTest
         machine.accept(1);
         machine.accept(13);
         machine.accept(17);
-        tester.expect(machine.dataOut(), "X13X");
-        tester.expect(machine.dataOut(), "Y17Y");
+        tester.awaitEquals(machine.dataOut(), "X13X");
+        tester.awaitEquals(machine.dataOut(), "Y17Y");
         assertFalse(machine.isNop());
     }
 
@@ -130,7 +129,7 @@ public final class AbstractTrampolineTest
         machine.accept(2);
         machine.accept(13);
         machine.accept(17);
-        tester.expect(machine.dataOut(), "Y17Y");
+        tester.awaitEquals(machine.dataOut(), "Y17Y");
         assertFalse(machine.isNop());
     }
 
@@ -146,7 +145,7 @@ public final class AbstractTrampolineTest
     {
         machine.accept(3);
         machine.accept(13);
-        tester.await(() -> machine.isNop());
+        tester.awaitTrue(() -> machine.isNop());
         assertTrue(machine.isNop());
     }
 
@@ -163,8 +162,8 @@ public final class AbstractTrampolineTest
         machine.accept(99);
         machine.accept(13);
         machine.accept(17);
-        tester.expect(machine.dataOut(), "Y13Y");
-        tester.expect(machine.dataOut(), "Y17Y");
+        tester.awaitEquals(machine.dataOut(), "Y13Y");
+        tester.awaitEquals(machine.dataOut(), "Y17Y");
         assertFalse(machine.isNop());
     }
 

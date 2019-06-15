@@ -56,7 +56,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 0
         //     actor2 weight = 0
         balancer.dataIn().send(101);
-        tester.expect(actor0.dataOut(), 101);
+        tester.awaitEquals(actor0.dataOut(), 101);
         assertEquals(101, balancer.sumOf(0));
         assertEquals(0, balancer.sumOf(1));
         assertEquals(0, balancer.sumOf(2));
@@ -66,7 +66,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 102
         //     actor2 weight = 0
         balancer.dataIn().send(102);
-        tester.expect(actor1.dataOut(), 102);
+        tester.awaitEquals(actor1.dataOut(), 102);
         assertEquals(101, balancer.sumOf(0));
         assertEquals(102, balancer.sumOf(1));
         assertEquals(0, balancer.sumOf(2));
@@ -76,7 +76,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 102
         //     actor2 weight = 103
         balancer.dataIn().send(103);
-        tester.expect(actor2.dataOut(), 103);
+        tester.awaitEquals(actor2.dataOut(), 103);
         assertEquals(101, balancer.sumOf(0));
         assertEquals(102, balancer.sumOf(1));
         assertEquals(103, balancer.sumOf(2));
@@ -86,7 +86,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 102
         //     actor2 weight = 103
         balancer.dataIn().send(104);
-        tester.expect(actor0.dataOut(), 104);
+        tester.awaitEquals(actor0.dataOut(), 104);
         assertEquals(205, balancer.sumOf(0));
         assertEquals(102, balancer.sumOf(1));
         assertEquals(103, balancer.sumOf(2));
@@ -96,7 +96,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 207
         //     actor2 weight = 103
         balancer.dataIn().send(105);
-        tester.expect(actor1.dataOut(), 105);
+        tester.awaitEquals(actor1.dataOut(), 105);
         assertEquals(205, balancer.sumOf(0));
         assertEquals(207, balancer.sumOf(1));
         assertEquals(103, balancer.sumOf(2));
@@ -106,7 +106,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 207
         //     actor2 weight = 209
         balancer.dataIn().send(106);
-        tester.expect(actor2.dataOut(), 106);
+        tester.awaitEquals(actor2.dataOut(), 106);
         assertEquals(205, balancer.sumOf(0));
         assertEquals(207, balancer.sumOf(1));
         assertEquals(209, balancer.sumOf(2));
@@ -116,7 +116,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 207
         //     actor2 weight = 209
         balancer.dataIn().send(400);
-        tester.expect(actor0.dataOut(), 400);
+        tester.awaitEquals(actor0.dataOut(), 400);
         assertEquals(605, balancer.sumOf(0));
         assertEquals(207, balancer.sumOf(1));
         assertEquals(209, balancer.sumOf(2));
@@ -126,7 +126,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 257
         //     actor2 weight = 209
         balancer.dataIn().send(50);
-        tester.expect(actor1.dataOut(), 50);
+        tester.awaitEquals(actor1.dataOut(), 50);
         assertEquals(605, balancer.sumOf(0));
         assertEquals(257, balancer.sumOf(1));
         assertEquals(209, balancer.sumOf(2));
@@ -136,7 +136,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 257
         //     actor2 weight = 509
         balancer.dataIn().send(300);
-        tester.expect(actor2.dataOut(), 300);
+        tester.awaitEquals(actor2.dataOut(), 300);
         assertEquals(605, balancer.sumOf(0));
         assertEquals(257, balancer.sumOf(1));
         assertEquals(509, balancer.sumOf(2));
@@ -146,7 +146,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 317
         //     actor2 weight = 509
         balancer.dataIn().send(60);
-        tester.expect(actor1.dataOut(), 60);
+        tester.awaitEquals(actor1.dataOut(), 60);
         assertEquals(605, balancer.sumOf(0));
         assertEquals(317, balancer.sumOf(1));
         assertEquals(509, balancer.sumOf(2));
@@ -156,7 +156,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 400
         //     actor2 weight = 509
         balancer.dataIn().send(83);
-        tester.expect(actor1.dataOut(), 83);
+        tester.awaitEquals(actor1.dataOut(), 83);
         assertEquals(605, balancer.sumOf(0));
         assertEquals(400, balancer.sumOf(1));
         assertEquals(509, balancer.sumOf(2));
@@ -166,7 +166,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 509
         //     actor2 weight = 509
         balancer.dataIn().send(109);
-        tester.expect(actor1.dataOut(), 109);
+        tester.awaitEquals(actor1.dataOut(), 109);
         assertEquals(605, balancer.sumOf(0));
         assertEquals(509, balancer.sumOf(1));
         assertEquals(509, balancer.sumOf(2));
@@ -176,7 +176,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 600
         //     actor2 weight = 509
         balancer.dataIn().send(91);
-        tester.expect(actor1.dataOut(), 91);
+        tester.awaitEquals(actor1.dataOut(), 91);
         assertEquals(605, balancer.sumOf(0));
         assertEquals(600, balancer.sumOf(1));
         assertEquals(509, balancer.sumOf(2));
@@ -186,7 +186,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 600
         //     actor2 weight = 540
         balancer.dataIn().send(31);
-        tester.expect(actor2.dataOut(), 31);
+        tester.awaitEquals(actor2.dataOut(), 31);
         assertEquals(605, balancer.sumOf(0));
         assertEquals(600, balancer.sumOf(1));
         assertEquals(540, balancer.sumOf(2));
@@ -196,7 +196,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 600
         //     actor2 weight = 605
         balancer.dataIn().send(65);
-        tester.expect(actor2.dataOut(), 65);
+        tester.awaitEquals(actor2.dataOut(), 65);
         assertEquals(605, balancer.sumOf(0));
         assertEquals(600, balancer.sumOf(1));
         assertEquals(605, balancer.sumOf(2));
@@ -206,7 +206,7 @@ public final class WeightBalancerTest
         //     actor1 weight = 620
         //     actor2 weight = 605
         balancer.dataIn().send(20);
-        tester.expect(actor1.dataOut(), 20);
+        tester.awaitEquals(actor1.dataOut(), 20);
         assertEquals(605, balancer.sumOf(0));
         assertEquals(620, balancer.sumOf(1));
         assertEquals(605, balancer.sumOf(2));

@@ -4,7 +4,7 @@ import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.socius.core.Printer;
 import com.mackenziehigh.socius.core.Processor;
-import com.mackenziehigh.socius.core.TypeCaster;
+import com.mackenziehigh.socius.core.Valve;
 
 public final class Example
 {
@@ -15,30 +15,27 @@ public final class Example
         /**
          * This actor merely simulates a data producer.
          */
-        final Processor<Object> producer = Processor.fromIdentityScript(stage);
+        final Processor<String> producer = Processor.fromIdentityScript(stage);
 
         /**
          * This is the actor whose functionality is being demonstrated.
          */
-        final TypeCaster<Object, String> caster = TypeCaster.newTypeCaster(stage, String.class);
+        final Valve<String> valve = Valve.newOpenValve(stage);
 
         /**
-         * These actors will print the results to standard-output.
+         * This actor will print the results to standard-output.
          */
-        final Printer<String> success = Printer.newPrintln(stage, "Successfully cast (%s) to type String.");
-        final Printer<Object> failure = Printer.newPrintln(stage, "Failed to cast (%s) to type String.");
+        final Printer<String> printer = Printer.newPrintln(stage, "Announcement: %s");
 
         /**
          * Connect the actors to form a network.
          */
-        producer.dataOut().connect(caster.dataIn());
-        caster.dataOut().connect(success.dataIn());
-        caster.errorOut().connect(failure.dataIn());
+        producer.dataOut().connect(valve.dataIn());
+        valve.dataOut().connect(printer.dataIn());
 
         /**
          * Cause data to flow through the network.
          */
-        producer.accept("10"); // 10 is a String.
-        producer.accept(13); // 13 is an Integer.
+        producer.accept("");
     }
 }

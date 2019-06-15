@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius.core;
 
-import com.mackenziehigh.socius.core.AsyncTestTool;
-import com.mackenziehigh.socius.core.AbstractPushdownAutomaton;
 import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -51,7 +49,8 @@ public final class AbstractPushdownAutomatonTest
         }
 
         @Override
-        protected void onError (final Throwable cause)
+        protected void onError (final Integer message,
+                                final Throwable cause)
                 throws Throwable
         {
             executedOnError.set(true);
@@ -87,10 +86,10 @@ public final class AbstractPushdownAutomatonTest
         machine.dataIn().send(300);
         machine.dataIn().send(400);
 
-        tester.expect(machine.dataOut(), "Z100Z");
-        tester.expect(machine.dataOut(), "Y200Y");
-        tester.expect(machine.dataOut(), "X300X");
-        tester.expect(machine.dataOut(), "I400I");
+        tester.awaitEquals(machine.dataOut(), "Z100Z");
+        tester.awaitEquals(machine.dataOut(), "Y200Y");
+        tester.awaitEquals(machine.dataOut(), "X300X");
+        tester.awaitEquals(machine.dataOut(), "I400I");
 
         assertTrue(executedOnInitial.get());
         assertFalse(executedOnError.get());
@@ -112,10 +111,10 @@ public final class AbstractPushdownAutomatonTest
 
         machine.dataIn().send(100);
 
-        tester.expect(machine.dataOut(), "Z");
-        tester.expect(machine.dataOut(), "Y");
-        tester.expect(machine.dataOut(), "X");
-        tester.expect(machine.dataOut(), "I100I");
+        tester.awaitEquals(machine.dataOut(), "Z");
+        tester.awaitEquals(machine.dataOut(), "Y");
+        tester.awaitEquals(machine.dataOut(), "X");
+        tester.awaitEquals(machine.dataOut(), "I100I");
 
         assertTrue(executedOnInitial.get());
         assertFalse(executedOnError.get());
@@ -140,10 +139,10 @@ public final class AbstractPushdownAutomatonTest
         machine.dataIn().send(300);
         machine.dataIn().send(400);
 
-        tester.expect(machine.dataOut(), "I100I");
-        tester.expect(machine.dataOut(), "X200X");
-        tester.expect(machine.dataOut(), "Y300Y");
-        tester.expect(machine.dataOut(), "Z400Z");
+        tester.awaitEquals(machine.dataOut(), "I100I");
+        tester.awaitEquals(machine.dataOut(), "X200X");
+        tester.awaitEquals(machine.dataOut(), "Y300Y");
+        tester.awaitEquals(machine.dataOut(), "Z400Z");
 
         assertTrue(executedOnInitial.get());
         assertFalse(executedOnError.get());
@@ -165,10 +164,10 @@ public final class AbstractPushdownAutomatonTest
 
         machine.dataIn().send(100);
 
-        tester.expect(machine.dataOut(), "I100I");
-        tester.expect(machine.dataOut(), "X");
-        tester.expect(machine.dataOut(), "Y");
-        tester.expect(machine.dataOut(), "Z");
+        tester.awaitEquals(machine.dataOut(), "I100I");
+        tester.awaitEquals(machine.dataOut(), "X");
+        tester.awaitEquals(machine.dataOut(), "Y");
+        tester.awaitEquals(machine.dataOut(), "Z");
 
         assertTrue(executedOnInitial.get());
         assertFalse(executedOnError.get());
@@ -189,8 +188,8 @@ public final class AbstractPushdownAutomatonTest
         machine.dataIn().send(100); // initial state
         machine.dataIn().send(200); // n = 200
 
-        tester.expect(machine.dataOut(), "I100I");
-        tester.await(() -> executedOnError.get());
+        tester.awaitEquals(machine.dataOut(), "I100I");
+        tester.awaitTrue(() -> executedOnError.get());
 
         assertTrue(executedOnInitial.get());
         assertTrue(executedOnError.get());
@@ -210,8 +209,8 @@ public final class AbstractPushdownAutomatonTest
 
         machine.dataIn().send(100); // initial state
 
-        tester.expect(machine.dataOut(), "I100I");
-        tester.await(() -> executedOnError.get());
+        tester.awaitEquals(machine.dataOut(), "I100I");
+        tester.awaitTrue(() -> executedOnError.get());
 
         assertTrue(executedOnInitial.get());
         assertTrue(executedOnError.get());
