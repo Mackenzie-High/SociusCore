@@ -2,9 +2,9 @@ package examples;
 
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
-import com.mackenziehigh.socius.core.Printer;
-import com.mackenziehigh.socius.core.Processor;
-import com.mackenziehigh.socius.core.Valve;
+import com.mackenziehigh.socius.Printer;
+import com.mackenziehigh.socius.Processor;
+import com.mackenziehigh.socius.Valve;
 
 public final class Example
 {
