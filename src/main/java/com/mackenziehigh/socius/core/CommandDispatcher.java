@@ -1,18 +1,28 @@
+/*
+ * Copyright 2019 Michael Mackenzie High
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.mackenziehigh.socius.core;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * Dispatches messages to previously declared functions.
@@ -24,38 +34,37 @@ import java.util.function.Predicate;
 public final class CommandDispatcher<K, I, O>
         implements Pipeline<I, O>
 {
+    /**
+     * This function will extract a key, from an incoming message,
+     * which will be used to route the message to the corresponding function.
+     */
     private final Function<I, K> keyFunction;
 
+    /**
+     * This map maps the names of functions to those functions.
+     */
     private final Map<K, Function<I, O>> namedFunctions;
 
-    private final List<Predicate<I>> anonPredicates;
-
-    private final List<Function<I, O>> anonFunctions;
-
+    /**
+     * This actor receives the input messages and invokes
+     * the corresponding functions synchronously.
+     */
     private final Pipeline<I, O> engine;
+
+    /**
+     * This actor provides the drops-out connector.
+     */
+    private final Processor<I> dropsConnector;
 
     private CommandDispatcher (final Builder<K, I, O> builder)
     {
         this.engine = Pipeline.fromFunctionScript(builder.stage, this::onInput);
+        this.dropsConnector = Processor.fromIdentityScript(builder.stage);
         this.keyFunction = builder.keyFunction;
         this.namedFunctions = Map.copyOf(builder.namedFunctions);
-        this.anonPredicates = List.copyOf(builder.anonPredicates);
-        this.anonFunctions = List.copyOf(builder.anonFunctions);
     }
 
     private O onInput (final I message)
-    {
-        if (keyFunction == null)
-        {
-            return onInputWithoutNamedFunctions(message);
-        }
-        else
-        {
-            return onInputWithNamedFunctions(message);
-        }
-    }
-
-    private O onInputWithNamedFunctions (final I message)
     {
         /**
          * Obtain the name of the function to execute.
@@ -67,34 +76,22 @@ public final class CommandDispatcher<K, I, O>
          */
         final Function<I, O> namedFunction = namedFunctions.get(key);
 
-        if (namedFunction != null)
+        if (namedFunction == null)
         {
-            final O output = namedFunction.apply(message);
-            return output;
+            /**
+             * Drop the message, because no corresponding function exists.
+             */
+            dropsConnector.accept(message);
+            return null;
         }
         else
         {
-            final O output = onInputWithoutNamedFunctions(message);
+            /**
+             * Process the message, since a corresponding function exists.
+             */
+            final O output = namedFunction.apply(message);
             return output;
         }
-    }
-
-    private O onInputWithoutNamedFunctions (final I message)
-    {
-        final int count = anonFunctions.size();
-
-        for (int i = 0; i < count; i++)
-        {
-            final Predicate<I> condition = anonPredicates.get(i);
-            final Function<I, O> function = anonFunctions.get(i);
-
-            if (condition.test(message))
-            {
-                return function.apply(message);
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -113,6 +110,16 @@ public final class CommandDispatcher<K, I, O>
     public Output<O> dataOut ()
     {
         return engine.dataOut();
+    }
+
+    /**
+     * Output Connection.
+     *
+     * @return the output that receives the dropped input messages.
+     */
+    public Output<I> dropsOut ()
+    {
+        return dropsConnector.dataOut();
     }
 
     /**
@@ -144,10 +151,6 @@ public final class CommandDispatcher<K, I, O>
 
         private final Map<K, Function<I, O>> namedFunctions = Maps.newHashMap();
 
-        private final List<Predicate<I>> anonPredicates = Lists.newLinkedList();
-
-        private final List<Function<I, O>> anonFunctions = Lists.newLinkedList();
-
         private Builder (final Stage stage)
         {
             this.stage = Objects.requireNonNull(stage, "stage");
@@ -166,25 +169,44 @@ public final class CommandDispatcher<K, I, O>
             return this;
         }
 
-        public Builder<K, I, O> declareFunction (final String key,
+        /**
+         * Declare a function that can be invoked by name only.
+         *
+         * <p>
+         * When an input message arrives, the key-function will be used
+         * to obtain the name of the function to invoke therefrom.
+         * If that name matches the name declared here,
+         * then the function declared here will be invoked.
+         * </p>
+         *
+         * @param key is the name of the function being declared.
+         * @param functor is the function being declared.
+         * @return this.
+         */
+        public Builder<K, I, O> declareFunction (final K key,
                                                  final Function<I, O> functor)
         {
             Objects.requireNonNull(key, "key");
             Objects.requireNonNull(functor, "functor");
+            namedFunctions.put(key, functor);
             return this;
         }
 
-        public Builder<K, I, O> declareFunction (final Predicate<I> condition,
-                                                 final Function<I, O> functor)
-        {
-            Objects.requireNonNull(condition, "condition");
-            Objects.requireNonNull(functor, "functor");
-            anonPredicates.add(condition);
-            anonFunctions.add(functor);
-            return this;
-        }
-
-        public Builder<K, I, O> declareConsumer (final String key,
+        /**
+         * Declare a function that can be invoked by name only.
+         *
+         * <p>
+         * When an input message arrives, the key-function will be used
+         * to obtain the name of the function to invoke therefrom.
+         * If that name matches the name declared here,
+         * then the function declared here will be invoked.
+         * </p>
+         *
+         * @param key is the name of the function being declared.
+         * @param functor is the function being declared.
+         * @return this.
+         */
+        public Builder<K, I, O> declareConsumer (final K key,
                                                  final Consumer<I> functor)
         {
             final Function<I, O> wrapper = (x) ->
@@ -196,32 +218,15 @@ public final class CommandDispatcher<K, I, O>
             return declareFunction(key, wrapper);
         }
 
-        public Builder<K, I, O> declareConsumer (final Predicate<I> condition,
-                                                 final Consumer<I> functor)
-        {
-            final Function<I, O> wrapper = (x) ->
-            {
-                functor.accept(x);
-                return null;
-            };
-
-            return declareFunction(condition, wrapper);
-        }
-
+        /**
+         * Construct the new dispatcher.
+         *
+         * @return the new object.
+         */
         public CommandDispatcher<K, I, O> build ()
         {
-            Preconditions.checkState(anonFunctions.isEmpty() || keyFunction != null, "A key-function is required.");
+            Objects.requireNonNull("A key-function is required.");
             return new CommandDispatcher<>(this);
         }
-    }
-
-    public static void main (String[] args)
-    {
-        var stage = Cascade.newStage();
-        var actor = CommandDispatcher.<String, String, String>newCommandDispatcher(stage)
-                .declareConsumer("main", x -> System.out.println("main"))
-                .declareConsumer(x -> x.equals("main"), x -> System.out.println("main"))
-                .build();
-
     }
 }

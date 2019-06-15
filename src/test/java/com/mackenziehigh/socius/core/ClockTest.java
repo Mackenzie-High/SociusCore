@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius.core;
 
-import com.mackenziehigh.socius.core.Processor;
-import com.mackenziehigh.socius.core.Clock;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;

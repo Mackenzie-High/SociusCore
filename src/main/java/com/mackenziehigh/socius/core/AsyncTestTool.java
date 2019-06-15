@@ -283,10 +283,12 @@ public final class AsyncTestTool
     /**
      * Wait for the given output to produce a message.
      *
+     * @param <T> is the type of the expected message.
      * @param output will produce a message at some point soon.
      * @return the message that was produced.
      */
-    public Object awaitMessage (final Output<?> output)
+    @SuppressWarnings ("unchecked")
+    public <T> T awaitMessage (final Output<T> output)
     {
         Objects.requireNonNull(output, "output");
 
@@ -302,7 +304,7 @@ public final class AsyncTestTool
                 /**
                  * Wait for a message to become available, if any.
                  */
-                final Object result = queue.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
+                final T result = (T) queue.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
 
                 if (result == null)
                 {
