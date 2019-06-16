@@ -15,11 +15,11 @@
  */
 package com.mackenziehigh.socius;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.ToIntFunction;
@@ -41,9 +41,13 @@ public final class WeightBalancer<T>
     /**
      * Provides the data-output connectors.
      */
-    private final ImmutableList<Processor<T>> outputs;
+    private final List<Processor<T>> outputs;
 
-    private final ImmutableList<AtomicLong> weights;
+    /**
+     * Each element in this list corresponds to an output connector.
+     * Each element stores how much weight has passed through that connector.
+     */
+    private final List<AtomicLong> weights;
 
     /**
      * This function determines the weight of each incoming message.
@@ -54,19 +58,24 @@ public final class WeightBalancer<T>
                             final int arity,
                             final ToIntFunction<T> scale)
     {
-        Preconditions.checkNotNull(stage, "stage");
-        Preconditions.checkArgument(arity > 0, "arity <= 0");
+        Objects.requireNonNull(stage, "stage");
+
+        if (arity <= 0)
+        {
+            throw new IllegalArgumentException("arity <= 0");
+        }
+
         this.input = Processor.fromConsumerScript(stage, this::forwardFromHub);
 
-        final ImmutableList.Builder<Processor<T>> builderOutputs = ImmutableList.builder();
-        final ImmutableList.Builder<AtomicLong> builderWeights = ImmutableList.builder();
+        final List<Processor<T>> builderOutputs = new LinkedList<>();
+        final List<AtomicLong> builderWeights = new LinkedList<>();
         for (int i = 0; i < arity; i++)
         {
             builderOutputs.add(Processor.fromIdentityScript(stage));
             builderWeights.add(new AtomicLong());
         }
-        this.outputs = builderOutputs.build();
-        this.weights = builderWeights.build();
+        this.outputs = List.copyOf(builderOutputs);
+        this.weights = List.copyOf(builderWeights);
 
         this.scale = Objects.requireNonNull(scale, "scale");
     }

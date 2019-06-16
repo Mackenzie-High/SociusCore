@@ -15,7 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.google.common.collect.ImmutableList;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -91,7 +90,7 @@ public final class Router<K, T>
      * This map maps a routing-key to a list of subscribers that
      * are interested in messages with that routing-key.
      */
-    private final ConcurrentMap<K, ImmutableList<Subscriber<K, T>>> routeMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<K, List<Subscriber<K, T>>> routeMap = new ConcurrentHashMap<>();
 
     /**
      * Provides the sink-all output connector.
@@ -298,7 +297,7 @@ public final class Router<K, T>
          * uses a for-loop, instead of a for-each-loop, which can avoid an unnecessary
          * object allocation (Iterator).
          */
-        final ImmutableList<Subscriber<K, T>> routeList = routeMap.getOrDefault(key, ImmutableList.of());
+        final List<Subscriber<K, T>> routeList = routeMap.getOrDefault(key, List.of());
 
         /**
          * Send the message to all of the subscribers, if any.
@@ -328,10 +327,10 @@ public final class Router<K, T>
          */
         synchronized (this)
         {
-            routeMap.putIfAbsent(key, ImmutableList.of());
+            routeMap.putIfAbsent(key, List.of());
             final Set<Subscriber<K, T>> copy = new HashSet<>(routeMap.get(key));
             copy.add(subscriber);
-            routeMap.put(key, ImmutableList.copyOf(copy));
+            routeMap.put(key, List.copyOf(copy));
         }
     }
 
@@ -344,10 +343,10 @@ public final class Router<K, T>
          */
         synchronized (this)
         {
-            routeMap.putIfAbsent(key, ImmutableList.of());
+            routeMap.putIfAbsent(key, List.of());
             final Set<Subscriber<K, T>> copy = new HashSet<>(routeMap.get(key));
             copy.add(subscriber);
-            routeMap.put(key, ImmutableList.copyOf(copy));
+            routeMap.put(key, List.copyOf(copy));
         }
     }
 

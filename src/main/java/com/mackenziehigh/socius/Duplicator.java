@@ -15,7 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.google.common.base.Preconditions;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -179,9 +178,15 @@ public final class Duplicator<T>
          */
         public Builder<T> withSequenceLength (final int value)
         {
-            Preconditions.checkArgument(value > 0, "sequence length <= 0");
-            this.sequenceLength = value;
-            return this;
+            if (value <= 0)
+            {
+                throw new IllegalArgumentException("sequence length <= 0");
+            }
+            else
+            {
+                this.sequenceLength = value;
+                return this;
+            }
         }
 
         /**
@@ -192,9 +197,15 @@ public final class Duplicator<T>
          */
         public Builder<T> withRepetitionCount (final int value)
         {
-            Preconditions.checkArgument(value > 0, "repeat count <= 0");
-            this.repeatCount = value;
-            return this;
+            if (value <= 0)
+            {
+                throw new IllegalArgumentException("repetition count <= 0");
+            }
+            else
+            {
+                this.repeatCount = value;
+                return this;
+            }
         }
 
         /**

@@ -15,7 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
@@ -23,6 +22,7 @@ import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 
 /**
@@ -48,7 +48,7 @@ public final class LookupSwitch<T>
     /**
      * This is a list of (condition, destination) tuples.
      */
-    private final List<Entry<Predicate<T>, Input<T>>> routes = Lists.newCopyOnWriteArrayList();
+    private final List<Entry<Predicate<T>, Input<T>>> routes = new CopyOnWriteArrayList<>();
 
     private LookupSwitch (final Stage stage)
     {

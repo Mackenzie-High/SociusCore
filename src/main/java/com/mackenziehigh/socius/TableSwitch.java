@@ -15,12 +15,12 @@
  */
 package com.mackenziehigh.socius;
 
-import com.google.common.collect.Maps;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 /**
@@ -47,7 +47,7 @@ public final class TableSwitch<K, T>
     /**
      * This map maps routing-keys to the corresponding receivers.
      */
-    private final Map<K, Processor<T>> routingTable = Maps.newConcurrentMap();
+    private final ConcurrentMap<K, Processor<T>> routingTable = new ConcurrentHashMap<>();
 
     /**
      * This function knows how to extract routing-keys from messages.

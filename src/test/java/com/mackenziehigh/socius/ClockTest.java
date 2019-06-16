@@ -15,12 +15,12 @@
  */
 package com.mackenziehigh.socius;
 
-import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -40,7 +40,7 @@ public final class ClockTest
             throws InterruptedException
     {
         final Stage stage = Cascade.newStage();
-        final List<Instant> ticks = Lists.newCopyOnWriteArrayList();
+        final List<Instant> ticks = new CopyOnWriteArrayList<>();
         final Processor<Instant> sink = Processor.fromConsumerScript(stage, (Instant x) -> ticks.add(x));
 
         final Clock clock = Clock

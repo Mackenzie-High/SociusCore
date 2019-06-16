@@ -15,11 +15,11 @@
  */
 package com.mackenziehigh.socius;
 
-import com.google.common.collect.Maps;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -34,7 +34,7 @@ public final class Funnel<T>
 
     private final Processor<T> output;
 
-    private final ConcurrentMap<Object, Processor<T>> inputs = Maps.newConcurrentMap();
+    private final ConcurrentMap<Object, Processor<T>> inputs = new ConcurrentHashMap<>();
 
     private final Object lock = new Object();
 
