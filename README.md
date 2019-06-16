@@ -6,40 +6,57 @@ Socius provides commonly used actor types based on the minimalist [Cascade](http
 
 ## Related Projects:
 
-* [Socius - Core](#Socius): Base Components. 
+* [Socius - Core](https://github.com/Mackenzie-High/SociusCore): Base Components. 
 * [Socius - Nats](https://github.com/Mackenzie-High/SociusNats): Provides the ability to connect to [NATS-based](https://nats.io/) message-oriented-middleware.
 * [Socius - Web](https://github.com/Mackenzie-High/SociusWeb): Provides a server for creating HTTP-based RESTful micro-services. 
 
+## Compilation and Installation
+
+**Step #1: Install Cascade**
+
+```bash
+git clone 'https://github.com/Mackenzie-High/Cascade.git'
+cd Cascade/
+git checkout REL_CASCADE_2_0_1_BETA
+mvn clean install
+```
+
+**Step #2: Install Socius Core Itself**
+```bash
+git clone 'https://github.com/Mackenzie-High/SociusCore.git'
+cd SociusCore/
+git checkout REL_SOCIUS_CORE_1_0_1_ALPHA
+mvn clean install
+```
+
 ## Core Classes:
-* [AbstractPipeline](/documentation/AbstractPipeline.xml)
-* [AbstractProcessor](/documentation/AbstractProcessor.xml)
-* [AbstractPushdownAutomaton](/documentation/AbstractPushdownAutomaton.xml)
-* [AbstractTrampoline](/documentation/AbstractTrampoline.xml)
-* [AsyncTestTool](/documentation/AsyncTestTool.xml)
-* [Bus](/documentation/Bus.xml)
-* [Clock](/documentation/Clock.xml)
-* [DefaultExecutor](/documentation/DefaultExecutor.xml)
-* [DelayedSender](/documentation/DelayedSender.xml)
-* [Duplicator](/documentation/Duplicator.xml)
-* [Fanout](/documentation/Fanout.xml)
-* [Funnel](/documentation/Funnel.xml)
-* [IfElse](/documentation/IfElse.xml)
-* [LookupSwitch](/documentation/LookupSwitch.xml)
-* [LookupTower](/documentation/LookupTower.xml)
-* [Minuteman](/documentation/Minuteman.xml)
-* [Oscillator](/documentation/Oscillator.xml)
-* [Pipeline](/documentation/Pipeline.xml)
-* [Printer](/documentation/Printer.xml)
-* [Processor](/documentation/Processor.xml)
-* [Requester](/documentation/Requester.xml)
-* [RequestTower](/documentation/RequestTower.xml)
-* [RoundRobin](/documentation/RoundRobin.xml)
-* [Router](/documentation/Router.xml)
-* [Sink](/documentation/Sink.xml)
-* [Source](/documentation/Source.xml)
-* [TableSwitch](/documentation/TableSwitch.xml)
-* [TableTower](/documentation/TableTower.xml)
-* [TypeCaster](/documentation/TypeCaster.xml)
-* [Valve](/documentation/Valve.xml)
-* [Variable](/documentation/Variable.xml)
-* [WeightBalancer](/documentation/WeightBalancer.xml)
+* [AbstractPipeline](/documentation/AbstractPipeline.md)
+* [AbstractProcessor](/documentation/AbstractProcessor.md)
+* [AbstractPushdownAutomaton](/documentation/AbstractPushdownAutomaton.md)
+* [AbstractTrampoline](/documentation/AbstractTrampoline.md)
+* [AsyncTestTool](/documentation/AsyncTestTool.md)
+* [Bus](/documentation/Bus.md)
+* [Clock](/documentation/Clock.md)
+* [DelayedSender](/documentation/DelayedSender.md)
+* [Duplicator](/documentation/Duplicator.md)
+* [Fanout](/documentation/Fanout.md)
+* [Funnel](/documentation/Funnel.md)
+* [IfElse](/documentation/IfElse.md)
+* [LookupSwitch](/documentation/LookupSwitch.md)
+* [LookupTower](/documentation/LookupTower.md)
+* [Minuteman](/documentation/Minuteman.md)
+* [Oscillator](/documentation/Oscillator.md)
+* [Pipeline](/documentation/Pipeline.md)
+* [Printer](/documentation/Printer.md)
+* [Processor](/documentation/Processor.md)
+* [Requester](/documentation/Requester.md)
+* [RoundRobin](/documentation/RoundRobin.md)
+* [Router](/documentation/Router.md)
+* [Sink](/documentation/Sink.md)
+* [Source](/documentation/Source.md)
+* [TableSwitch](/documentation/TableSwitch.md)
+* [TableTower](/documentation/TableTower.md)
+* [TypeCaster](/documentation/TypeCaster.md)
+* [Valve](/documentation/Valve.md)
+* [Variable](/documentation/Variable.md)
+* [WeightBalancer](/documentation/WeightBalancer.md)
