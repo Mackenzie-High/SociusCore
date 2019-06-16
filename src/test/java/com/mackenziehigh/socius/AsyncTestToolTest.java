@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Processor;
-import com.mackenziehigh.socius.AsyncTestTool;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
@@ -88,7 +86,7 @@ public final class AsyncTestToolTest
      * Case: Timeout.
      * </p>
      */
-    @Test (expected = AsyncTestTool.AwaitTimeoutException.class)
+    @Test (expected = AsyncTestTool.AwaitTimeoutError.class)
     public void test20190614211950560863 ()
     {
         tool.setAwaitTimeout(Duration.ZERO);
@@ -132,7 +130,7 @@ public final class AsyncTestToolTest
      * Case: Timeout.
      * </p>
      */
-    @Test (expected = AsyncTestTool.AwaitTimeoutException.class)
+    @Test (expected = AsyncTestTool.AwaitTimeoutError.class)
     public void test20190614213514045194 ()
     {
         tool.setAwaitTimeout(Duration.ZERO);
@@ -186,7 +184,7 @@ public final class AsyncTestToolTest
             tool.awaitEquals(actor.dataOut(), "X");
             fail();
         }
-        catch (AsyncTestTool.ExpectationFailedException ex)
+        catch (AsyncTestTool.ExpectationFailedError ex)
         {
             assertEquals("X", ex.expected());
             assertEquals("Y", ex.actual());
@@ -205,7 +203,7 @@ public final class AsyncTestToolTest
      * Case: Timeout.
      * </p>
      */
-    @Test (expected = AsyncTestTool.AwaitTimeoutException.class)
+    @Test (expected = AsyncTestTool.AwaitTimeoutError.class)
     public void test20190614220911104592 ()
     {
         final Stage stage = tool.stage();
@@ -248,7 +246,7 @@ public final class AsyncTestToolTest
      * Case: Timeout.
      * </p>
      */
-    @Test (expected = AsyncTestTool.AwaitTimeoutException.class)
+    @Test (expected = AsyncTestTool.AwaitTimeoutError.class)
     public void test20190614214033914475 ()
     {
         final Processor<String> actor = Processor.fromIdentityScript(tool.stage());
@@ -269,7 +267,7 @@ public final class AsyncTestToolTest
      * Case: No Connection.
      * </p>
      */
-    @Test (expected = AsyncTestTool.NoConnectionException.class)
+    @Test (expected = AsyncTestTool.NoConnectionError.class)
     public void test20190614214033914519 ()
     {
         final Processor<String> actor = Processor.fromIdentityScript(tool.stage());
@@ -300,7 +298,7 @@ public final class AsyncTestToolTest
             tool.awaitMessage(actor.dataOut());
             fail();
         }
-        catch (AsyncTestTool.AwaitInterruptedException ex)
+        catch (AsyncTestTool.AwaitInterruptedError ex)
         {
             assertFalse(Thread.currentThread().isInterrupted());
         }
@@ -356,7 +354,7 @@ public final class AsyncTestToolTest
             tool.awaitSteadyState();
             fail();
         }
-        catch (AsyncTestTool.AwaitTimeoutException ex)
+        catch (AsyncTestTool.AwaitTimeoutError ex)
         {
             // Pass, because this is the desired outcome.
         }
@@ -387,10 +385,85 @@ public final class AsyncTestToolTest
             tool.sleep(Duration.ZERO);
             fail();
         }
-        catch (AsyncTestTool.AwaitInterruptedException ex)
+        catch (AsyncTestTool.AwaitInterruptedError ex)
         {
             assertFalse(Thread.currentThread().isInterrupted());
         }
     }
 
+    /**
+     * Test: 20190615181109409881
+     *
+     * <p>
+     * Method: <code>assertEmptyOutputs</code>
+     * </p>
+     *
+     * <p>
+     * Case: An output is non-empty.
+     * </p>
+     */
+    @Test (expected = AsyncTestTool.NonEmptyOutputError.class)
+    public void test20190615181109409881 ()
+    {
+        final Processor<String> actor = Processor.fromIdentityScript(tool.stage());
+        tool.connect(actor.dataOut());
+        actor.accept("X");
+        tool.assertEmptyOutputs();
+    }
+
+    /**
+     * Test: 20190615181109409926
+     *
+     * <p>
+     * Method: <code>assertEmptyOutputs</code>
+     * </p>
+     *
+     * <p>
+     * Case: All of the outputs are empty.
+     * </p>
+     */
+    @Test
+    public void test20190615181109409926 ()
+    {
+        final Processor<String> actor = Processor.fromIdentityScript(tool.stage());
+        tool.connect(actor.dataOut());
+        actor.accept("X");
+        tool.awaitEquals(actor.dataOut(), "X");
+        tool.assertEmptyOutputs();
+    }
+
+    /**
+     * Test: 20190615212614038053
+     *
+     * <p>
+     * Method: <code>connect</code>
+     * </p>
+     *
+     * <p>
+     * Case: Duplicate Connect.
+     * </p>
+     */
+    @Test
+    public void test20190615212614038053 ()
+    {
+        final Processor<String> actor = Processor.fromIdentityScript(tool.stage());
+
+        /**
+         * Connect the tool to the actor multiple times.
+         */
+        tool.connect(actor.dataOut()); // original
+        tool.connect(actor.dataOut()); // duplicate
+
+        /**
+         * Send a message through the actor.
+         */
+        actor.accept("X");
+
+        /**
+         * The duplicate connections does *not* cause
+         * the message to be received multiple times.
+         */
+        tool.awaitEquals(actor.dataOut(), "X");
+        tool.assertEmptyOutputs();
+    }
 }

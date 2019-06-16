@@ -15,12 +15,10 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Pipeline;
-import com.mackenziehigh.socius.AsyncTestTool;
-import com.mackenziehigh.socius.TableTower;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import java.util.function.Function;
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
@@ -41,32 +39,17 @@ public final class TableTowerTest
 
     private final Pipeline<Integer, String> floorC = Pipeline.fromFunctionScript(stage, x -> "C" + x + "C");
 
-    private final TableTower<Character, Integer, String> fixedTower = TableTower.<Character, Integer, String>newTableTower(stage)
+    private final TableTower<Character, Integer, String> tower = TableTower.<Character, Integer, String>newTableTower(stage)
             .withKeyFunction(keyFunction)
             .withFloor('1', floorA)
             .withFloor('2', floorB)
             .withFloor('3', floorC)
             .build();
 
-    private final TableTower<Character, Integer, String> expandoTower = TableTower.<Character, Integer, String>newTableTower(stage)
-            .withKeyFunction(keyFunction)
-            .withFloor('1', floorA)
-            .withFloor('2', floorB)
-            .withFloor('3', floorC)
-            .withAutoExpansion(this::floorFactory)
-            .build();
-
 
     {
-        tester.connect(fixedTower.dataOut());
-        tester.connect(fixedTower.dropsOut());
-        tester.connect(expandoTower.dataOut());
-        tester.connect(expandoTower.dataOut());
-    }
-
-    private Pipeline<Integer, String> floorFactory (Integer message)
-    {
-        return Pipeline.fromFunctionScript(stage, x -> "AUTO" + x + "AUTO");
+        tester.connect(tower.dataOut());
+        tester.connect(tower.dropsOut());
     }
 
     /**
@@ -79,52 +62,123 @@ public final class TableTowerTest
     @Test
     public void test20190514003742189062 ()
     {
-        fixedTower.dataIn().send(101);
-        fixedTower.dataIn().send(201);
-        fixedTower.dataIn().send(301);
-        fixedTower.dataIn().send(401);
-        fixedTower.dataIn().send(102);
-        fixedTower.dataIn().send(202);
-        fixedTower.dataIn().send(302);
+        tower.dataIn().send(101); // Goes To Floor (A)
+        tower.dataIn().send(201); // Goes To Floor (B)
+        tower.dataIn().send(301); // Goes To Floor (C)
+        tower.dataIn().send(401); // Dropped, because of no corresponding floor.
+        tower.dataIn().send(102); // Goes To Floor (A)
+        tower.dataIn().send(202); // Goes To Floor (B)
+        tower.dataIn().send(302); // Goes To Floor (C)
 
-        tester.awaitEquals(fixedTower.dataOut(), "A101A");
-        tester.awaitEquals(fixedTower.dataOut(), "B201B");
-        tester.awaitEquals(fixedTower.dataOut(), "C301C");
+        tester.awaitEquals(tower.dataOut(), "A101A");
+        tester.awaitEquals(tower.dataOut(), "B201B");
+        tester.awaitEquals(tower.dataOut(), "C301C");
 
-        tester.awaitEquals(fixedTower.dropsOut(), 401);
+        tester.awaitEquals(tower.dropsOut(), 401);
 
-        tester.awaitEquals(fixedTower.dataOut(), "A102A");
-        tester.awaitEquals(fixedTower.dataOut(), "B202B");
-        tester.awaitEquals(fixedTower.dataOut(), "C302C");
-
+        tester.awaitEquals(tower.dataOut(), "A102A");
+        tester.awaitEquals(tower.dataOut(), "B202B");
+        tester.awaitEquals(tower.dataOut(), "C302C");
     }
 
     /**
-     * Test: 20190514004313647875
+     * Test: 20190615145510274432
      *
      * <p>
-     * Case: Auto Expansion.
+     * Method: <code>put</code>
+     * </p>
+     *
+     * <p>
+     * Case: Floor Added.
      * </p>
      */
     @Test
-    public void test20190514004313647875 ()
+    public void test20190615145510274432 ()
     {
-        expandoTower.dataIn().send(101);
-        expandoTower.dataIn().send(201);
-        expandoTower.dataIn().send(301);
-        expandoTower.dataIn().send(401);
-        expandoTower.dataIn().send(102);
-        expandoTower.dataIn().send(202);
-        expandoTower.dataIn().send(302);
+        final var floorD = Pipeline.fromFunctionScript(stage, (Integer x) -> "D" + x + "D");
 
-        tester.awaitEquals(expandoTower.dataOut(), "A101A");
-        tester.awaitEquals(expandoTower.dataOut(), "B201B");
-        tester.awaitEquals(expandoTower.dataOut(), "C301C");
+        assertFalse(tower.floors().containsKey('4'));
 
-        tester.awaitEquals(expandoTower.dataOut(), "AUTO401AUTO");
+        tower.put('4', floorD); // Method Under Test.
 
-        tester.awaitEquals(expandoTower.dataOut(), "A102A");
-        tester.awaitEquals(expandoTower.dataOut(), "B202B");
-        tester.awaitEquals(expandoTower.dataOut(), "C302C");
+        assertTrue(tower.floors().containsKey('4'));
+        assertEquals(4, tower.floors().size());
+
+        tower.dataIn().send(101); // Goes To Floor (A)
+        tower.dataIn().send(201); // Goes To Floor (B)
+        tower.dataIn().send(301); // Goes To Floor (C)
+        tower.dataIn().send(401); // Goes To Floor (D)
+
+        tester.awaitEquals(tower.dataOut(), "A101A");
+        tester.awaitEquals(tower.dataOut(), "B201B");
+        tester.awaitEquals(tower.dataOut(), "C301C");
+        tester.awaitEquals(tower.dataOut(), "D401D");
+    }
+
+    /**
+     * Test: 20190615145510274485
+     *
+     * <p>
+     * Method: <code>put</code>
+     * </p>
+     *
+     * <p>
+     * Case: Floor Already Exists.
+     * </p>
+     */
+    @Test (expected = IllegalStateException.class)
+    public void test20190615145510274485 ()
+    {
+        final var newFloor = Pipeline.fromFunctionScript(stage, (Integer x) -> "Z" + x + "Z");
+
+        tower.put('2', newFloor); // Method Under Test.
+    }
+
+    /**
+     * Test: 20190615145510274504
+     *
+     * <p>
+     * Method: <code>remove</code>
+     * </p>
+     *
+     * <p>
+     * Case: Floor Removed.
+     * </p>
+     */
+    @Test
+    public void test20190615145510274504 ()
+    {
+        assertTrue(tower.floors().containsKey('2'));
+
+        tower.remove('2'); // Method Under Test.
+
+        assertFalse(tower.floors().containsKey('2'));
+        assertEquals(2, tower.floors().size());
+
+        tower.dataIn().send(101); // Goes To Floor (A)
+        tower.dataIn().send(201); // Dropped, because of no corresponding floor.
+        tower.dataIn().send(301); // Goes To Floor (C)
+
+        tester.awaitEquals(tower.dataOut(), "A101A");
+        tester.awaitEquals(tower.dataOut(), "C301C");
+
+        tester.awaitEquals(tower.dropsOut(), 201);
+    }
+
+    /**
+     * Test: 20190615145836689970
+     *
+     * <p>
+     * Method: <code>remove</code>
+     * </p>
+     *
+     * <p>
+     * Case: No Such Floor.
+     * </p>
+     */
+    @Test (expected = IllegalStateException.class)
+    public void test20190615145836689970 ()
+    {
+        tower.remove('7');
     }
 }

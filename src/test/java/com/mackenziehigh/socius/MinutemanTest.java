@@ -15,7 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Minuteman;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import java.time.Instant;
@@ -46,6 +45,8 @@ public final class MinutemanTest
         final Stage stage = Cascade.newStage();
 
         final Minuteman clock = Minuteman.newMinuteman(stage);
+
+        assertNotNull(clock.dataOut());
 
         assertFalse(clock.scheduledTick().isPresent());
 

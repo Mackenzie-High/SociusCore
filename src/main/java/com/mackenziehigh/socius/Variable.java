@@ -163,7 +163,7 @@ public final class Variable<T>
     {
         Objects.requireNonNull(stage, "stage");
         Objects.requireNonNull(initial, "initial");
-        return new Variable<>(stage, new AtomicReference<>(initial));
+        return newSharedVariable(stage, new AtomicReference<>(initial));
     }
 
     /**

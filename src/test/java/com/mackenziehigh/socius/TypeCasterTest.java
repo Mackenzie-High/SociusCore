@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.AsyncTestTool;
-import com.mackenziehigh.socius.TypeCaster;
 import org.junit.Test;
 
 /**

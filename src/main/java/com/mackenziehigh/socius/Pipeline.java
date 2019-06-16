@@ -17,7 +17,6 @@ package com.mackenziehigh.socius;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor;
-import com.mackenziehigh.cascade.Cascade.Stage.Actor.ConsumerScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.ContextScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.FunctionScript;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
@@ -103,40 +102,6 @@ public interface Pipeline<I, O>
         Objects.requireNonNull(stage, "stage");
         Objects.requireNonNull(script, "script");
         return fromActor(stage.newActor().withFunctionScript(script).create());
-    }
-
-    /**
-     * Factory Method.
-     *
-     * @param <I> is the type of the incoming and outgoing messages.
-     * @param stage will be used to create private actors.
-     * @param script defines the processing to perform.
-     * @return the new pipeline.
-     */
-    public static <I> Pipeline<I, I> fromConsumerScript (final Stage stage,
-                                                         final ConsumerScript<I> script)
-    {
-        Objects.requireNonNull(stage, "stage");
-        Objects.requireNonNull(script, "script");
-        return fromActor(stage.newActor().withConsumerScript(script).create());
-    }
-
-    /**
-     * Creates a new identity processor.
-     *
-     * <p>
-     * An identity processor merely forwards incoming messages to
-     * the output without performing any actual transformation, etc.
-     * </p>
-     *
-     * @param <I> is the type of the incoming and outgoing messages.
-     * @param stage will be used to create private actors.
-     * @return the new pipeline.
-     */
-    public static <I> Pipeline<I, I> fromIdentityScript (final Stage stage)
-    {
-        Objects.requireNonNull(stage, "stage");
-        return fromFunctionScript(stage, (I x) -> x);
     }
 
     /**

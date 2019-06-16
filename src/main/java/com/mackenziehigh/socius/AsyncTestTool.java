@@ -36,9 +36,8 @@ import java.util.function.BooleanSupplier;
  * (Experimental API) Provides a mechanism for testing actors in unit-tests.
  *
  * <p>
- * This method throws unchecked <code>AwaitInterruptedException</code>s,
- * rather than propagating checked <code>InterruptedException</code>.
- * In general, interruption
+ * This method throws unchecked <code>AwaitInterruptedError</code>s,
+ * rather than propagating checked <code>InterruptedError</code>.
  * </p>
  */
 public final class AsyncTestTool
@@ -48,8 +47,8 @@ public final class AsyncTestTool
     /**
      * Indicates that an <code>await</code> method timed out.
      */
-    public final class AwaitTimeoutException
-            extends RuntimeException
+    public final class AwaitTimeoutError
+            extends Error
     {
         // Pass.
     }
@@ -57,8 +56,8 @@ public final class AsyncTestTool
     /**
      * Indicates that an <code>await</code> method was interrupted.
      */
-    public final class AwaitInterruptedException
-            extends RuntimeException
+    public final class AwaitInterruptedError
+            extends Error
     {
         // Pass.
     }
@@ -66,8 +65,14 @@ public final class AsyncTestTool
     /**
      * Indicates that this test tool is not connected to a necessary <code>Output</code>.
      */
-    public final class NoConnectionException
-            extends RuntimeException
+    public final class NoConnectionError
+            extends Error
+    {
+        // Pass.
+    }
+
+    public final class NonEmptyOutputError
+            extends Error
     {
         // Pass.
     }
@@ -75,15 +80,15 @@ public final class AsyncTestTool
     /**
      * Indicates that an expected result was not produced during a test.
      */
-    public final class ExpectationFailedException
-            extends RuntimeException
+    public final class ExpectationFailedError
+            extends Error
     {
         private final Object expected;
 
         private final Object actual;
 
-        public ExpectationFailedException (final Object expected,
-                                           final Object actual)
+        public ExpectationFailedError (final Object expected,
+                                       final Object actual)
         {
             this.expected = expected;
             this.actual = actual;
@@ -255,7 +260,7 @@ public final class AsyncTestTool
          */
         if (condition.getAsBoolean() == false)
         {
-            throw new AwaitTimeoutException();
+            throw new AwaitTimeoutError();
         }
     }
 
@@ -312,7 +317,7 @@ public final class AsyncTestTool
                      * The timeout expired before a message became available;
                      * therefore, throw an indicative exception.
                      */
-                    throw new AwaitTimeoutException();
+                    throw new AwaitTimeoutError();
                 }
                 else
                 {
@@ -321,7 +326,7 @@ public final class AsyncTestTool
             }
             catch (InterruptedException ex)
             {
-                throw new AwaitInterruptedException();
+                throw new AwaitInterruptedError();
             }
         }
         else
@@ -330,7 +335,7 @@ public final class AsyncTestTool
              * We cannot wait for messages from outputs that are not connected;
              * therefore, throw an indicative exception.
              */
-            throw new NoConnectionException();
+            throw new NoConnectionError();
         }
     }
 
@@ -352,7 +357,22 @@ public final class AsyncTestTool
 
         if (Objects.equals(expected, actual) == false)
         {
-            throw new ExpectationFailedException(expected, actual);
+            throw new ExpectationFailedError(expected, actual);
+        }
+    }
+
+    /**
+     * Verify that all of the monitored outputs are now empty.
+     */
+    public void assertEmptyOutputs ()
+    {
+        awaitSteadyState();
+
+        final boolean notEmpty = connections.values().stream().anyMatch(x -> !x.isEmpty());
+
+        if (notEmpty)
+        {
+            throw new NonEmptyOutputError();
         }
     }
 
@@ -371,7 +391,7 @@ public final class AsyncTestTool
         }
         catch (InterruptedException ex)
         {
-            throw new AwaitInterruptedException();
+            throw new AwaitInterruptedError();
         }
     }
 

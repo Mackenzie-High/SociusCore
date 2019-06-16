@@ -15,12 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.DelayedSender;
-import com.mackenziehigh.socius.Processor;
-import com.google.common.collect.Lists;
-import com.mackenziehigh.cascade.Cascade;
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.Executors;
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -30,8 +25,10 @@ import org.junit.Test;
  */
 public final class DelayedSenderTest
 {
+    private final AsyncTestTool tester = new AsyncTestTool();
+
     /**
-     * Case: Throughput.
+     * Case: Throughput when Delay is Zero.
      *
      * @throws InterruptedException
      */
@@ -39,9 +36,8 @@ public final class DelayedSenderTest
     public void test ()
             throws InterruptedException
     {
-        final Cascade.Stage stage = Cascade.newStage();
-        final List<String> ticks = Lists.newCopyOnWriteArrayList();
-        final Processor<String> sink = Processor.fromConsumerScript(stage, (String x) -> ticks.add(x));
+        final Processor<String> sink = Processor.fromIdentityScript(tester.stage());
+        tester.connect(sink.dataOut());
 
         final DelayedSender clock = DelayedSender.newDelayedSender();
 
@@ -49,13 +45,39 @@ public final class DelayedSenderTest
         clock.send(sink.dataIn(), "Y", Duration.ofMillis(100));
         clock.send(sink.dataIn(), "Z", Duration.ofMillis(200));
 
-        Thread.sleep(400);
+        tester.awaitEquals(sink.dataOut(), "Y"); // First, due to shortest delay.
+        tester.awaitEquals(sink.dataOut(), "Z");
+        tester.awaitEquals(sink.dataOut(), "X"); // Last, due to longest delay.
+        tester.assertEmptyOutputs();
+    }
 
-        assertTrue(ticks.size() == 3);
+    /**
+     * Test: 20190615222213559604
+     *
+     * <p>
+     * Method: <code>send</code>
+     * </p>
+     *
+     * <p>
+     * Case: Throughput when Delay is Non-Zero.
+     * </p>
+     */
+    @Test
+    public void test20190615222213559604 ()
+    {
+        final Processor<String> sink = Processor.fromIdentityScript(tester.stage());
+        tester.connect(sink.dataOut());
 
-        assertEquals("Y", ticks.get(0)); // First, due to shortest delay.
-        assertEquals("Z", ticks.get(1));
-        assertEquals("X", ticks.get(2)); // Last, due to longest delay.
+        final DelayedSender clock = DelayedSender.newDelayedSender();
+
+        clock.send(sink.dataIn(), "X", Duration.ZERO);
+        clock.send(sink.dataIn(), "Y", Duration.ZERO);
+        clock.send(sink.dataIn(), "Z", Duration.ZERO);
+
+        tester.awaitEquals(sink.dataOut(), "X");
+        tester.awaitEquals(sink.dataOut(), "Y");
+        tester.awaitEquals(sink.dataOut(), "Z");
+        tester.assertEmptyOutputs();
     }
 
     /**

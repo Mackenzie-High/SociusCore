@@ -190,7 +190,7 @@ public abstract class AbstractPushdownAutomaton<I, O>
                     state.onMessage(message);
                     executedState = true;
                 }
-                else if (task instanceof SideEffect)
+                else // (task instanceof SideEffect)
                 {
                     final SideEffect effect = (SideEffect) task;
                     effect.onExecute();

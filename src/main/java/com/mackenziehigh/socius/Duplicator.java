@@ -179,7 +179,7 @@ public final class Duplicator<T>
          */
         public Builder<T> withSequenceLength (final int value)
         {
-            Preconditions.checkArgument(value >= 0, "sequence length < 0");
+            Preconditions.checkArgument(value > 0, "sequence length <= 0");
             this.sequenceLength = value;
             return this;
         }
@@ -190,9 +190,9 @@ public final class Duplicator<T>
          * @param value is the number of repetitions.
          * @return this.
          */
-        public Builder<T> withRepeatCount (final int value)
+        public Builder<T> withRepetitionCount (final int value)
         {
-            Preconditions.checkArgument(value >= 0, "repeat count < 0");
+            Preconditions.checkArgument(value > 0, "repeat count <= 0");
             this.repeatCount = value;
             return this;
         }

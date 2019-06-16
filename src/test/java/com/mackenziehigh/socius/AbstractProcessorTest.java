@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.AbstractProcessor;
-import com.mackenziehigh.socius.AsyncTestTool;
 import static org.junit.Assert.*;
 import org.junit.Test;
 

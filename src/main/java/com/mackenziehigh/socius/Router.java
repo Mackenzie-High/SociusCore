@@ -407,6 +407,7 @@ public final class Router<K, T>
             if (active.get())
             {
                 final K routingKey = keyFunction.apply(message);
+                Objects.requireNonNull(routingKey, "routingKey");
                 router.send(routingKey, message);
             }
         }

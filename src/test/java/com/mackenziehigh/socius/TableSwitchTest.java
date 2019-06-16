@@ -15,9 +15,8 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.AsyncTestTool;
-import com.mackenziehigh.socius.TableSwitch;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
@@ -25,27 +24,30 @@ import org.junit.Test;
  */
 public final class TableSwitchTest
 {
+    private final AsyncTestTool tester = new AsyncTestTool();
+
+    /**
+     * Case: Basic Throughput.
+     */
     @Test
-    public void test ()
-            throws Throwable
+    public void test1 ()
     {
-        final AsyncTestTool tester = new AsyncTestTool();
-        final TableSwitch<Character, String> inserter = TableSwitch.newTableSwitch(tester.stage(), x -> x.charAt(0));
-        final Output<String> outputA = inserter.selectIf('A');
-        final Output<String> outputE = inserter.selectIf('E');
-        final Output<String> others = inserter.dataOut();
+        final TableSwitch<Character, String> tableSwitch = TableSwitch.newTableSwitch(tester.stage(), x -> x.charAt(0));
+        final Output<String> outputA = tableSwitch.selectIf('A');
+        final Output<String> outputE = tableSwitch.selectIf('E');
+        final Output<String> others = tableSwitch.dataOut();
 
         tester.connect(outputA);
         tester.connect(outputE);
         tester.connect(others);
 
-        inserter.dataIn().send("Autumn");
-        inserter.dataIn().send("Emma");
-        inserter.dataIn().send("Molly");
-        inserter.dataIn().send("Avril");
-        inserter.dataIn().send("Erin");
-        inserter.dataIn().send("Olivia");
-        inserter.dataIn().send("Ashley");
+        tableSwitch.dataIn().send("Autumn");
+        tableSwitch.dataIn().send("Emma");
+        tableSwitch.dataIn().send("Molly");
+        tableSwitch.dataIn().send("Avril");
+        tableSwitch.dataIn().send("Erin");
+        tableSwitch.dataIn().send("Olivia");
+        tableSwitch.dataIn().send("Ashley");
         tester.awaitEquals(outputA, "Autumn");
         tester.awaitEquals(outputA, "Avril");
         tester.awaitEquals(outputA, "Ashley");
@@ -53,5 +55,16 @@ public final class TableSwitchTest
         tester.awaitEquals(outputE, "Erin");
         tester.awaitEquals(others, "Molly");
         tester.awaitEquals(others, "Olivia");
+    }
+
+    /**
+     * Case: <code>selectIf()</code> always returns the same object given the same key.
+     */
+    @Test
+    public void test2 ()
+    {
+        final TableSwitch<Character, String> tableSwitch = TableSwitch.newTableSwitch(tester.stage(), x -> x.charAt(0));
+
+        assertSame(tableSwitch.selectIf('A'), tableSwitch.selectIf('A'));
     }
 }

@@ -66,9 +66,19 @@ public final class Oscillator
     private Oscillator (final Builder builder)
     {
         this.waveform = builder.waveform;
-        this.service = builder.service != null ? builder.service : DefaultExecutor.get();
+        this.service = builder.service != null ? builder.service : DefaultExecutor.instance().service();
         final Stage stage = Cascade.newStage(service);
         this.procClockOut = Processor.fromIdentityScript(stage);
+    }
+
+    /**
+     * Get the waveform that is being used by this oscillator.
+     *
+     * @return the waveform.
+     */
+    public LongFunction<Duration> waveform ()
+    {
+        return waveform;
     }
 
     /**
@@ -88,7 +98,7 @@ public final class Oscillator
      */
     public boolean isUsingDefaultExecutor ()
     {
-        return service.equals(DefaultExecutor.get());
+        return service.equals(DefaultExecutor.instance().service());
     }
 
     /**
@@ -178,9 +188,15 @@ public final class Oscillator
         /**
          * Specify the periodicity of the oscillations.
          *
-         * @param waveform is a sine-like function that takes
-         * a sequence-number as input and produces a value
-         * that is the delay until the next tick.
+         * <p>
+         * The function should be extremely fast and non-blocking in order
+         * to avoid interfering with other actors using the same executor.
+         * In particular, if the oscillator is running on the default-executor,
+         * then a long running waveform could affect other actors using the executor.
+         * </p>
+         *
+         * @param waveform is a function that takes a sequence-number
+         * as input and produces the delay until the next tick.
          * @return this.
          */
         public Builder withWaveform (final LongFunction<Duration> waveform)

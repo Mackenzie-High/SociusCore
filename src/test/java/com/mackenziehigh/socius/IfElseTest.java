@@ -15,8 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.IfElse;
-import com.mackenziehigh.socius.AsyncTestTool;
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
@@ -26,18 +25,18 @@ public final class IfElseTest
 {
     @Test
     public void test ()
-            throws Throwable
     {
         final var tester = new AsyncTestTool();
         final var actor = IfElse.newIfElse(tester.stage(), (String x) -> x.contains("e"));
 
         tester.connect(actor.trueOut());
         tester.connect(actor.falseOut());
+        assertSame(actor.trueOut(), actor.dataOut());
 
         actor.dataIn().send("avril");
         actor.dataIn().send("emma");
         actor.dataIn().send("erin");
-        actor.dataIn().send("t;pol");
+        actor.dataIn().send("t'pol");
 
         tester.awaitEquals(actor.falseOut(), "avril");
         tester.awaitEquals(actor.trueOut(), "emma");

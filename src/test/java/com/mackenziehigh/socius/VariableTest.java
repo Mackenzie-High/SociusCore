@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.AsyncTestTool;
-import com.mackenziehigh.socius.Variable;
 import java.time.Instant;
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -31,60 +29,66 @@ public final class VariableTest
             throws Throwable
     {
         final var tester = new AsyncTestTool();
-        final Variable<Character> var = Variable.newVariable(tester.stage(), 'A');
-        final Instant now1 = Instant.now();
-        final Instant now2 = Instant.now();
-        final Instant now3 = Instant.now();
-        final Instant now4 = Instant.now();
 
-        tester.connect(var.clockOut());
-        tester.connect(var.dataOut());
+        final Variable<Character> variable = Variable.newVariable(tester.stage(), 'A');
+
+        /**
+         * None of these are equal to each other,
+         * so that they can be distinguished.
+         */
+        final Instant now1 = Instant.now().plusMillis(1);
+        final Instant now2 = Instant.now().plusMillis(2);
+        final Instant now3 = Instant.now().plusMillis(3);
+        final Instant now4 = Instant.now().plusMillis(4);
+
+        tester.connect(variable.clockOut());
+        tester.connect(variable.dataOut());
 
         /**
          * Verify the initial state.
          */
-        assertEquals('A', (char) var.get());
+        assertEquals('A', (char) variable.get());
 
         /**
          * Sending a clock-pulse retrieves the value in the variable.
          */
-        var.clockIn().send(now1);
-        tester.awaitEquals(var.dataOut(), 'A');
-        tester.awaitEquals(var.clockOut(), now1);
+        variable.clockIn().send(now1);
+        tester.awaitEquals(variable.dataOut(), 'A');
+        tester.awaitEquals(variable.clockOut(), now1);
 
         /**
          * The value may be retrieved multiple times.
          */
-        var.clockIn().send(now2);
-        tester.awaitEquals(var.dataOut(), 'A');
-        tester.awaitEquals(var.clockOut(), now2);
+        variable.clockIn().send(now2);
+        tester.awaitEquals(variable.dataOut(), 'A');
+        tester.awaitEquals(variable.clockOut(), now2);
 
         /**
          * Change the value stored in the variable via a message.
          */
-        var.dataIn().send('B');
-        tester.awaitEquals(var.dataOut(), 'B');
-        assertEquals('B', (char) var.get());
+        variable.dataIn().send('B');
+        tester.awaitEquals(variable.dataOut(), 'B');
+        assertEquals('B', (char) variable.get());
 
         /**
          * The new value may be retrieved by sending a clock-pulse.
          */
-        var.clockIn().send(now3);
-        tester.awaitEquals(var.dataOut(), 'B');
-        tester.awaitEquals(var.clockOut(), now3);
+        variable.clockIn().send(now3);
+        tester.awaitEquals(variable.dataOut(), 'B');
+        tester.awaitEquals(variable.clockOut(), now3);
 
         /**
          * Change the value via the set() method.
          */
-        var.set('C');
-        tester.awaitEquals(var.dataOut(), 'C');
-        assertEquals('C', (char) var.get());
+        variable.set('C');
+        tester.awaitEquals(variable.dataOut(), 'C');
+        assertEquals('C', (char) variable.get());
 
         /**
          * The new value may be retrieved by sending a clock-pulse.
          */
-        var.clockIn().send(now4);
-        tester.awaitEquals(var.dataOut(), 'C');
-        tester.awaitEquals(var.clockOut(), now4);
+        variable.clockIn().send(now4);
+        tester.awaitEquals(variable.dataOut(), 'C');
+        tester.awaitEquals(variable.clockOut(), now4);
     }
 }

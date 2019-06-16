@@ -15,9 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Processor;
-import com.mackenziehigh.socius.AsyncTestTool;
-import com.mackenziehigh.socius.WeightBalancer;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -47,9 +44,11 @@ public final class WeightBalancerTest
         tester.connect(actor2.dataOut());
     }
 
+    /**
+     * Case: Throughput and Balancing.
+     */
     @Test
-    public void test ()
-            throws Throwable
+    public void test1 ()
     {
         // Postcondition:
         //     actor0 weight = 101
@@ -210,5 +209,14 @@ public final class WeightBalancerTest
         assertEquals(605, balancer.sumOf(0));
         assertEquals(620, balancer.sumOf(1));
         assertEquals(605, balancer.sumOf(2));
+    }
+
+    /**
+     * Case: Negative Arity.
+     */
+    @Test (expected = IllegalArgumentException.class)
+    public void test2 ()
+    {
+        WeightBalancer.newWeightBalancer(tester.stage(), -1, x -> 0);
     }
 }

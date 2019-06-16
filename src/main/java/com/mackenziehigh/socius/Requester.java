@@ -15,21 +15,20 @@
  */
 package com.mackenziehigh.socius;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Input;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * Provides a request/reply mechanism.
+ * Provides an asynchronous request/reply mechanism.
  *
- * @param <K> is the type of the key used to correlate requests and replies.
+ * @param <K> is the type of the keys used to correlate requests and replies.
  * @param <I> is the type of the request messages.
  * @param <R> is the type of the reply messages.
  * @param <O> is the type of message created by combining a request and a reply.
@@ -47,7 +46,7 @@ public final class Requester<K, I, R, O>
     private final Processor<I> dataIn;
 
     /**
-     * This actor provides the requests-out connector.
+     * This actor provides the request-out connector.
      */
     private final Processor<I> requestOut;
 
@@ -57,17 +56,17 @@ public final class Requester<K, I, R, O>
     private final Processor<R> replyIn;
 
     /**
-     * This actor provides the responses-out connector.
+     * This actor provides the result-out connector.
      */
     private final Processor<O> resultOut;
 
     /**
-     * This actor provides the drops-requests connector.
+     * This actor provides the dropped-request connector.
      */
     private final Processor<I> droppedRequestOut;
 
     /**
-     * This actor provides the drops-replies connector.
+     * This actor provides the dropped-reply connector.
      */
     private final Processor<R> droppedReplyOut;
 
@@ -79,6 +78,11 @@ public final class Requester<K, I, R, O>
 
     /**
      * This is the number of times to forward a request before giving up.
+     *
+     * <p>
+     * If this number is greater than one and a request times-out,
+     * then the request will be forwarded again (a retry occurs).
+     * </p>
      */
     private final int tries;
 
@@ -93,21 +97,23 @@ public final class Requester<K, I, R, O>
     private final Function<R, K> keyFuncR;
 
     /**
-     * This function is used to merge a request-message and a
+     * This function is used to combine a request-message and a
      * reply-message into a single output message to forward.
      */
-    private final BiFunction<I, R, O> composer;
+    private final BiFunction<I, R, O> correlator;
 
     /**
-     * This lock prevents the actors herein from stomping on one another.
+     * This processor is used to execute tasks,
+     * which avoids the need to use locks herein,
+     * since locks between the actors would be inappropriate.
      */
-    private final Object lock = new Object();
+    private final Processor<Runnable> engine;
 
     /**
      * This map maps a key to the the handler that is handling the
      * request/reply process for the messages identified by that key.
      */
-    private final Map<K, Handler> handlers = Maps.newConcurrentMap();
+    private final Map<K, Handler> handlers = new ConcurrentHashMap<>();
 
     /**
      * This actor is used to request a callback at a specified time in the future.
@@ -123,9 +129,10 @@ public final class Requester<K, I, R, O>
         this.resultOut = Processor.fromIdentityScript(stage);
         this.droppedRequestOut = Processor.fromIdentityScript(stage);
         this.droppedReplyOut = Processor.fromIdentityScript(stage);
+        this.engine = Processor.fromConsumerScript(stage, task -> task.run());
         this.keyFuncI = builder.keyFuncI;
         this.keyFuncR = builder.keyFuncR;
-        this.composer = builder.combiner;
+        this.correlator = builder.correlator;
         this.timeout = builder.timeout;
         this.tries = builder.tries;
         this.delayedSender = builder.delayedSender != null ? builder.delayedSender : DelayedSender.newDelayedSender();
@@ -214,43 +221,52 @@ public final class Requester<K, I, R, O>
 
     private void onRequestIn (final I message)
     {
-        /**
-         * Obtain the key that identifies the message.
-         * If the message is already being handled (duplicate message),
-         * then drop the message; otherwise, create a handler that
-         * will handle the request/reply sequence of operations.
-         */
-        synchronized (lock)
+        final Runnable task = () ->
         {
+            /**
+             * Obtain the key that identifies the message.
+             */
             final K key = keyFuncI.apply(message);
 
-            if (handlers.containsKey(key) == false)
-            {
-                final Handler handler = new Handler(key, message);
-                handlers.put(key, handler);
-                handler.send();
-            }
-            else
+            /**
+             * If the message is already being handled (duplicate message),
+             * then drop the message; otherwise, assign the handler that
+             * will handle the request/reply sequence of operations.
+             */
+            if (handlers.containsKey(key))
             {
                 droppedRequestOut.accept(message);
             }
-        }
+            else
+            {
+                final Handler handler = new Handler(key, message);
+                handlers.put(key, handler);
+                handler.execute();
+            }
+        };
+
+        /**
+         * Synchronize the task relative to ones from other actors herein.
+         */
+        engine.accept(task);
     }
 
     private void onReplyIn (final R message)
     {
-        /**
-         * Obtain the key that identifies the message.
-         * If we are still interested in the message,
-         * then there will be an associated handler.
-         * Notify the handler of the received reply.
-         */
-        synchronized (lock)
+        final Runnable task = () ->
         {
+            /**
+             * Obtain the key that identifies the message.
+             */
             final K key = keyFuncR.apply(message);
 
+            /**
+             * If we are still interested in the message,
+             * then there will be an associated handler.
+             * Notify the handler of the received reply.
+             * Otherwise, drop the reply.
+             */
             final Handler handler = handlers.get(key);
-
             if (handler != null)
             {
                 handler.recv(message);
@@ -259,7 +275,12 @@ public final class Requester<K, I, R, O>
             {
                 droppedReplyOut.accept(message);
             }
-        }
+        };
+
+        /**
+         * Synchronize the task relative to ones from other actors herein.
+         */
+        engine.accept(task);
     }
 
     /**
@@ -298,7 +319,7 @@ public final class Requester<K, I, R, O>
          * (1) a reply is received,
          * (2) the request times-out and all retries are exhausted.
          */
-        private boolean cancelled = false;
+        private boolean closed = false;
 
         /**
          * This is the number of times that we have forwarded the request.
@@ -325,80 +346,74 @@ public final class Requester<K, I, R, O>
             this.request = request;
         }
 
-        public void send ()
+        public void execute ()
         {
-            synchronized (lock)
+            if (closed)
             {
-                if (cancelled)
-                {
-                    /**
-                     * Since we always schedule a callback when forwarding a request,
-                     * we will hit this case one-time, once we receive a reply.
-                     * Although the reply was already processed, the delayed-sender
-                     * will send us our requested wakeup call after we processed the reply.
-                     * In that case, we do not want to process the reply again.
-                     * Likewise, we do not want to report the request as dropped,
-                     * when we already reported that a reply was received.
-                     */
-                    return;
-                }
-                else if (reply != null)
-                {
-                    /**
-                     * We got a reply.
-                     * Create a single message from the request and the reply pair.
-                     * Forward the combined message.
-                     * Prevent this method from executing again unintentionally.
-                     */
-                    final O response = composer.apply(request, reply);
-                    resultOut.dataIn().send(response);
-                    cancel();
-                }
-                else if (sent >= tries)
-                {
-                    /**
-                     * The request has timed-out multiple times.
-                     * Each time, we resent the request and waited.
-                     * Now, we have exceeded the retry limit.
-                     * Give up and drop the request.
-                     * Prevent this method from executing again unintentionally.
-                     */
-                    droppedRequestOut.dataIn().send(request);
-                    cancel();
-                }
-                else
-                {
-                    /**
-                     * Forward the request.
-                     * Schedule this method to execute again, when the request times-out.
-                     */
-                    ++sent;
-                    requestOut.dataIn().send(request);
-                    delayedSender.send(callback.dataIn(), this, timeout);
-                }
+                /**
+                 * Since we always schedule a callback when forwarding a request,
+                 * we will hit this case one-time, once we receive a reply.
+                 * Although the reply was already processed, the delayed-sender
+                 * will send us our requested wake-up call after we processed the reply.
+                 * In that case, we do not want to process the reply again.
+                 * Likewise, we do not want to report the request as dropped,
+                 * when we already reported that a reply was received.
+                 */
+                return;
+            }
+            else if (reply != null)
+            {
+                /**
+                 * We got a reply.
+                 * Create a single message from the request and the reply pair.
+                 * Forward the combined message.
+                 * Prevent this method from executing again unintentionally.
+                 */
+                final O response = correlator.apply(request, reply);
+                resultOut.dataIn().send(response);
+                close();
+            }
+            else if (sent >= tries)
+            {
+                /**
+                 * The request has timed-out multiple times.
+                 * Each time, we resent the request and waited.
+                 * Now, we have exceeded the retry limit.
+                 * Give up and drop the request.
+                 * Prevent this method from executing again unintentionally.
+                 */
+                droppedRequestOut.dataIn().send(request);
+                close();
+            }
+            else
+            {
+                /**
+                 * Forward the request.
+                 * Schedule this method to execute again, when the request times-out.
+                 */
+                ++sent;
+                requestOut.dataIn().send(request);
+                delayedSender.send(callback.dataIn(), this, timeout);
             }
         }
 
         public void recv (final R replyMsg)
         {
-            synchronized (lock)
-            {
-                if (cancelled == false)
-                {
-                    reply = replyMsg;
-                    send();
-                }
-            }
+            reply = replyMsg;
+            execute();
         }
 
         private void onTimeoutExpired (final Object ignored)
         {
-            send();
+            /**
+             * Synchronize the task relative to ones from other actors herein.
+             */
+            engine.accept(this::execute);
         }
 
-        private void cancel ()
+        private void close ()
         {
-            cancelled = true;
+            closed = true;
             handlers.remove(key);
         }
     }
@@ -419,7 +434,7 @@ public final class Requester<K, I, R, O>
 
         private Function<R, K> keyFuncR;
 
-        private BiFunction<I, R, O> combiner;
+        private BiFunction<I, R, O> correlator;
 
         private Integer tries;
 
@@ -462,9 +477,9 @@ public final class Requester<K, I, R, O>
          * @param functor will be used to combine requests and replies.
          * @return this.
          */
-        public Builder<K, I, R, O> withCombiner (final BiFunction<I, R, O> functor)
+        public Builder<K, I, R, O> withCorrelator (final BiFunction<I, R, O> functor)
         {
-            this.combiner = Objects.requireNonNull(functor, "functor");
+            this.correlator = Objects.requireNonNull(functor, "functor");
             return this;
         }
 
@@ -489,9 +504,15 @@ public final class Requester<K, I, R, O>
          */
         public Builder<K, I, R, O> withTries (final int limit)
         {
-            Preconditions.checkArgument(limit >= 1, "limit < 1");
-            this.tries = limit;
-            return this;
+            if (limit < 1)
+            {
+                throw new IllegalArgumentException("limit < 1");
+            }
+            else
+            {
+                this.tries = limit;
+                return this;
+            }
         }
 
         /**

@@ -74,7 +74,8 @@ public final class LookupTower<I, O>
          * Iterate through each of the floors until either one is found that
          * is willing to accept the message or the last floor is reached.
          */
-        for (int i = 0; i < floors.size(); i++)
+        var count = floors.size();
+        for (int i = 0; i < count; i++)
         {
             var floor = floors.get(i);
 
@@ -171,7 +172,7 @@ public final class LookupTower<I, O>
     }
 
     /**
-     * A <code>DataPipeline</code> that only conditionally accepts messages.
+     * A <code>Pipeline</code> that conditionally accepts messages.
      *
      * @param <I> is the type of the incoming messages.
      * @param <O> is the type of the outgoing messages.

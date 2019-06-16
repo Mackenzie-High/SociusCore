@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.AsyncTestTool;
-import com.mackenziehigh.socius.Printer;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.After;

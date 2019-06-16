@@ -15,8 +15,7 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.AbstractTrampoline;
-import com.mackenziehigh.socius.AsyncTestTool;
+import com.mackenziehigh.socius.AbstractTrampoline.State;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -25,6 +24,14 @@ import org.junit.Test;
  */
 public final class AbstractTrampolineTest
 {
+    private static final int GOTO_STATE_1 = 1;
+
+    private static final int GOTO_STATE_2 = 2;
+
+    private static final int GOTO_STATE_3 = 3;
+
+    private static final int THROW_RUNTIME_EXCEPTION = 99;
+
     private final AsyncTestTool tester = new AsyncTestTool();
 
     private final AbstractTrampoline<Integer, String> machine = new AbstractTrampoline<Integer, String>(tester.stage())
@@ -48,19 +55,15 @@ public final class AbstractTrampolineTest
         @Override
         protected State<Integer> onInitial (final Integer message)
         {
-            if (message == 1)
+            if (message == GOTO_STATE_1)
             {
                 return this::state1;
             }
-            else if (message == 2)
+            else if (message == GOTO_STATE_2)
             {
                 return this::state2;
             }
-            else if (message == 2)
-            {
-                return this::state2;
-            }
-            else if (message == 3)
+            else if (message == GOTO_STATE_3)
             {
                 return this::state3;
             }
@@ -72,7 +75,7 @@ public final class AbstractTrampolineTest
 
         private State<Integer> state1 (final Integer message)
         {
-            sendFrom("X" + message + "X");
+            sendFrom("STATE_1 = " + message);
             return this::end;
         }
 
@@ -90,7 +93,7 @@ public final class AbstractTrampolineTest
 
         private State<Integer> end (final Integer message)
         {
-            sendFrom("Y" + message + "Y");
+            sendFrom("END = " + message);
             return this::end;
         }
     };
@@ -110,12 +113,11 @@ public final class AbstractTrampolineTest
     @Test
     public void test20190513233337094556 ()
     {
-        machine.accept(1);
+        machine.accept(GOTO_STATE_1);
         machine.accept(13);
         machine.accept(17);
-        tester.awaitEquals(machine.dataOut(), "X13X");
-        tester.awaitEquals(machine.dataOut(), "Y17Y");
-        assertFalse(machine.isNop());
+        tester.awaitEquals(machine.dataOut(), "STATE_1 = 13");
+        tester.awaitEquals(machine.dataOut(), "END = 17");
     }
 
     /**
@@ -128,11 +130,10 @@ public final class AbstractTrampolineTest
     @Test
     public void test20190513233337094605 ()
     {
-        machine.accept(2);
-        machine.accept(13);
+        machine.accept(GOTO_STATE_2);
+        machine.accept(13); // Throws Exception in State Function
         machine.accept(17);
-        tester.awaitEquals(machine.dataOut(), "Y17Y");
-        assertFalse(machine.isNop());
+        tester.awaitEquals(machine.dataOut(), "END = 17");
     }
 
     /**
@@ -145,10 +146,10 @@ public final class AbstractTrampolineTest
     @Test
     public void test20190513233337094648 ()
     {
-        machine.accept(3);
-        machine.accept(13);
-        tester.awaitTrue(() -> machine.isNop());
-        assertTrue(machine.isNop());
+        machine.accept(GOTO_STATE_3);
+        machine.accept(13); // Throws Exception in State Function *AND* Error Handler.
+        tester.awaitSteadyState();
+        tester.awaitTrue(() -> machine.isInitial());
     }
 
     /**
@@ -161,27 +162,38 @@ public final class AbstractTrampolineTest
     @Test
     public void test20190513233337094628 ()
     {
-        machine.accept(99);
+        machine.accept(THROW_RUNTIME_EXCEPTION);
         machine.accept(13);
         machine.accept(17);
-        tester.awaitEquals(machine.dataOut(), "Y13Y");
-        tester.awaitEquals(machine.dataOut(), "Y17Y");
-        assertFalse(machine.isNop());
+        tester.awaitEquals(machine.dataOut(), "END = 13");
+        tester.awaitEquals(machine.dataOut(), "END = 17");
     }
 
     /**
-     * Test: 20190513233337094670
+     * Test: 20190615225919691702
      *
      * <p>
-     * Case: Behavior of No-Op State.
+     * Case: By Default, <code>onError()</code> returns the initial state.
      * </p>
      *
      * @throws java.lang.Throwable
      */
     @Test
-    public void test20190513233337094670 ()
+    public void test20190615225919691702 ()
             throws Throwable
     {
-        assertSame(machine.nop(), machine.nop().onMessage(17));
+        final AbstractTrampoline<String, String> trampoline = new AbstractTrampoline<String, String>(tester.stage())
+        {
+            @Override
+            protected State<String> onInitial (final String message)
+            {
+                return null;
+            }
+        };
+
+        assertTrue(trampoline.isInitial());
+        final State<String> initial = trampoline.state();
+        final State<String> error = trampoline.onError(null, null, null);
+        assertSame(initial, error);
     }
 }

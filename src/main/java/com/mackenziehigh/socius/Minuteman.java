@@ -17,7 +17,6 @@ package com.mackenziehigh.socius;
 
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.Processor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -26,7 +25,6 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
-import com.mackenziehigh.socius.Source;
 
 /**
  * A clock that sends a tick once per minute,

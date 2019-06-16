@@ -15,9 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.DelayedSender;
-import com.mackenziehigh.socius.AsyncTestTool;
-import com.mackenziehigh.socius.Requester;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -32,7 +29,7 @@ public final class RequesterTest
     /**
      * Fake Data Type.
      */
-    private final class TypeA
+    private final class IdentifierClass
     {
         // Pass.
     }
@@ -40,14 +37,14 @@ public final class RequesterTest
     /**
      * Fake Data Type.
      */
-    private final class TypeB
+    private final class RequestClass
     {
-        public final TypeA id;
+        public final IdentifierClass id;
 
         public final String value;
 
-        public TypeB (final TypeA id,
-                      final String value)
+        public RequestClass (final IdentifierClass id,
+                             final String value)
         {
             this.id = id;
             this.value = value;
@@ -57,14 +54,14 @@ public final class RequesterTest
     /**
      * Fake Data Type.
      */
-    private final class TypeC
+    private final class ReplyClass
     {
-        public final TypeA id;
+        public final IdentifierClass id;
 
         public final String value;
 
-        public TypeC (final TypeA id,
-                      final String value)
+        public ReplyClass (final IdentifierClass id,
+                           final String value)
         {
             this.id = id;
             this.value = value;
@@ -74,14 +71,14 @@ public final class RequesterTest
     /**
      * Fake Data Type.
      */
-    private final class TypeD
+    private final class ResultClass
     {
-        public final TypeB request;
+        public final RequestClass request;
 
-        public final TypeC reply;
+        public final ReplyClass reply;
 
-        public TypeD (final TypeB request,
-                      final TypeC reply)
+        public ResultClass (final RequestClass request,
+                            final ReplyClass reply)
         {
             this.request = request;
             this.reply = reply;
@@ -111,7 +108,7 @@ public final class RequesterTest
             {
                 return false;
             }
-            final TypeD other = (TypeD) obj;
+            final ResultClass other = (ResultClass) obj;
             return Objects.equals(request, other.request) && Objects.equals(reply, other.reply);
         }
     }
@@ -120,11 +117,11 @@ public final class RequesterTest
 
     private final AsyncTestTool tester = new AsyncTestTool();
 
-    private final Requester<TypeA, TypeB, TypeC, TypeD> requester = Requester
-            .<TypeA, TypeB, TypeC, TypeD>newRequester(tester.stage())
+    private final Requester<IdentifierClass, RequestClass, ReplyClass, ResultClass> requester = Requester
+            .<IdentifierClass, RequestClass, ReplyClass, ResultClass>newRequester(tester.stage())
             .withTries(1 + 5) // Initial + Up to (5) Retries
             .withTimeout(Duration.ofMillis(TIMEOUT_MILLIS))
-            .withCombiner((TypeB x, TypeC y) -> new TypeD(x, y))
+            .withCorrelator((RequestClass x, ReplyClass y) -> new ResultClass(x, y))
             .withRequestKeyFunction(x -> x.id)
             .withReplyKeyFunction(x -> x.id)
             .build();
@@ -135,28 +132,38 @@ public final class RequesterTest
      * <p>
      * Case: Throughput of Normal Request with Normal Reply.
      * </p>
-     *
-     * @throws java.lang.Throwable
      */
     @Test
     public void test20190102033656219973 ()
-            throws Throwable
     {
-        final TypeA id = new TypeA();
-        final TypeB request = new TypeB(id, "Neptune");
-        final TypeC reply = new TypeC(id, "Jovian");
-        final TypeD result = new TypeD(request, reply);
+        final IdentifierClass id = new IdentifierClass();
+        final RequestClass request = new RequestClass(id, "Neptune");
+        final ReplyClass reply = new ReplyClass(id, "Jovian");
+        final ResultClass result = new ResultClass(request, reply);
 
         tester.connect(requester.droppedReplyOut());
         tester.connect(requester.droppedRequestOut());
         tester.connect(requester.requestOut());
         tester.connect(requester.resultOut());
 
+        /**
+         * Send the request through the requester.
+         * The requester will forward the request.
+         */
         assertEquals(0, requester.pendingRequestCount());
         requester.requestIn().send(request);
-        assertEquals(1, requester.pendingRequestCount());
         tester.awaitEquals(requester.requestOut(), request);
+        assertEquals(1, requester.pendingRequestCount());
+
+        /**
+         * Send a reply back to the requester.
+         */
         requester.replyIn().send(reply);
+
+        /**
+         * The requester will correlate the request and reply.
+         * The requester will then send the combined result.
+         */
         tester.awaitEquals(requester.resultOut(), result);
         assertEquals(0, requester.pendingRequestCount());
     }
@@ -167,34 +174,45 @@ public final class RequesterTest
      * <p>
      * Case: Request Timed Out, Retry Successful.
      * </p>
-     *
-     * @throws java.lang.Throwable
      */
     @Test
     public void test20190102033656220076 ()
-            throws Throwable
     {
-        fail();
+        final IdentifierClass id = new IdentifierClass();
+        final RequestClass request = new RequestClass(id, "Neptune");
+        final ReplyClass reply = new ReplyClass(id, "Jovian");
+        final ResultClass result = new ResultClass(request, reply);
 
-//        final TypeA id = new TypeA();
-//        final TypeB request = new TypeB(id, "Neptune");
-//        final TypeC reply = new TypeC(id, "Jovian");
-//        final TypeD result = new TypeD(request, reply);
-//
-//        tester.connect(requester.droppedReplyOut());
-//        tester.connect(requester.droppedRequestOut());
-//        tester.connect(requester.requestOut());
-//        tester.connect(requester.resultOut());
-//
-//        assertEquals(0, requester.pendingRequestCount());
-//        requester.requestIn().send(request);
-//        assertEquals(1, requester.pendingRequestCount());
-//        tester.awaitEquals(requester.requestOut(), request);
-//        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
-//        tester.awaitEquals(requester.requestOut(), request); // After the request timed out, it was sent again (retried).
-//        requester.replyIn().send(reply);
-//        tester.awaitEquals(requester.resultOut(), result);
-//        assertEquals(0, requester.pendingRequestCount());
+        tester.connect(requester.droppedReplyOut());
+        tester.connect(requester.droppedRequestOut());
+        tester.connect(requester.requestOut());
+        tester.connect(requester.resultOut());
+
+        /**
+         * Send the request through the requester.
+         * The requester will forward the request.
+         */
+        assertEquals(0, requester.pendingRequestCount());
+        requester.requestIn().send(request);
+        tester.awaitEquals(requester.requestOut(), request);
+        assertEquals(1, requester.pendingRequestCount());
+
+        /**
+         * After the request times-out, it will be sent again (retried).
+         */
+        tester.awaitEquals(requester.requestOut(), request);
+
+        /**
+         * Send a reply back to the requester.
+         */
+        requester.replyIn().send(reply);
+
+        /**
+         * The requester will correlate the request and reply.
+         * The requester will then send the combined result.
+         */
+        tester.awaitEquals(requester.resultOut(), result);
+        assertEquals(0, requester.pendingRequestCount());
     }
 
     /**
@@ -203,30 +221,40 @@ public final class RequesterTest
      * <p>
      * Case: Duplicate Request, Normal Reply.
      * </p>
-     *
-     * @throws java.lang.Throwable
      */
     @Test
     public void test20190102043344891456 ()
-            throws Throwable
     {
-        final TypeA id = new TypeA();
-        final TypeB request = new TypeB(id, "Neptune");
-        final TypeC reply = new TypeC(id, "Jovian");
-        final TypeD result = new TypeD(request, reply);
+        final IdentifierClass id = new IdentifierClass();
+        final RequestClass request = new RequestClass(id, "Neptune");
+        final ReplyClass reply = new ReplyClass(id, "Jovian");
+        final ResultClass result = new ResultClass(request, reply);
 
         tester.connect(requester.droppedReplyOut());
         tester.connect(requester.droppedRequestOut());
         tester.connect(requester.requestOut());
         tester.connect(requester.resultOut());
 
+        /**
+         * Send the request through the requester.
+         * The requester will forward the request.
+         */
         assertEquals(0, requester.pendingRequestCount());
         requester.requestIn().send(request);
         requester.requestIn().send(request); // Duplicate Request.
         tester.awaitEquals(requester.droppedRequestOut(), request); // The duplicate request was dropped.
+        tester.awaitEquals(requester.requestOut(), request); // The first request was forwarded.
         assertEquals(1, requester.pendingRequestCount());
-        tester.awaitEquals(requester.requestOut(), request);
+
+        /**
+         * Send a reply back to the requester.
+         */
         requester.replyIn().send(reply);
+
+        /**
+         * The requester will correlate the request and reply.
+         * The requester will then send the combined result.
+         */
         tester.awaitEquals(requester.resultOut(), result);
         assertEquals(0, requester.pendingRequestCount());
     }
@@ -236,30 +264,40 @@ public final class RequesterTest
      * <p>
      * Case: Normal Request, Duplicate Reply.
      * </p>
-     *
-     * @throws java.lang.Throwable
      */
     @Test
     public void test20190102033656220182 ()
-            throws Throwable
     {
-        final TypeA id = new TypeA();
-        final TypeB request = new TypeB(id, "Neptune");
-        final TypeC reply = new TypeC(id, "Jovian");
-        final TypeD result = new TypeD(request, reply);
+        final IdentifierClass id = new IdentifierClass();
+        final RequestClass request = new RequestClass(id, "Neptune");
+        final ReplyClass reply = new ReplyClass(id, "Jovian");
+        final ResultClass result = new ResultClass(request, reply);
 
         tester.connect(requester.droppedReplyOut());
         tester.connect(requester.droppedRequestOut());
         tester.connect(requester.requestOut());
         tester.connect(requester.resultOut());
 
+        /**
+         * Send the request through the requester.
+         * The requester will forward the request.
+         */
         assertEquals(0, requester.pendingRequestCount());
         requester.requestIn().send(request);
-        assertEquals(1, requester.pendingRequestCount());
         tester.awaitEquals(requester.requestOut(), request);
+        assertEquals(1, requester.pendingRequestCount());
+
+        /**
+         * Send a reply back to the requester.
+         */
         requester.replyIn().send(reply);
         requester.replyIn().send(reply); // Duplicate Reply.
         tester.awaitEquals(requester.droppedReplyOut(), reply); // The duplicate was dropped.
+
+        /**
+         * The requester will correlate the request and reply.
+         * The requester will then send the combined result.
+         */
         tester.awaitEquals(requester.resultOut(), result);
         assertEquals(0, requester.pendingRequestCount());
     }
@@ -270,41 +308,54 @@ public final class RequesterTest
      * <p>
      * Case: Multiple Retries.
      * </p>
-     *
-     * @throws java.lang.Throwable
      */
     @Test
     public void test20190102050927530236 ()
-            throws Throwable
     {
-        fail();
-//        final TypeA id = new TypeA();
-//        final TypeB request = new TypeB(id, "Neptune");
-//        final TypeC reply = new TypeC(id, "Jovian");
-//
-//        tester.connect(requester.droppedReplyOut());
-//        tester.connect(requester.droppedRequestOut());
-//        tester.connect(requester.requestOut());
-//        tester.connect(requester.resultOut());
-//
-//        assertEquals(0, requester.pendingRequestCount());
-//        requester.requestIn().send(request);
-//        assertEquals(1, requester.pendingRequestCount());
-//        tester.awaitEquals(requester.requestOut(), request);
-//        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
-//        tester.awaitEquals(requester.requestOut(), request); // Retry #1.
-//        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
-//        tester.awaitEquals(requester.requestOut(), request); // Retry #2.
-//        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
-//        tester.awaitEquals(requester.requestOut(), request); // Retry #3.
-//        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
-//        tester.awaitEquals(requester.requestOut(), request); // Retry #4.
-//        tester.sleep((long) (TIMEOUT_MILLIS * 1.5));
-//        tester.awaitEquals(requester.requestOut(), request); // Retry #5.
-//        tester.sleep((long) (TIMEOUT_MILLIS * 1.5)); // Retry Limit Exceeded.
-//        requester.replyIn().send(reply);
-//        tester.awaitEquals(requester.droppedReplyOut(), reply);
-//        assertEquals(0, requester.pendingRequestCount());
+        final IdentifierClass id = new IdentifierClass();
+        final RequestClass request = new RequestClass(id, "Neptune");
+        final ReplyClass reply = new ReplyClass(id, "Jovian");
+
+        tester.connect(requester.droppedReplyOut());
+        tester.connect(requester.droppedRequestOut());
+        tester.connect(requester.requestOut());
+        tester.connect(requester.resultOut());
+
+        /**
+         * Send the request through the requester.
+         * The requester will forward the request.
+         */
+        assertEquals(0, requester.pendingRequestCount());
+        requester.requestIn().send(request);
+        tester.awaitEquals(requester.requestOut(), request);
+        tester.awaitEquals(requester.requestOut(), request); // Retry #1.
+        assertEquals(1, requester.pendingRequestCount());
+        tester.awaitEquals(requester.requestOut(), request); // Retry #2.
+        assertEquals(1, requester.pendingRequestCount());
+        tester.awaitEquals(requester.requestOut(), request); // Retry #3.
+        assertEquals(1, requester.pendingRequestCount());
+        tester.awaitEquals(requester.requestOut(), request); // Retry #4.
+        assertEquals(1, requester.pendingRequestCount());
+        tester.awaitEquals(requester.requestOut(), request); // Retry #5.
+        assertEquals(1, requester.pendingRequestCount());
+
+        /**
+         * The request timed-out.
+         */
+        tester.awaitEquals(requester.droppedRequestOut(), request);
+        assertEquals(0, requester.pendingRequestCount());
+
+        /**
+         * Send a reply back to the requester.
+         */
+        requester.replyIn().send(reply);
+
+        /**
+         * The requester will drop the reply,
+         * because the request timed-out.
+         */
+        tester.awaitEquals(requester.droppedReplyOut(), reply);
+        assertEquals(0, requester.pendingRequestCount());
     }
 
     /**
@@ -317,20 +368,20 @@ public final class RequesterTest
     @Test
     public void test20190102052221744099 ()
     {
-        final Requester<TypeA, TypeB, TypeC, TypeD> requesterX = Requester
-                .<TypeA, TypeB, TypeC, TypeD>newRequester(tester.stage())
+        final Requester<IdentifierClass, RequestClass, ReplyClass, ResultClass> requesterX = Requester
+                .<IdentifierClass, RequestClass, ReplyClass, ResultClass>newRequester(tester.stage())
                 .withTries(5)
                 .withTimeout(Duration.ofMillis(TIMEOUT_MILLIS))
-                .withCombiner((TypeB x, TypeC y) -> new TypeD(x, y))
+                .withCorrelator((RequestClass x, ReplyClass y) -> new ResultClass(x, y))
                 .withRequestKeyFunction(x -> x.id)
                 .withReplyKeyFunction(x -> x.id)
                 .build();
 
-        final Requester<TypeA, TypeB, TypeC, TypeD> requesterY = Requester
-                .<TypeA, TypeB, TypeC, TypeD>newRequester(tester.stage())
+        final Requester<IdentifierClass, RequestClass, ReplyClass, ResultClass> requesterY = Requester
+                .<IdentifierClass, RequestClass, ReplyClass, ResultClass>newRequester(tester.stage())
                 .withTries(5)
                 .withTimeout(Duration.ofMillis(TIMEOUT_MILLIS))
-                .withCombiner((TypeB x, TypeC y) -> new TypeD(x, y))
+                .withCorrelator((RequestClass x, ReplyClass y) -> new ResultClass(x, y))
                 .withRequestKeyFunction(x -> x.id)
                 .withReplyKeyFunction(x -> x.id)
                 .withDelayedSender(DelayedSender.newDelayedSender(Executors.newScheduledThreadPool(1)))
@@ -338,5 +389,22 @@ public final class RequesterTest
 
         assertTrue(requesterX.isUsingDefaultDelayedSender());
         assertFalse(requesterY.isUsingDefaultDelayedSender());
+    }
+
+    /**
+     * Test: 20190615193718730457
+     *
+     * <p>
+     * Method: <code>withTries</code>
+     * </p>
+     *
+     * <p>
+     * Case: Invalid Retry Limit.
+     * </p>
+     */
+    @Test (expected = IllegalArgumentException.class)
+    public void test20190615193718730457 ()
+    {
+        Requester.newRequester(tester.stage()).withTries(0);
     }
 }

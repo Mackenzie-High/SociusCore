@@ -48,7 +48,7 @@ public final class DelayedSender
      */
     public boolean isUsingDefaultExecutor ()
     {
-        return service.equals(DefaultExecutor.get());
+        return service.equals(DefaultExecutor.instance().service());
     }
 
     /**
@@ -96,7 +96,7 @@ public final class DelayedSender
      * @param service will provide the clock.
      * @return the new object.
      */
-    public static synchronized DelayedSender newDelayedSender (final ScheduledExecutorService service)
+    public static DelayedSender newDelayedSender (final ScheduledExecutorService service)
     {
         return new DelayedSender(service);
     }
@@ -110,7 +110,7 @@ public final class DelayedSender
     {
         if (global == null)
         {
-            final ScheduledExecutorService ses = DefaultExecutor.get();
+            final ScheduledExecutorService ses = DefaultExecutor.instance().service();
             global = new DelayedSender(ses);
         }
 

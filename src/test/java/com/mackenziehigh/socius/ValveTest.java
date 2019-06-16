@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Valve;
-import com.mackenziehigh.socius.AsyncTestTool;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -55,6 +53,7 @@ public final class ValveTest
         assertFalse(valve.isOpen());
         assertTrue(valve.isClosed());
         valve.dataIn().send('A');
+        tester.awaitSteadyState();
 
         /**
          * Open the valve via a message.
@@ -72,12 +71,12 @@ public final class ValveTest
 
         /**
          * Close the valve via the toggle() method.
-         * Verify that no data gets through subsequently.
          * Notice that a toggle message is sent out however.
          */
         valve.toggle(false);
         tester.awaitEquals(valve.toggleOut(), false);
         valve.dataIn().send('D');
+        tester.awaitSteadyState();
 
         /**
          * Open the valve via the toggle() method.
@@ -106,6 +105,7 @@ public final class ValveTest
         assertFalse(valve.isOpen());
         assertTrue(valve.isClosed());
         valve.dataIn().send('A');
+        tester.awaitSteadyState();
 
         /**
          * Open the valve via a message.

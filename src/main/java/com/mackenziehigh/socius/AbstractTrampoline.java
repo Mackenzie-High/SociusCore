@@ -50,11 +50,6 @@ public abstract class AbstractTrampoline<I, O>
             throws Throwable;
 
     /**
-     * This state responds to messages by doing nothing.
-     */
-    private final State<I> nop = message -> this.nop;
-
-    /**
      * This is the initial state that the state-machine is in.
      */
     private final State<I> initial = this::onInitial;
@@ -75,17 +70,17 @@ public abstract class AbstractTrampoline<I, O>
     {
         try
         {
-            current = current.onMessage(message);
+            state(state().onMessage(message));
         }
         catch (Throwable ex1)
         {
             try
             {
-                current = onError(current, message, ex1);
+                state(onError(current, message, ex1));
             }
             catch (Throwable ex2)
             {
-                current = nop;
+                state(initial);
             }
         }
     }
@@ -123,23 +118,13 @@ public abstract class AbstractTrampoline<I, O>
     }
 
     /**
-     * Get the default no-op state.
+     * Determine whether the state-machine is in the initial state.
      *
-     * @return the no-op state.
+     * @return true, if the current state is the initial state.
      */
-    public final State<I> nop ()
+    public final boolean isInitial ()
     {
-        return nop;
-    }
-
-    /**
-     * Determine whether this state-machine is in the no-op state.
-     *
-     * @return true, if this state-machine is in the no-op state.
-     */
-    public final boolean isNop ()
-    {
-        return nop.equals(current);
+        return initial.equals(current);
     }
 
     /**

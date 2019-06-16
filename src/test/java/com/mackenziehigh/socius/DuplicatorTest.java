@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.AsyncTestTool;
-import com.mackenziehigh.socius.Duplicator;
 import org.junit.Test;
 
 /**
@@ -24,13 +22,16 @@ import org.junit.Test;
  */
 public final class DuplicatorTest
 {
+    private final AsyncTestTool tester = new AsyncTestTool();
+
+    /**
+     * Case: Single-Element Repetitions Only.
+     */
     @Test
     public void test1 ()
-            throws Throwable
     {
-        final var tester = new AsyncTestTool();
         final var dup = Duplicator.<Character>newDuplicator(tester.stage())
-                .withRepeatCount(4)
+                .withRepetitionCount(4)
                 .build();
 
         tester.connect(dup.dataOut());
@@ -55,14 +56,15 @@ public final class DuplicatorTest
         tester.awaitEquals(dup.dataOut(), 'C');
     }
 
+    /**
+     * Case: Multi-Element Repetitions.
+     */
     @Test
     public void test2 ()
-            throws Throwable
     {
-        final var tester = new AsyncTestTool();
         final var dup = Duplicator.<Character>newDuplicator(tester.stage())
                 .withSequenceLength(3)
-                .withRepeatCount(2)
+                .withRepetitionCount(2)
                 .build();
 
         tester.connect(dup.dataOut());
@@ -86,5 +88,23 @@ public final class DuplicatorTest
         tester.awaitEquals(dup.dataOut(), 'X');
         tester.awaitEquals(dup.dataOut(), 'Y');
         tester.awaitEquals(dup.dataOut(), 'Z');
+    }
+
+    /**
+     * Case: Illegal Sequence-Length.
+     */
+    @Test (expected = IllegalArgumentException.class)
+    public void test3 ()
+    {
+        Duplicator.newDuplicator(tester.stage()).withSequenceLength(0);
+    }
+
+    /**
+     * Case: Illegal Repetition-Count.
+     */
+    @Test (expected = IllegalArgumentException.class)
+    public void test4 ()
+    {
+        Duplicator.newDuplicator(tester.stage()).withRepetitionCount(0);
     }
 }

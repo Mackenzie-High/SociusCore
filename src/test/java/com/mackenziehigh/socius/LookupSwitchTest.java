@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.LookupSwitch;
-import com.mackenziehigh.socius.AsyncTestTool;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
 import java.math.BigInteger;
 import org.junit.Test;

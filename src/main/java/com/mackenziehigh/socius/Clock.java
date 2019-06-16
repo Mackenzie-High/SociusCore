@@ -18,7 +18,6 @@ package com.mackenziehigh.socius;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
 import com.mackenziehigh.cascade.Cascade.Stage.Actor.Output;
-import com.mackenziehigh.socius.Processor;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -27,7 +26,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import com.mackenziehigh.socius.Source;
 
 /**
  * A clock that sends ticks at a user-specified periodicity.
@@ -79,6 +77,12 @@ public final class Clock
     private final Processor<Instant> procClockOut;
 
     /**
+     * This lock protects the start() and stop() methods.
+     * This lock never blocks the actors themselves.
+     */
+    private final Object lock = new Object();
+
+    /**
      * This is the next scheduled tick, if any.
      */
     private volatile Future<?> future;
@@ -87,7 +91,7 @@ public final class Clock
     {
         this.delay = builder.delay;
         this.period = builder.period;
-        this.service = builder.service != null ? builder.service : DefaultExecutor.get();
+        this.service = builder.service != null ? builder.service : DefaultExecutor.instance().service();
         final Stage stage = Cascade.newStage(service);
         this.procClockOut = Processor.fromIdentityScript(stage);
     }
@@ -129,7 +133,17 @@ public final class Clock
      */
     public boolean isUsingDefaultExecutor ()
     {
-        return service.equals(DefaultExecutor.get());
+        return service.equals(DefaultExecutor.instance().service());
+    }
+
+    /**
+     * Determine whether this clock is sending ticks.
+     *
+     * @return true, if the clock was started, but not yet stopped.
+     */
+    public boolean isTicking ()
+    {
+        return future != null;
     }
 
     /**
@@ -154,12 +168,15 @@ public final class Clock
      */
     public Clock start ()
     {
-        if (started.compareAndSet(false, true))
+        synchronized (lock)
         {
-            future = service.scheduleAtFixedRate(this::onTick,
-                                                 delay.toNanos(),
-                                                 period.toNanos(),
-                                                 TimeUnit.NANOSECONDS);
+            if (started.compareAndSet(false, true))
+            {
+                future = service.scheduleAtFixedRate(this::onTick,
+                                                     delay.toNanos(),
+                                                     period.toNanos(),
+                                                     TimeUnit.NANOSECONDS);
+            }
         }
 
         return this;
@@ -175,19 +192,24 @@ public final class Clock
      * Call this method to cause the clock to stop ticking.
      *
      * <p>
-     * This method is a no-op, if the clock was already started.
+     * This method is a no-op, if the clock was already stopped.
      * </p>
      *
      * @return this.
      */
     public Clock stop ()
     {
-        if (stopped.compareAndSet(false, true))
+        synchronized (lock)
         {
-            if (future != null)
+            if (started.get() == false)
+            {
+                throw new IllegalStateException("Not Started Yet");
+            }
+            else if (stopped.compareAndSet(false, true))
             {
                 final boolean interrupt = false;
                 future.cancel(interrupt);
+                future = null;
             }
         }
 

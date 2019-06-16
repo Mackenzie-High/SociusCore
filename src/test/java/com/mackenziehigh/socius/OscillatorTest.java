@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Oscillator;
-import com.mackenziehigh.socius.Processor;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
@@ -24,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.function.LongFunction;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -38,7 +37,7 @@ public final class OscillatorTest
      * @throws InterruptedException
      */
     @Test
-    public void test ()
+    public void test1 ()
             throws InterruptedException
     {
         final Stage stage = Cascade.newStage();
@@ -80,11 +79,7 @@ public final class OscillatorTest
     }
 
     /**
-     * Test: 20181125020004923394
-     *
-     * <p>
      * Case: Different Executors.
-     * </p>
      */
     @Test
     public void test20181125020004923394 ()
@@ -99,5 +94,21 @@ public final class OscillatorTest
                 .poweredBy(Executors.newSingleThreadScheduledExecutor())
                 .build()
                 .isUsingDefaultExecutor());
+    }
+
+    /**
+     * Case: Verify Default Waveform.
+     */
+    @Test
+    public void test20190615020004923395 ()
+    {
+        final LongFunction<Duration> waveform = Oscillator.newOscillator().build().waveform();
+
+        final Duration oneSecond = Duration.ofSeconds(1);
+
+        for (int i = 0; i < 100; i++)
+        {
+            assertEquals(oneSecond, waveform.apply(i));
+        }
     }
 }

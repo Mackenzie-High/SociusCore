@@ -15,9 +15,9 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.AbstractPushdownAutomaton;
-import com.mackenziehigh.socius.AsyncTestTool;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -176,6 +176,28 @@ public final class AbstractPushdownAutomatonTest
     }
 
     /**
+     * Test: 20190615230717099494
+     *
+     * <p>
+     * Method: <code>clear</code>
+     * </p>
+     */
+    @Test
+    public void test20190615230717099494 ()
+    {
+        machine.then(() -> machine.sendFrom("X"));
+        machine.then(() -> machine.sendFrom("Y"));
+        machine.then(() -> machine.sendFrom("Z"));
+        machine.clear();
+
+        machine.dataIn().send(100);
+        tester.awaitSteadyState();
+
+        assertFalse(executedOnInitial.get());
+        assertFalse(executedOnError.get());
+    }
+
+    /**
      * Test: 20190514000726589899
      *
      * <p>
@@ -216,5 +238,99 @@ public final class AbstractPushdownAutomatonTest
 
         assertTrue(executedOnInitial.get());
         assertTrue(executedOnError.get());
+    }
+
+    /**
+     * Test: 20190615231103309292
+     *
+     * <p>
+     * Case: Exception in Error Handler.
+     * </p>
+     */
+    @Test
+    public void test20190615231103309292 ()
+    {
+        final AtomicReference<String> refMessage = new AtomicReference<>();
+        final AtomicReference<Throwable> refCause = new AtomicReference<>();
+        final AtomicInteger counter = new AtomicInteger();
+
+        final AbstractPushdownAutomaton<String, String> automaton = new AbstractPushdownAutomaton<>(tester.stage())
+        {
+            @Override
+            protected void onInitial (final String message)
+                    throws Throwable
+            {
+                if (counter.incrementAndGet() == 1)
+                {
+                    push(this::badState);
+                }
+                else
+                {
+                    push(this::onInitial);
+                }
+            }
+
+            private void badState (final String message)
+                    throws Throwable
+            {
+                throw new Throwable("T1");
+            }
+
+            @Override
+            protected void onError (final String message,
+                                    final Throwable cause)
+                    throws Throwable
+            {
+                refMessage.set(message);
+                refCause.set(cause);
+                throw new Throwable("T2");
+            }
+        };
+
+        automaton.accept("A"); // State = onInitial
+        automaton.accept("B"); // State = badState
+        automaton.accept("C"); // State = onInitial
+        automaton.accept("D"); // State = onInitial
+        automaton.accept("E"); // State = onInitial
+        tester.awaitSteadyState();
+        tester.assertEmptyOutputs();
+
+        assertEquals("B", refMessage.get());
+        assertEquals("T1", refCause.get().getMessage());
+        assertEquals(4, counter.get());
+    }
+
+    /**
+     * Test: 20190615232633253467
+     *
+     * <p>
+     * Case: The default error-handler simply resets the machine.
+     * </p>
+     */
+    @Test
+    public void test20190615232633253467 ()
+    {
+        final AtomicInteger counter = new AtomicInteger();
+
+        final AbstractPushdownAutomaton<String, String> automaton = new AbstractPushdownAutomaton<>(tester.stage())
+        {
+            @Override
+            protected void onInitial (final String message)
+                    throws Throwable
+            {
+                counter.incrementAndGet();
+                throw new Throwable();
+            }
+        };
+
+        automaton.accept("A"); // State = onInitial
+        automaton.accept("B"); // State = onInitial
+        automaton.accept("C"); // State = onInitial
+        automaton.accept("D"); // State = onInitial
+        automaton.accept("E"); // State = onInitial
+        tester.awaitSteadyState();
+        tester.assertEmptyOutputs();
+
+        assertEquals(5, counter.get());
     }
 }

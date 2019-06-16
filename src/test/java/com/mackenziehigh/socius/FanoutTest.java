@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Fanout;
-import com.mackenziehigh.socius.AsyncTestTool;
 import org.junit.Test;
 
 /**

@@ -15,8 +15,6 @@
  */
 package com.mackenziehigh.socius;
 
-import com.mackenziehigh.socius.Processor;
-import com.mackenziehigh.socius.Clock;
 import com.google.common.collect.Lists;
 import com.mackenziehigh.cascade.Cascade;
 import com.mackenziehigh.cascade.Cascade.Stage;
@@ -59,13 +57,16 @@ public final class ClockTest
         assertTrue(clock.isUsingDefaultExecutor());
 
         final Instant start = Instant.now();
+        assertFalse(clock.isTicking());
         clock.start();
         clock.start(); // Duplicate should be ignored.
+        assertTrue(clock.isTicking());
 
         Thread.sleep(600);
 
         clock.stop();
         clock.stop(); // Duplicate should be ignored.
+        assertFalse(clock.isTicking());
 
         assertTrue(ticks.size() >= 2);
         assertTrue(clock.tickCount() >= 2);
@@ -101,5 +102,48 @@ public final class ClockTest
                 .poweredBy(Executors.newSingleThreadScheduledExecutor())
                 .build()
                 .isUsingDefaultExecutor());
+    }
+
+    /**
+     * Test: 20190615224227135419
+     *
+     * <p>
+     * Method: <code>stop</code>
+     * </p>
+     *
+     * <p>
+     * Case: Not Started Yet.
+     * </p>
+     */
+    @Test (expected = IllegalStateException.class)
+    public void test20190615224227135419 ()
+    {
+        final Clock clock = Clock
+                .newClock()
+                .withDelay(Duration.ofMillis(100))
+                .withPeriod(Duration.ofMillis(200))
+                .build();
+
+        clock.stop();
+    }
+
+    /**
+     * Test: 20190615224524980059
+     *
+     * <p>
+     * Case: Default Settings.
+     * </p>
+     */
+    @Test
+    public void test20190615224524980059 ()
+    {
+        final Clock clock = Clock
+                .newClock()
+                .build();
+
+        assertEquals(Duration.ZERO, clock.delay());
+        assertEquals(Duration.ofSeconds(1), clock.period());
+        assertFalse(clock.isTicking());
+        assertTrue(clock.isUsingDefaultExecutor());
     }
 }
